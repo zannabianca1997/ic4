@@ -4,6 +4,7 @@
 
 This is a cross compiler from a dialect of C to [Intcode](https://esolangs.org/wiki/Intcode). 
 The idea is that, being Intcode more akin to an instruction set than a language, it can be a good exercise in compilers design.
+This is nothing more than an exercise: no particular standard is adhered to, neither any particular feature will be implemented.
 
 ## Objectives
 
@@ -58,3 +59,7 @@ Every step is made by a different translation unit, offering a stream-like inter
     void result_stream_close(result_stream_t*);
 
 First translation unit will take a filename, while last will emit integers.
+
+## Developers
+
+For now, everything is by me, zannabianca1997 <zannabianca199712@gmail.com>.
