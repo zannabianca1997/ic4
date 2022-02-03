@@ -1,4 +1,4 @@
-### IC4: IntCode C CrossCompiler
+# IC4: IntCode C CrossCompiler
 
 ## Overview
 
