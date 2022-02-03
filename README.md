@@ -26,6 +26,17 @@ This is a sintetic roadmap:
     - [ ] Bookmark struct
     - [ ] Error reporting
 
+## Used C dialect
+
+To adapt to the end instruction limitations, the original language will deviate from standard C.
+
+The most noticeable difference from standard C is that scalar type will be a wreak: only `signed int` is implemented, and is the natural size of the machine (`sizeof(int) == 1`). Other `signed` integers may, or may not be translated as `int`. `unsigned` variation should be inplemented with adapt code for the wrap around (requested fot them).
+
+`float`s are for now not implemented, nor planning to be.
+
+For the aritmetic `+`, `-` and `*` will translate directly to code. `/` and `%` are planned to be translated to calls to builtin functions.  
+There is no plan to implement bitshift or bitwise operators, as they would be more slow than useful.
+
 ## Design
 
 Every step is made by a different translation unit, offering a stream-like interface, like the one below:
