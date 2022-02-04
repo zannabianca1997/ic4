@@ -5,11 +5,10 @@
 
 from argparse import ArgumentParser, FileType
 from datetime import datetime
-from io import StringIO
 from itertools import chain
 from pathlib import Path
 import subprocess
-from sys import stderr, stdout
+from sys import stderr
 from typing import Dict, Set, Tuple
 from subprocess import run
 
@@ -90,8 +89,8 @@ MAKEFILE_NAME := $(abspath $(lastword $(MAKEFILE_LIST)))
 
 # configure script call
 CONFIGURE_ARGS := -source_dir $(SOURCE_DIR) -debug_dir $(DEBUG_DIR) -release_dir $(RELEASE_DIR) \\
-     -binary_name $(BINARY_NAME) -test_binary_name $(TEST_BINARY_NAME) -main_name $(MAIN_NAME) \\
-         -catalog_script $(CATALOG_SCRIPT)
+                  -binary_name $(BINARY_NAME) -test_binary_name $(TEST_BINARY_NAME) -main_name $(MAIN_NAME) \\
+                  -catalog_script $(CATALOG_SCRIPT)
 
 # delete predefined rules
 .SUFFIXES:
@@ -145,9 +144,9 @@ $(MAKEFILE_NAME): $(CONFIGURE_SCRIPT)
 """
 
 PARAMETER: Dict[str, Tuple[str, str]] = {
-    "source_dir": ("./src", "The directory containing the source files"),
-    "debug_dir": ("./debug", "The directory where the debug versions of the program will be built"),
-    "release_dir": ("./release", "The directory where the release versions of the program will be built"),
+    "source_dir": ("src", "The directory containing the source files"),
+    "debug_dir": ("debug", "The directory where the debug versions of the program will be built"),
+    "release_dir": ("release", "The directory where the release versions of the program will be built"),
     "binary_name": ("ic4", "The name of the finished binary"),
     "test_binary_name": ("ic4_test", "The name of the test binary"),
     "main_name": ("main.c", "The name of the file containing the entry point"),

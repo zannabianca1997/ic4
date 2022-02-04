@@ -202,16 +202,6 @@ def write_catalog_header(
 
         print(file=cat_header)
 
-    # dependency
-    if origin_files is not None and origin_files:
-        print("// keeping track of source files", file=cat_header)
-        print("#ifdef __GNUC__", file=cat_header)
-        for file in origin_files:
-            print(
-                f"#pragma GCC dependency \"{file}\" Modified file \"{file}\", catalog header need to be regenerated", file=cat_header)
-        print("#endif // __GNUC__", file=cat_header)
-        print(file=cat_header)
-
     for sectionname, sectioncontent in catalog.items():
         print(f"// {sectionname} ", file=cat_header)
         for messagename, messagecontent in sectioncontent.items():
