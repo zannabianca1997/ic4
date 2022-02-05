@@ -80,6 +80,7 @@ These flags are used to compile different capacity in the program
 - ANSI_FORMATTED_OUTPUT: logging module will expose some function to set logtarget formatting via [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
 - CHECK_ERRORLEVELS_VALIDITY: logging moduel will give an error when inconsistent errorlevels are setted
 - CHECK_PTR_TARGET: logging module will give an error when removing an unmanaged target
+- CHECK_CONTEXT_CHILDS: freeing a context with childs will give a warning
 
 ## Developers
 

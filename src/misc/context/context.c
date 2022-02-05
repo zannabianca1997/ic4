@@ -10,7 +10,7 @@
 struct context_s
 {
     struct context_s *parent;
-#ifdef DEBUG
+#ifdef CHECK_CONTEXT_CHILDS
     size_t child_count;
 #endif
 
@@ -26,7 +26,7 @@ context_t *context_new(context_t *parent, const char *context_name)
     new_context->parent = parent;
     new_context->name = context_name;
 
-#ifdef DEBUG
+#ifdef CHECK_CONTEXT_CHILDS
     new_context->child_count = 0;
     if (parent != NULL)
         parent->child_count++;
@@ -37,7 +37,7 @@ context_t *context_new(context_t *parent, const char *context_name)
 
 void context_free(context_t *context)
 {
-#ifdef DEBUG
+#ifdef CHECK_CONTEXT_CHILDS
     if (context->child_count != 0)
         log_warning(context, CONTEXT_FREE_PARENT);
 
