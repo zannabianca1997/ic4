@@ -320,3 +320,38 @@ SPECIALIZED_LOG_MARK_F(error, LOG_ERROR, )
 #endif
 
 #undef SPECIALIZED_LOG_MARK_F
+
+#ifdef ANSI_FORMATTED_OUTPUT
+#error "ANSI formatting is unimplemented"
+#else
+
+// stubs to warn the user
+void logtarget_set_use_ansi_formatting(
+    context_t *context,
+#ifdef __GNUC__
+    __attribute__((unused)) logtarget_t *logtarget,
+    __attribute__((unused)) bool use_ansi_fmt
+#else
+    logtarget_t *logtarget,
+    bool use_ansi_fmt
+#endif
+)
+{
+    log_warning(context, LOGFORMAT_ANSI_UNIMPLEMENTED);
+}
+
+void logtarget_set_ansi_format(
+    context_t *context,
+#ifdef __GNUC__
+    __attribute__((unused)) logtarget_t *logtarget,
+    __attribute__((unused)) struct logtarget_ansi_format_s* ansi_format
+#else
+    logtarget_t *logtarget,
+    struct logtarget_ansi_format_s ansi_format
+#endif
+)
+{
+    log_warning(context, LOGFORMAT_ANSI_UNIMPLEMENTED);
+}
+
+#endif

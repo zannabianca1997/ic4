@@ -69,7 +69,7 @@ void logtarget_set_errorlevel(context_t *context, logtarget_t *target, enum logl
 // --- ANSI FORMATTED OUTPUT ---
 
 // set if the given target should use ANSI escape sequence to format the output
-void logtarget_set_use_ansi_formatting(logtarget_t *logtarget, bool use_ansi_fmt);
+void logtarget_set_use_ansi_formatting(context_t *context, logtarget_t *logtarget, bool use_ansi_fmt);
 
 #ifndef __COUNTER__
 #error "The macro __COUNTER__ is needed for automatic flag numbering"
@@ -119,7 +119,7 @@ struct logtarget_ansi_format_s
 };
 
 // set the colors the target should use for its output
-void logtarget_set_format(logtarget_t *logtarget, struct logtarget_ansi_format_s ansi_format);
+void logtarget_set_ansi_format(context_t *context, logtarget_t *logtarget, struct logtarget_ansi_format_s *ansi_format);
 
 #endif // ANSI_FORMATTED_OUTPUT
 

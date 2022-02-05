@@ -34,3 +34,5 @@ LOGFORMAT:
 
     SEPARATOR ":"
     MESSAGE_SEPARATOR "\n\n"
+
+    ANSI_UNIMPLEMENTED "ANSI formatting is unimplemented"
