@@ -13,9 +13,9 @@
 #include "../context/context.h"
 #include "../context/contextio.h"
 
-#include "loglevel.h"
 #include "log.h"
 #include "logtarget.h"
+#include "abortlevel.h"
 
 #include "log.cat.h"
 
