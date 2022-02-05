@@ -21,13 +21,13 @@ struct line_logical_s
 
     // contains the numbering and relative starting position of composing raw lines
     // end marked by a line of num==0
-    struct
+    struct rawline_bookmark_s
     {
         // 1-based line numbering
-        size_t num;
+        size_t row;
         // position of the raw line in the logical one
         size_t start;
-    } * raw_lines;
+    } * index;
 };
 
 // free the memory used

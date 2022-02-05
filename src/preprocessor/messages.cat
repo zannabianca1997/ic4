@@ -1,0 +1,10 @@
+LINESTREAM:
+    MALLOC_FAIL_OPEN "Malloc failed in creating linestream struct"
+
+    MALLOC_FAIL_LOGICALLINE "Malloc failed in creating logical line struct"
+    MALLOC_FAIL_EXTENDBUFFER "realloc failed in extending linebuffer"
+    MALLOC_FAIL_EXTENDLINES "realloc failed in extending raw line marker"
+    MALLOC_FAIL_SHRINKBUFFER "realloc failed in shrinking linebuffer"
+    MALLOC_FAIL_SHRINKLINES "realloc failed in shrinking raw line marker"
+
+    CONTEXT_READING "reading logical line"
