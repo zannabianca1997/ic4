@@ -18,6 +18,6 @@ context_t *context_new(context_t *parent, const char *context_name);
 void context_free(context_t *context);
 
 // print a context trace on a stream
-void context_fprint(FILE *stream, struct context_s *context)
+void context_fprint(FILE *stream, struct context_s *context);
 
 #endif // _CONTEXT_H
