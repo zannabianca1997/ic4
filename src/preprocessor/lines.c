@@ -169,4 +169,5 @@ struct line_logical_s *linestream_get(context_t *context, linestream_t *stream)
 
     context_free(lcontext);
 
+    return new_logical_line;
 }
