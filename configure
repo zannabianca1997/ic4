@@ -10,139 +10,14 @@ from pathlib import Path
 import subprocess
 from sys import stderr
 from typing import Dict, Set, Tuple
-from subprocess import run
 
 
-MAKEFILE_SKEL = """# GENERATED ON {date:%Y-%m-%d %H:%M} by {configure_name}
+TEST_PREFIX = "test_"
 
-# --- PARAMETERS ---
+DIRECTORY_RULE = "$(BUILD_DIR)/{dirname}/:\n\t$(MKDIR) $@"
 
-# compilation directories
-SOURCE_DIR := {source_dir}
-DEBUG_DIR := {debug_dir}
-RELEASE_DIR := {release_dir}
+CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(MAKEFILE_NAME) $(SOURCE_DIR)/$(CATALOG_SCRIPT) | $(dir $(BUILD_DIR)/{cat_header_name})\n\t$(SOURCE_DIR)/$(CATALOG_SCRIPT) $< -o $@"
 
-# output binaries names
-BINARY_NAME := {binary_name}
-TEST_BINARY_NAME := {test_binary_name}
-
-# entry point 
-MAIN_NAME := {main_name}
-
-# c compiler setup
-CC := gcc
-CFLAGS := -std=c99 -Wall -Wextra -Wpedantic
-CDEBUG_FLAGS := -O0 -DDEBUG -DCHECK_ERRORLEVELS_VALIDITY -DCHECK_LOGTARGET_PTR -DCHECK_CONTEXT_CHILDS
-CRELEASE_FLAGS := -Werror -O3
-LDFLAGS := 
-
-# system commands
-RM := rm -rf
-MKDIR := mkdir -p
-
-# configure script
-CONFIGURE_SCRIPT := {configure_name}
-
-# catalog script
-CATALOG_SCRIPT := {catalog_script}
-
-# --- MAKE OPTIONS ---
-
-# defaulting to debug build
-ifndef BUILD
-    BUILD := debug
-endif
-
-# adding debug flags
-ifeq ($(BUILD), debug)
-    BUILD_DIR := $(DEBUG_DIR)
-    CFLAGS += $(CDEBUG_FLAGS)
-else ifeq ($(BUILD), release)
-    BUILD_DIR := $(RELEASE_DIR)
-    CFLAGS += $(CRELEASE_FLAGS)
-else
-    $(error BUILD flag can only have the value "debug" or "release")
-endif
-
-# --- DISCOVERED SOURCES AND OBJECTS ---
-
-# list of sources
-SOURCES := {sources}
-TEST_SOURCES := {test_sources}
-
-# lists of object files needed
-OBJECTS := {objects}
-MAIN_OBJ := {main_obj}
-TEST_OBJECTS := {test_objects}
-
-# list of catalogs to generate
-CATALOG_FILES := {catalog_files}
-CATALOG_HEADERS := {catalog_header}
-
-# binaries
-BINARY := $(BUILD_DIR)/$(BINARY_NAME)
-TEST_BINARY := $(BUILD_DIR)/$(TEST_BINARY_NAME)
-
-# --- OTHER ---
-
-# makefile name
-MAKEFILE_NAME := $(abspath $(lastword $(MAKEFILE_LIST)))
-
-# configure script call
-CONFIGURE_ARGS := -source_dir $(SOURCE_DIR) -debug_dir $(DEBUG_DIR) -release_dir $(RELEASE_DIR) \\
-                  -binary_name $(BINARY_NAME) -test_binary_name $(TEST_BINARY_NAME) -main_name $(MAIN_NAME) \\
-                  -catalog_script $(CATALOG_SCRIPT)
-
-# delete predefined rules
-.SUFFIXES:
-
-# --- PHONY TARGETS ---
-
-.PHONY: all build test test_build catalogs clean
-
-all: catalogs test build $(MAKEFILE_NAME)
-
-build: $(BINARY) $(MAKEFILE_NAME)
-
-test: test_build $(MAKEFILE_NAME)
-\t$(TEST_BINARY) $(TEST_ARGS)
-
-test_build: $(TEST_BINARY) $(MAKEFILE_NAME)
-
-catalogs: $(CATALOG_HEADERS)
-
-clean: $(MAKEFILE_NAME)
-\t$(RM) $(BUILD_DIR)
-
-# --- LINKER TARGETS ---
-
-$(BINARY): $(MAIN_OBJ) $(OBJECTS) $(MAKEFILE_NAME) | $(dir $(BINARY))
-\t$(CC) $(LDFLAGS) $(MAIN_OBJ) $(OBJECTS) $< -o $@
-
-$(TEST_BINARY): $(OBJECTS) $(TEST_OBJECTS) $(MAKEFILE_NAME) | $(dir $(TEST_BINARY))
-\t$(CC) $(LDFLAGS) $(OBJECTS) $(TEST_OBJECTS) -o  $@
-
-# --- COMPILE RULES ---
-
-{compile_rules}
-
-# --- COMPILE TEST RULES ---
-
-{compile_test_rules}
-
-# --- CATALOG GENERATION RULES ---
-
-{catalog_rules}
-
-# --- DIRECTORY CREATION ---
-
-{directory_rules}
-
-# --- MAKEFILE REGENERATION ---
-
-$(MAKEFILE_NAME): $(CONFIGURE_SCRIPT)
-\t$(CONFIGURE_SCRIPT) $(CONFIGURE_ARGS) $(MAKEFILE_NAME)
-"""
 
 PARAMETER: Dict[str, Tuple[str, str]] = {
     "source_dir": ("src", "The directory containing the source files"),
@@ -151,15 +26,10 @@ PARAMETER: Dict[str, Tuple[str, str]] = {
     "binary_name": ("ic4", "The name of the finished binary"),
     "test_binary_name": ("ic4_test", "The name of the test binary"),
     "main_name": ("main.c", "The name of the file containing the entry point"),
-    "catalog_script": ("misc/messages/make_catalog.py", "Where the catalog script is located")
+    "test_main_name": (TEST_PREFIX + "main.c", "The name of the generated file containing the test entry point"),
+    "catalog_script": ("misc/catalog.py", "Where the catalog script is located"),
+    "test_discovery_script": ("misc/test_discovery.py", "Where the test discovery script is located"),
 }
-
-TEST_PREFIX = "test_"
-
-DIRECTORY_RULE = "$(BUILD_DIR)/{dirname}:\n\t$(MKDIR) $@"
-
-CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(MAKEFILE_NAME) $(SOURCE_DIR)/$(CATALOG_SCRIPT) | $(BUILD_DIR)/{cat_dir}\n\t$(SOURCE_DIR)/$(CATALOG_SCRIPT) $< -o $@"
-
 
 def examine_source_tree(source_dir: str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
     """Search source_dir and it's subdirectories for file of the type *.c, test_*.c, *.h, *.cat"""
@@ -210,7 +80,7 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
     rule = f"""$(BUILD_DIR)/{source.with_suffix(".o")}: \\
     {" ".join(f"$(SOURCE_DIR)/{str(p)}" for p in source_files)} \\
     {" ".join(f"$(BUILD_DIR)/{str(p)}" for p in catalog_files)} $(MAKEFILE_NAME) | \\
-    $(BUILD_DIR)/{str(source.parent)}
+    $(dir $(BUILD_DIR)/{source.with_suffix(".o")})
 \t$(CC) $(CFLAGS) {" ".join(f"-I$(BUILD_DIR)/{str(p)}" for p in catalog_dirs)} -c $< -o $@"""
 
     return rule
@@ -224,6 +94,8 @@ def get_argparser() -> ArgumentParser:
 
     parser.add_argument("outputfile", nargs="?", type=FileType("w"), default=open("Makefile", "w"),
                         help="The output Makefile. If absent defaults to \"Makefile\"")
+    parser.add_argument("-mskel", nargs="?", type=FileType("r"), default=open("Makefile.skel", "r"),
+                        help="The input Makefile skeleton. If absent defaults to \"Makefile.skel\"")
 
     for par_name, (par_default, par_descr) in PARAMETER.items():
         parser.add_argument(f"-{par_name}", type=str,
@@ -244,6 +116,7 @@ def main(argv):
     parameters = {name: vars(parsed_args)[name] for name in PARAMETER}
     parameters["date"] = datetime.now()
     parameters["configure_name"] = argv[0]
+    parameters["makefile_skel"] = parsed_args.mskel.name
 
     parameters["sources"] = " ".join(
         f"$(SOURCE_DIR)/{str(p)}" for p in source_files)
@@ -255,6 +128,7 @@ def main(argv):
     parameters["main_obj"] = f"$(BUILD_DIR)/{str(Path(parsed_args.main_name).with_suffix('.o'))}"
     parameters["test_objects"] = " ".join(
         f"$(BUILD_DIR)/{str(p.with_suffix('.o'))}" for p in test_source_files)
+    parameters["test_main_obj"] = f"$(BUILD_DIR)/{str(Path(parsed_args.test_main_name).with_suffix('.o'))}"
 
     parameters["catalog_files"] = " ".join(
         f"$(SOURCE_DIR)/{str(p)}" for p in catalog_files)
@@ -266,11 +140,11 @@ def main(argv):
     parameters["compile_test_rules"] = "\n\n".join(
         make_compile_rule(p, Path(parsed_args.source_dir)) for p in test_source_files)
     parameters["catalog_rules"] = "\n\n".join(
-        CATALOG_RULE.format(cat_name=str(p), cat_header_name=str(p.with_suffix(".cat.h")), cat_dir=str(p.parent)) for p in catalog_files)
+        CATALOG_RULE.format(cat_name=str(p), cat_header_name=str(p.with_suffix(".cat.h"))) for p in catalog_files)
     parameters["directory_rules"] = "\n\n".join(
         DIRECTORY_RULE.format(dirname=str(p)) for p in directories)
 
-    print(MAKEFILE_SKEL.format(**parameters), file=parsed_args.outputfile)
+    print(parsed_args.mskel.read().format(**parameters), file=parsed_args.outputfile)
     parsed_args.outputfile.close()
 
 
