@@ -11,6 +11,7 @@
 #include <stdarg.h>  // variadic argument support
 
 #include "../context/context.h"
+#include "../context/contextio.h"
 
 #include "loglevel.h"
 #include "log.h"
