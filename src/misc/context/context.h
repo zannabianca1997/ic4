@@ -5,6 +5,8 @@
 #ifndef _CONTEXT_H
 #define _CONTEXT_H
 
+#include <stdio.h>
+
 // contain the context in which the program is operating
 typedef struct context_s context_t;
 
