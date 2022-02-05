@@ -28,7 +28,8 @@ context_t *context_new(context_t *parent, const char *context_name)
 
 #ifdef DEBUG
     new_context->child_count = 0;
-    parent->child_count++;
+    if (parent != NULL)
+        parent->child_count++;
 #endif
 
     return new_context;
