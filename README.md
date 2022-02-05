@@ -73,6 +73,14 @@ Every step is made by a different translation unit, offering a stream-like inter
 
 First translation unit will take a filename, while last will emit integers.
 
+## Compile flags
+
+These flags are used to compile different capacity in the program
+
+- ANSI_FORMATTED_OUTPUT: logging module will expose some function to set logtarget formatting via [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
+- CHECK_ERRORLEVELS_VALIDITY: logging moduel will give an error when inconsistent errorlevels are setted
+- CHECK_PTR_TARGET: logging module will give an error when removing an unmanaged target
+
 ## Developers
 
 For now, everything is by me, zannabianca1997 <zannabianca199712@gmail.com>.
