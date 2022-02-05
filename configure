@@ -157,7 +157,7 @@ TEST_PREFIX = "test_"
 
 DIRECTORY_RULE = "$(BUILD_DIR)/{dirname}:\n\t$(MKDIR) $@"
 
-CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} | $(BUILD_DIR)/{cat_dir}\n\t$(SOURCE_DIR)/$(CATALOG_SCRIPT) $< -o $@"
+CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(MAKEFILE_NAME) $(SOURCE_DIR)/$(CATALOG_SCRIPT) | $(BUILD_DIR)/{cat_dir}\n\t$(SOURCE_DIR)/$(CATALOG_SCRIPT) $< -o $@"
 
 
 def examine_source_tree(source_dir: str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
@@ -208,7 +208,7 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
 
     rule = f"""$(BUILD_DIR)/{source.with_suffix(".o")}: \\
     {" ".join(f"$(SOURCE_DIR)/{str(p)}" for p in source_files)} \\
-    {" ".join(f"$(BUILD_DIR)/{str(p)}" for p in catalog_files)} | \\
+    {" ".join(f"$(BUILD_DIR)/{str(p)}" for p in catalog_files)} $(MAKEFILE_NAME) | \\
     $(BUILD_DIR)/{str(source.parent)}
 \t$(CC) $(CFLAGS) {" ".join(f"-I$(BUILD_DIR)/{str(p)}" for p in catalog_dirs)} -c $< -o $@"""
 
