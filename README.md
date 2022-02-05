@@ -22,9 +22,10 @@ This is a sintetic roadmap:
         - [ ] Macro substitution
 - [ ] Compiler
 - [ ] Linker
-- [ ] Miscellanea
-    - [ ] Bookmark struct
-    - [ ] Error reporting
+- [x] Miscellanea
+    - [x] Context tracking
+    - [x] Error reporting
+    - [x] Bookmark struct
 
 ## Used C dialect
 
