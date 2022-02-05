@@ -1,12 +1,16 @@
+/*
+    This is an unused test main for the logging system
+*/
+
 #include <stdio.h>
 
-#include "misc/context/context.h"
+#include "../context/context.h"
 
-#include "misc/log/log.h"
-#include "misc/log/abortlevel.h"
-#include "misc/log/logtarget.h"
+#include "../log/log.h"
+#include "../log/abortlevel.h"
+#include "../log/logtarget.h"
 
-#include "misc/bookmark.h"
+#include "../bookmark.h"
 
 int main()
 {
