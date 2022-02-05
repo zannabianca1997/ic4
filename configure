@@ -252,8 +252,7 @@ def main(argv):
 
     parameters["objects"] = " ".join(
         f"$(BUILD_DIR)/{str(p.with_suffix('.o'))}" for p in source_files)
-    parameters["main_obj"] = " ".join(
-        f"$(BUILD_DIR)/{str(Path(parsed_args.main_name).with_suffix('.o'))}")
+    parameters["main_obj"] = f"$(BUILD_DIR)/{str(Path(parsed_args.main_name).with_suffix('.o'))}"
     parameters["test_objects"] = " ".join(
         f"$(BUILD_DIR)/{str(p.with_suffix('.o'))}" for p in test_source_files)
 
