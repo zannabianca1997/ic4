@@ -1,5 +1,6 @@
 #include <stddef.h> // size_t
 #include <stdio.h>  // FILE*
+#include <stdlib.h> // malloc, free
 
 #include "context.h"
 #include "context.cat.h"
@@ -49,6 +50,6 @@ void context_fprint(FILE *stream, struct context_s *context)
     if (context == NULL)
         return;
 
-    logcontext_fprint(context->parent, stream);
+    context_fprint(context->parent, stream);
     fprintf(stream, CONTEXT_TRACE, context->name);
 }
