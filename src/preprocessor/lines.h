@@ -1,0 +1,45 @@
+/* 
+    Provide an interface to lines.c
+    Break a FILE* stream into logical lines.
+    Each line is made of multiple raw lines separated by an escaped newline.
+    The raw lines are merged, but where they start is kept
+*/
+#ifndef _LINES_H
+#define _LINES_H
+
+#include <stddef.h> // size_t
+
+#include "../misc/context/context.h"
+
+// --- LOGICAL LINES ---
+
+// contain the data of a single raw line
+struct line_logical_s
+{
+    // the content of the logical line
+    char * content;
+
+    // contains the numbering and relative starting position of composing raw lines
+    // end marked by a line of num==0
+    struct
+    {
+        // 1-based line numbering
+        size_t num;
+        // position of the raw line in the logical one
+        size_t start;
+    } * raw_lines;
+};
+
+// free the memory used
+// calling with a logical_line not given by linestream_get is UB
+void line_free(struct line_logical_s *line);
+
+// --- LOGICAL LINE STREAM ---
+
+// contain all the data for a stream of logical lines
+typedef struct linestream_s linestream_t;
+
+// get the next line in a linestream
+struct line_logical_s *linestream_get(context_t *context, linestream_t *stream);
+
+#endif // _LINES_H
