@@ -26,7 +26,7 @@ static void (*abortfun)(context_t *) = NULL;
 
 void set_abortlevel(context_t *context, enum loglevel_e new_abortlevel)
 {
-#ifdef DEBUG
+#ifdef CHECK_ERRORLEVELS_VALIDITY
     // checking validity of the settings
     if (new_abortlevel > LOG_ERROR)
         log_error(context_new(context, ABORTLEVEL_SETTING_ABORTLEVEL), ABORTLEVEL_ABORTLEVEL_OVER_LOG_ERROR, new_abortlevel, LOG_ERROR);
@@ -103,7 +103,7 @@ void logtarget_remove(context_t *context, logtarget_t *target, bool close_stream
     while (logtargets[idx] != target)
     {
         idx++;
-#ifdef DEBUG
+#ifdef CHECK_PTR_TARGET
         if (idx >= logtargets_num)
             log_error(context_new(context, LOGTARGET_CONTEXT_FREEING), LOGTARGET_TARGET_PTR_UNKNOW);
 #endif
@@ -126,7 +126,7 @@ void logtarget_remove(context_t *context, logtarget_t *target, bool close_stream
 
 void logtarget_set_errorlevels(context_t *context, logtarget_t *target, struct logtarget_errorlevels_s errorlevels)
 {
-#ifdef DEBUG
+#ifdef CHECK_ERRORLEVELS_VALIDITY
     // checking validity of the settings
     if (errorlevels.debuglevel > errorlevels.warninglevel)
         log_error(context_new(context, LOGLEVEL_SETTING_LOGLEVELS), LOGLEVEL_DEBUGLEVEL_OVER_WARNINGLEVEL, errorlevels.debuglevel, errorlevels.warninglevel);
@@ -141,7 +141,7 @@ void logtarget_set_errorlevels(context_t *context, logtarget_t *target, struct l
 
 void logtarget_set_debuglevel(context_t *context, logtarget_t *target, enum loglevel_e new_debuglevel)
 {
-#ifdef DEBUG
+#ifdef CHECK_ERRORLEVELS_VALIDITY
     // checking validity of the settings
     if (new_debuglevel > target->errorlevels.warninglevel)
         log_error(context_new(context, LOGLEVEL_SETTING_DEBUGLEVEL), LOGLEVEL_DEBUGLEVEL_OVER_WARNINGLEVEL, new_debuglevel, target->errorlevels.warninglevel);
@@ -152,7 +152,7 @@ void logtarget_set_debuglevel(context_t *context, logtarget_t *target, enum logl
 
 void logtarget_set_warninglevel(context_t *context, logtarget_t *target, enum loglevel_e new_warninglevel)
 {
-#ifdef DEBUG
+#ifdef CHECK_ERRORLEVELS_VALIDITY
     // checking validity of the settings
     if (new_warninglevel > target->errorlevels.errorlevel)
         log_error(context_new(context, LOGLEVEL_SETTING_WARNINGLEVEL), LOGLEVEL_WARNINGLEVEL_OVER_ERRORLEVEL, new_warninglevel, target->errorlevels.errorlevel);
@@ -163,7 +163,7 @@ void logtarget_set_warninglevel(context_t *context, logtarget_t *target, enum lo
 
 void logtarget_set_errorlevel(context_t *context, logtarget_t *target, enum loglevel_e new_errorlevel)
 {
-#ifdef DEBUG
+#ifdef CHECK_ERRORLEVELS_VALIDITY
     // checking validity of the settings
     if (new_errorlevel > LOG_ERROR)
         log_error(context_new(context, LOGLEVEL_SETTING_ERRORLEVEL), LOGLEVEL_ERRORLEVEL_OVER_LOG_ERROR, new_errorlevel, LOG_ERROR);
@@ -344,7 +344,7 @@ void logtarget_set_ansi_format(
     context_t *context,
 #ifdef __GNUC__
     __attribute__((unused)) logtarget_t *logtarget,
-    __attribute__((unused)) struct logtarget_ansi_format_s* ansi_format
+    __attribute__((unused)) struct logtarget_ansi_format_s *ansi_format
 #else
     logtarget_t *logtarget,
     struct logtarget_ansi_format_s ansi_format
