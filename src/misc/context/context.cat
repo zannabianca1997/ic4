@@ -2,4 +2,4 @@ CONTEXT:
     FREE_PARENT "Context exited with open childs"
     FAIL_MALLOC "Failed malloc for child context %s"
 
-    TRACE "Inside context %s...\n"
+    TRACE "Inside %s...\n"
