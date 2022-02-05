@@ -50,6 +50,6 @@ void context_fprint(FILE *stream, struct context_s *context)
     if (context == NULL)
         return;
 
-    context_fprint(context->parent, stream);
+    context_fprint(stream, context->parent);
     fprintf(stream, CONTEXT_TRACE, context->name);
 }
