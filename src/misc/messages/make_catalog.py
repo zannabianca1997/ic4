@@ -26,7 +26,7 @@ Sources are:
 {sources}
 """
 
-STRING_TYPE = "const char {name}[]"
+STRING_TYPE = "static const char {name}[]"
 TAB = " "*4
 
 
