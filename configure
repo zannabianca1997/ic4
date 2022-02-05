@@ -12,8 +12,6 @@ from sys import stderr
 from typing import Dict, Set, Tuple
 
 
-TEST_PREFIX = "test_"
-
 DIRECTORY_RULE = "$(BUILD_DIR)/{dirname}/:\n\t$(MKDIR) $@"
 
 CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(MAKEFILE_NAME) $(SOURCE_DIR)/$(CATALOG_SCRIPT) | $(dir $(BUILD_DIR)/{cat_header_name})\n\t$(SOURCE_DIR)/$(CATALOG_SCRIPT) $< -o $@"
@@ -24,20 +22,21 @@ PARAMETER: Dict[str, Tuple[str, str]] = {
     "debug_dir": ("debug", "The directory where the debug versions of the program will be built"),
     "release_dir": ("release", "The directory where the release versions of the program will be built"),
     "binary_name": ("ic4", "The name of the finished binary"),
-    "test_binary_name": ("ic4_test", "The name of the test binary"),
     "main_name": ("main.c", "The name of the file containing the entry point"),
-    "test_main_name": (TEST_PREFIX + "main.c", "The name of the generated file containing the test entry point"),
+    "test_prefix": ("test_", "The prefix identifing what files are tests and what aren't"),
+    "test_binary_name": ("ic4_test", "The name of the test binary"),
+    "test_main_name": ("test_main.c", "The name of the generated file containing the test entry point"),
     "catalog_script": ("misc/catalog.py", "Where the catalog script is located"),
     "test_discovery_script": ("misc/test_discovery.py", "Where the test discovery script is located"),
 }
 
-def examine_source_tree(source_dir: str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
+def examine_source_tree(source_dir: str, test_prefix:str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
     """Search source_dir and it's subdirectories for file of the type *.c, test_*.c, *.h, *.cat"""
     source_dir: Path = Path(source_dir)
 
     all_source_files = set(source_dir.glob("**/*.c"))
     test_source_files = set(
-        x for x in all_source_files if x.stem.lower().startswith(TEST_PREFIX))
+        x for x in all_source_files if x.stem.lower().startswith(test_prefix))
     source_files = all_source_files.difference(test_source_files)
 
     headers_files = set(source_dir.glob("**/*.h"))
@@ -107,8 +106,7 @@ def get_argparser() -> ArgumentParser:
 def main(argv):
     parsed_args = get_argparser().parse_args(argv[1:])
 
-    source_files, test_source_files, headers_files, catalog_files, directories = examine_source_tree(
-        parsed_args.source_dir)
+    source_files, test_source_files, headers_files, catalog_files, directories = examine_source_tree(parsed_args.source_dir, parsed_args.test_prefix)
 
     # remove main from source files
     source_files.discard(Path(parsed_args.main_name))
