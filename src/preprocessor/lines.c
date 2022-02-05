@@ -30,7 +30,7 @@ void line_free(struct line_logical_s *line)
     free(line->content);
     free(line->index);
     free(line);
-};
+}
 
 // --- LOGICAL LINE STREAM ---
 
@@ -123,7 +123,7 @@ struct line_logical_s *linestream_get(context_t *context, linestream_t *stream)
             rawline_num++;
 
             // growed buffer
-            struct rawline_bookmark_s *new_index = realloc(stream->rawline_readed, sizeof(struct rawline_bookmark_s) * (rawline_num + 2));
+            struct rawline_bookmark_s *new_index = realloc(new_logical_line->index, sizeof(struct rawline_bookmark_s) * (rawline_num + 2));
             if (new_index == NULL)
                 log_error(lcontext, LINESTREAM_MALLOC_FAIL_EXTENDLINES);
             new_logical_line->index = new_index;
