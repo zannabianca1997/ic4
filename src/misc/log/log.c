@@ -103,7 +103,7 @@ void logtarget_remove(context_t *context, logtarget_t *target, bool close_stream
     while (logtargets[idx] != target)
     {
         idx++;
-#ifdef CHECK_PTR_TARGET
+#ifdef CHECK_LOGTARGET_PTR
         if (idx >= logtargets_num)
             log_error(context_new(context, LOGTARGET_CONTEXT_FREEING), LOGTARGET_TARGET_PTR_UNKNOW);
 #endif
@@ -344,10 +344,10 @@ void logtarget_set_ansi_format(
     context_t *context,
 #ifdef __GNUC__
     __attribute__((unused)) logtarget_t *logtarget,
-    __attribute__((unused)) struct logtarget_ansi_format_s *ansi_format
+    __attribute__((unused)) void *ansi_format
 #else
     logtarget_t *logtarget,
-    struct logtarget_ansi_format_s ansi_format
+    void *ansi_format
 #endif
 )
 {
