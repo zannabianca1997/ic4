@@ -14,7 +14,7 @@ from typing import Dict, Set, Tuple
 
 DIRECTORY_RULE = "$(BUILD_DIR)/{dirname}/:\n\t$(MKDIR) $@"
 
-CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(MAKEFILE_NAME) $(SOURCE_DIR)/$(CATALOG_SCRIPT) | $(dir $(BUILD_DIR)/{cat_header_name})\n\t$(SOURCE_DIR)/$(CATALOG_SCRIPT) $< -o $@"
+CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(MAKEFILE_NAME) $(CATALOG_SCRIPT) | $(dir $(BUILD_DIR)/{cat_header_name})\n\t$(CATALOG_SCRIPT) $< -o $@"
 
 
 PARAMETER: Dict[str, Tuple[str, str]] = {
@@ -26,8 +26,8 @@ PARAMETER: Dict[str, Tuple[str, str]] = {
     "test_prefix": ("test_", "The prefix identifing what files are tests and what aren't"),
     "test_binary_name": ("ic4_test", "The name of the test binary"),
     "test_main_name": ("test_main.c", "The name of the generated file containing the test entry point"),
-    "catalog_script": ("misc/catalog.py", "Where the catalog script is located"),
-    "test_discovery_script": ("misc/test_discovery.py", "Where the test discovery script is located"),
+    "catalog_script": ("utils/catalog.py", "Where the catalog script is located"),
+    "test_discovery_script": ("utils/test_discovery.py", "Where the test discovery script is located"),
 }
 
 def examine_source_tree(source_dir: str, test_prefix:str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
