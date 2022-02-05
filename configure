@@ -72,6 +72,7 @@ TEST_SOURCES := {test_sources}
 
 # lists of object files needed
 OBJECTS := {objects}
+MAIN_OBJ := {main_obj}
 TEST_OBJECTS := {test_objects}
 
 # list of catalogs to generate
@@ -115,10 +116,10 @@ clean: $(MAKEFILE_NAME)
 
 # --- LINKER TARGETS ---
 
-$(BINARY): $(SOURCE_DIR)/$(MAIN_NAME) $(OBJECTS) $(MAKEFILE_NAME) | $(dir $(BINARY))
-\t$(CC) $(LDFLAGS) $(OBJECTS) $< -o $@
+$(BINARY): $(MAIN_OBJ) $(OBJECTS) $(MAKEFILE_NAME) | $(dir $(BINARY))
+\t$(CC) $(LDFLAGS) $(MAIN_OBJ) $(OBJECTS) $< -o $@
 
-$(TEST_BINARY): $(TEST_OBJECTS) $(MAKEFILE_NAME) | $(dir $(TEST_BINARY))
+$(TEST_BINARY): $(OBJECTS) $(TEST_OBJECTS) $(MAKEFILE_NAME) | $(dir $(TEST_BINARY))
 \t$(CC) $(LDFLAGS) $(OBJECTS) $(TEST_OBJECTS) -o  $@
 
 # --- COMPILE RULES ---
@@ -251,6 +252,8 @@ def main(argv):
 
     parameters["objects"] = " ".join(
         f"$(BUILD_DIR)/{str(p.with_suffix('.o'))}" for p in source_files)
+    parameters["main_obj"] = " ".join(
+        f"$(BUILD_DIR)/{str(Path(parsed_args.main_name).with_suffix('.o'))}")
     parameters["test_objects"] = " ".join(
         f"$(BUILD_DIR)/{str(p.with_suffix('.o'))}" for p in test_source_files)
 
