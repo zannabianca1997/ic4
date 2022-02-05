@@ -31,9 +31,9 @@ MAIN_NAME := {main_name}
 
 # c compiler setup
 CC := gcc
-CFLAGS := -std=c99
-CDEBUG_FLAGS := -Wall -Wextra -Wpedantic -Werror -O0 -DDEBUG
-CRELEASE_FLAGS := -O3
+CFLAGS := -std=c99 -Wall -Wextra -Wpedantic
+CDEBUG_FLAGS := -O0 -DDEBUG -DCHECK_ERRORLEVELS_VALIDITY -DCHECK_LOGTARGET_PTR -DCHECK_CONTEXT_CHILDS
+CRELEASE_FLAGS := -Werror -O3
 LDFLAGS := 
 
 # system commands
@@ -100,7 +100,7 @@ CONFIGURE_ARGS := -source_dir $(SOURCE_DIR) -debug_dir $(DEBUG_DIR) -release_dir
 
 .PHONY: all build test test_build catalogs clean
 
-all: catalogs run_test build $(MAKEFILE_NAME)
+all: catalogs test build $(MAKEFILE_NAME)
 
 build: $(BINARY) $(MAKEFILE_NAME)
 
