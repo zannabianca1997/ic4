@@ -1,3 +1,0 @@
-ERRORS:
-    OUT_OF_MEM "Failed to allocate memory for %s"
-    UNEXPECTED_EOF "Unexpected EOF while %s"
