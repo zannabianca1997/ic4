@@ -54,22 +54,22 @@ Every step is made by a different translation unit, offering a stream-like inter
     void result_free(struct result_s *);
 
     // keep every value needed for stream working
-    typedef ... result_stream_t;
+    typedef ... resultstream_t;
 
     // open a new stream
     // return NULL on errors
-    result_stream_t *result_stream_open(some_stream_identifier);
+    result_stream_t *resultstream_open(some_stream_identifier);
 
     // obtain the next stream object
     // return NULL if stream is ended
-    struct result_s * result_stream_get(result_stream_t*);
+    struct result_s * resultstream_get(result_stream_t*);
 
     // return the object to the stream, will be returned by next get
     // guarantee maximum of 1 return, after beaviour is undefinite
-    void result_stream_unget(result_stream_t*, struct result_s *);
+    void resultstream_unget(result_stream_t*, struct result_s *);
     
     // close the stream
-    void result_stream_close(result_stream_t*);
+    void resultstream_close(result_stream_t*);
 
 First translation unit will take a filename, while last will emit integers.
 
