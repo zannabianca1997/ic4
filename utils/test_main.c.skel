@@ -266,6 +266,12 @@ static size_t all_tests(FILE *out, struct parsed_args_s options)
                     test_num_string_maxlen, num_tests,
                     FUNCTIONS_NAME_LENGTH, filetable[i].funcstable[j].name);
 
+            if (options.dry_run)
+            {
+                fprintf(out, "[    ]\n");
+                continue;
+            }
+
             // run test
             struct complete_test_result_s result = fork_test(filetable[i].funcstable[j].test_func);
             runned_tests++;
@@ -280,9 +286,9 @@ static size_t all_tests(FILE *out, struct parsed_args_s options)
             }
 
             // checking if we have to report the output
-            if (out_report && ((out_report == OUT_REPORT_ALWAYS) ||
-                               (out_report == OUT_REPORT_FAIL && !result.result.success) ||
-                               (out_report == OUT_REPORT_ANOMALOUS_FAIL && !result.result.success && result.result.is_fail_anomalous)))
+            if (options.out_report && ((options.out_report == OUT_REPORT_ALWAYS) ||
+                                       (options.out_report == OUT_REPORT_FAIL && !result.result.success) ||
+                                       (options.out_report == OUT_REPORT_ANOMALOUS_FAIL && !result.result.success && result.result.is_fail_anomalous)))
             {
                 char ch;
                 if (read(result.out_pipe, &ch, 1) == 1) // if output pipe is not empty
@@ -300,7 +306,7 @@ static size_t all_tests(FILE *out, struct parsed_args_s options)
                 }
             }
 
-            if (critical_fails && !result.result.success)
+            if (options.critical_fail && !result.result.success)
                 continue_running = false; // close at the fist fail
         }
         fprintf(out, "\n");
@@ -337,6 +343,8 @@ static const struct argp_option ARGUMENT_PARSER_OPTIONS[] = {
                                             "- NEVER: never report\n",
      0},
     {0}};
+
+static error_t argument_parser(int key, char *arg, struct argp_state *state);
 
 static const struct argp ARGUMENT_PARSER_SETUP = {
     .options = ARGUMENT_PARSER_OPTIONS,
@@ -386,9 +394,8 @@ static error_t argument_parser(int key, char *arg, struct argp_state *state)
 int main(int argc, char *argv[])
 {
     struct parsed_args_s parsed_args = ARGS_DEFAULT;
-    argp_parse(&argument_parser_setup, argc, argv, 0, NULL, &parsed_args);
+    argp_parse(&ARGUMENT_PARSER_SETUP, argc, argv, 0, NULL, &parsed_args);
 
     // run all matching tests
-    all_tests(stdout, parsed_args);
-    return 0;
+    return all_tests(stdout, parsed_args);
 }
