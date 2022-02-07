@@ -3,14 +3,16 @@
     this script will examin the c source file given as argument in search of test functions and write a main file that will call them all
 """
 
+import logging
+from pycparser import c_ast, parse_file, c_generator
+import zlib
+from typing import List
+from sys import stdout
+from pathlib import Path
+from datetime import datetime
+from argparse import ArgumentParser, FileType
 VERSION = "1.0"
 
-from argparse import ArgumentParser, FileType
-from datetime import datetime
-from sys import stdout
-from typing import List
-from pycparser import c_ast, parse_file, c_generator
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +82,8 @@ class TestFunctions:
         yield from self.function_bin
 
 
-def make_test_main(filenames: List[str], main_skel: str, test_prefix: str, gen_script_name:str):
+def make_test_main(filenames: List[str], main_skel: str, test_prefix: str, gen_script_name: str):
+    """Create the test main from the template"""
     funcs = []
     for id, filename in enumerate(filenames):
         funcs.append((f"functable_{id}", filename, list(
@@ -94,10 +97,11 @@ def make_test_main(filenames: List[str], main_skel: str, test_prefix: str, gen_s
     ).replace(
         "__GEN_DATE__", datetime.now().strftime("%Y-%m-%d %H:%M")
     ).replace(
-        "__FILE_NAME_LENGTH__", str(max(len(f[1]) for f in funcs))
+        "__FILE_NAME_LENGTH__", str(
+            max(len(f[1]) for f in funcs) if funcs else 0)
     ).replace(
         "__FUNCTIONS_NAME_LENGTH__", str(max(len(fname)
-                                             for f in funcs for fname in f[2]))
+                                             for f in funcs for fname in f[2]) if funcs else 0)
     )
 
     # splitting skel into section and replicating file list the needed times
@@ -127,10 +131,12 @@ def make_test_main(filenames: List[str], main_skel: str, test_prefix: str, gen_s
 def get_argument_parser(prog):
     parser = ArgumentParser(prog=prog, description=__doc__)
 
-    parser.add_argument("test_source", nargs="+", type=str,
+    parser.add_argument("test_source", nargs="*", type=str,
                         help="the source files to search for test functions")
-    parser.add_argument("-test_prefix", type=str,
+    parser.add_argument("--test_prefix", type=str,
                         default="test_", help="the prefix to test functions")
+    parser.add_argument("--main_skel", type=FileType("r"),
+                        default=FileType("r")(str(Path(__file__).parent / "test_main.c.skel")), help="the template file for the test main")
     parser.add_argument("--output", "-o", type=FileType("w"),
                         default=stdout, help="The file to generate")
 
@@ -140,9 +146,8 @@ def get_argument_parser(prog):
 def main(argv):
     parsed_args = get_argument_parser(argv[0]).parse_args(argv[1:])
 
-    with open("utils/test_main.c.skel", "r") as skel:
-        parsed_args.output.write(make_test_main(
-            parsed_args.test_source, skel.read(), parsed_args.test_prefix, argv[0]))
+    parsed_args.output.write(make_test_main(
+        parsed_args.test_source, parsed_args.main_skel.read(), parsed_args.test_prefix, argv[0]))
 
 
 if __name__ == "__main__":
