@@ -41,7 +41,8 @@ void context_free(context_t *context)
     if (context->child_count != 0)
         log_warning(context, CONTEXT_FREE_PARENT);
 
-    context->parent->child_count--;
+    if (context->parent != NULL)
+        context->parent->child_count--;
 #endif
     free(context);
 }
