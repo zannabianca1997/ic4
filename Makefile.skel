@@ -26,8 +26,8 @@ LDFLAGS :=
 RM := rm -rf
 MKDIR := mkdir -p
 
-# configure script
-CONFIGURE_SCRIPT := {configure_name}
+# discover script
+DISCOVER_SCRIPT := {configure_name}
 
 # catalog script
 CATALOG_SCRIPT := {catalog_script}
@@ -147,5 +147,5 @@ $(BUILD_DIR)/:
 
 # --- MAKEFILE REGENERATION ---
 
-$(MAKEFILE_NAME): $(CONFIGURE_SCRIPT) $(MAKEFILE_SKEL)
-	$(CONFIGURE_SCRIPT) $(CONFIGURE_ARGS) -mskel $(MAKEFILE_SKEL) $(MAKEFILE_NAME)
+$(MAKEFILE_NAME): $(DISCOVER_SCRIPT) $(MAKEFILE_SKEL)
+	$(DISCOVER_SCRIPT) $(CONFIGURE_ARGS) -mskel $(MAKEFILE_SKEL) $(MAKEFILE_NAME)
