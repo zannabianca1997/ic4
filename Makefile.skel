@@ -35,6 +35,7 @@ CATALOG_SCRIPT := {catalog_script}
 # test discovery script
 TEST_DISCOVERY_SCRIPT := {test_discovery_script}
 TEST_PREFIX := {test_prefix}
+TEST_MAIN_SKEL := {test_main_skel}
 
 # --- MAKE OPTIONS ---
 
@@ -80,13 +81,13 @@ TEST_BINARY := $(BUILD_DIR)/$(TEST_BINARY_NAME)
 # makefile name
 MAKEFILE_NAME := $(abspath $(lastword $(MAKEFILE_LIST)))
 
-# skeleton name
+# makefile skeleton name
 MAKEFILE_SKEL := {makefile_skel}
 
 # configure script call
 CONFIGURE_ARGS := -source_dir $(SOURCE_DIR) -debug_dir $(DEBUG_DIR) -release_dir $(RELEASE_DIR) \
                   -binary_name $(BINARY_NAME) -test_binary_name $(TEST_BINARY_NAME) -main_name $(MAIN_NAME) -test_main_name $(TEST_MAIN_NAME)\
-                  -catalog_script $(CATALOG_SCRIPT) -test_discovery_script $(TEST_DISCOVERY_SCRIPT) -test_prefix $(TEST_PREFIX)
+                  -catalog_script $(CATALOG_SCRIPT) -test_discovery_script $(TEST_DISCOVERY_SCRIPT) -test_prefix $(TEST_PREFIX) -test_main_skel $(TEST_MAIN_SKEL)
 
 # delete predefined rules
 .SUFFIXES:
@@ -130,8 +131,8 @@ $(TEST_MAIN_OBJ): $(BUILD_DIR)/$(TEST_MAIN_NAME) $(MAKEFILE_NAME) | $(dir $(TEST
 
 # --- GENERATION OF TEST_MAIN ---
 
-$(BUILD_DIR)/$(TEST_MAIN_NAME): $(TEST_SOURCES) $(TEST_DISCOVERY_SCRIPT) $(MAKEFILE_NAME) | $(dir $(BUILD_DIR)/$(TEST_MAIN_NAME))
-	$(TEST_DISCOVERY_SCRIPT) $(TEST_SOURCES) -test_prefix $(TEST_PREFIX) -o $@
+$(BUILD_DIR)/$(TEST_MAIN_NAME): $(TEST_SOURCES) $(TEST_DISCOVERY_SCRIPT) $(TEST_MAIN_SKEL) $(MAKEFILE_NAME) | $(dir $(BUILD_DIR)/$(TEST_MAIN_NAME))
+	$(TEST_DISCOVERY_SCRIPT) $(TEST_SOURCES) --test_prefix $(TEST_PREFIX) --main_skel $(TEST_MAIN_SKEL) -o $@
 
 # --- CATALOGS GENERATION RULES ---
 

@@ -28,6 +28,7 @@ PARAMETER: Dict[str, Tuple[str, str]] = {
     "test_main_name": ("test_main.c", "The name of the generated file containing the test entry point"),
     "catalog_script": ("utils/catalog.py", "Where the catalog script is located"),
     "test_discovery_script": ("utils/test_discovery.py", "Where the test discovery script is located"),
+    "test_main_skel": ("utils/test_main.c.skel", "File from where the test main will be generated")
 }
 
 def examine_source_tree(source_dir: str, test_prefix:str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
