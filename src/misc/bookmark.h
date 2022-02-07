@@ -5,6 +5,8 @@
 #ifndef _BOOKMARK_H
 #define _BOOKMARK_H
 
+#include <stddef.h> // size_t
+
 // contain a bookmark information
 // row and col are 1-based
 // NULL and 0 are used to mark missing information
