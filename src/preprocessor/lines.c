@@ -25,7 +25,7 @@ static const size_t RAWLINE_BUFFER_GROWRATE = 2;
 
 // --- LOGICAL LINE ---
 
-void line_free(struct line_logical_s *line)
+void line_free(struct logical_line_s *line)
 {
     free(line->content);
     free(line->index);
@@ -83,18 +83,22 @@ static bool linestream_peek_newline(FILE *stream)
     return false;
 }
 
-struct line_logical_s *linestream_get(context_t *context, linestream_t *stream)
+struct logical_line_s *linestream_get(context_t *context, linestream_t *stream)
 {
     // short circuit if file is ended
-    if(feof(stream->source))
-    return NULL;
-
+    if (feof(stream->source))
+        return NULL;
+        
+    // creating local context
     context_t *lcontext = context_new(context, LINESTREAM_CONTEXT_READING);
 
-    struct line_logical_s *new_logical_line = malloc(sizeof(struct line_logical_s));
+    // opening space for return struct
+    struct logical_line_s *new_logical_line = malloc(sizeof(struct logical_line_s));
     if (new_logical_line == NULL)
         log_error(lcontext, LINESTREAM_MALLOC_FAIL_LOGICALLINE);
 
+
+    // allocating space for line buffer
     size_t buffer_len = RAWLINE_BUFFER_INITIAL_LEN;
     new_logical_line->content = malloc(sizeof(char) * buffer_len);
     if (new_logical_line->content == NULL)
@@ -133,6 +137,7 @@ struct line_logical_s *linestream_get(context_t *context, linestream_t *stream)
             new_logical_line->index[rawline_num].start = char_readed;
 
             continue; // do not add ch, go to the next char
+
         }
         // check for file ended
         if (ch == EOF)
@@ -149,6 +154,7 @@ struct line_logical_s *linestream_get(context_t *context, linestream_t *stream)
             new_logical_line->content = newbuffer;
         }
     }
+
 
     // putting endings
     new_logical_line->index[rawline_num + 1].row = 0;

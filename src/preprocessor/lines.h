@@ -14,7 +14,7 @@
 // --- LOGICAL LINES ---
 
 // contain the data of a single raw line
-struct line_logical_s
+struct logical_line_s
 {
     // the content of the logical line
     char * content;
@@ -32,7 +32,7 @@ struct line_logical_s
 
 // free the memory used
 // calling with a logical_line not given by linestream_get is UB
-void line_free(struct line_logical_s *line);
+void line_free(struct logical_line_s *line);
 
 // --- LOGICAL LINE STREAM ---
 
@@ -40,6 +40,6 @@ void line_free(struct line_logical_s *line);
 typedef struct linestream_s linestream_t;
 
 // get the next line in a linestream
-struct line_logical_s *linestream_get(context_t *context, linestream_t *stream);
+struct logical_line_s *linestream_get(context_t *context, linestream_t *stream);
 
 #endif // _LINES_H
