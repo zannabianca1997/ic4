@@ -20,4 +20,6 @@ linestream_t *linestream_open(context_t *context, FILE *source);
 // if close_file the underling stream is closed too
 void linestream_close(linestream_t *stream, bool close_file);
 
+//TODO: write linestream setup struct (e.g. if warn of \ as last non-ws char, or last line is non-empty)
+
 #endif // _LINESCO_H
