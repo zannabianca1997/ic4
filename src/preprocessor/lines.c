@@ -13,7 +13,7 @@
 
 #include "messages.cat.h"
 
-static const char ESCAPE_CHAR = '/';
+static const char ESCAPE_CHAR = '\\';
 
 #ifndef RAWLINE_BUFFER_INITIAL_LEN
 static const size_t RAWLINE_BUFFER_INITIAL_LEN = 256;
