@@ -225,10 +225,10 @@ count_tests()
 
 enum out_report_e
 {
-    OUT_REPORT_ALWAYS,
-    OUT_REPORT_FAIL,
+    OUT_REPORT_NEVER = 0,
     OUT_REPORT_ANOMALOUS_FAIL,
-    OUT_REPORT_NEVER = 0
+    OUT_REPORT_FAIL,
+    OUT_REPORT_ALWAYS
 };
 
 // contain the result of the argument parsing
@@ -244,6 +244,8 @@ struct parsed_args_s
 
 static size_t all_tests(FILE *out, struct parsed_args_s options)
 {
+    printf(">%d\n", options.out_report);
+
     size_t failed_tests = 0;
     size_t runned_tests = 0;
     size_t const num_tests = count_tests();
