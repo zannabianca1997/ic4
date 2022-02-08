@@ -1,6 +1,6 @@
 /* 
     Provide an interface to lines.c opening and closing of linestreams
-    Used to protect from the including of large headers like <stdio.h>
+    Separated from lines.h to protect from the including of large headers like <stdio.h>
 */
 #ifndef _LINESCO_H
 #define _LINESCO_H
