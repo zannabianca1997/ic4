@@ -12,7 +12,7 @@ Objective is to translate the biggest subset of C I can manage.
 This is a sintetic roadmap:
 
 - [ ] Preprocessor
-    - [ ] Raw line detection
+    - [V] Raw line detection
     - [ ] Logical line merging
     - [ ] Tokenization of lines
     - [ ] Preprocessor language

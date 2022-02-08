@@ -151,8 +151,6 @@ const char *test_rawline_merge()
         for (struct logical_line_s *ll = linestream_get(testing_c, lstream); ll != NULL; line_free(ll), ll = linestream_get(testing_c, lstream))
         {
             line_count++;
-            fprintf(stderr, "%lu >> %s\n", line_count, ll->content);
-            fflush(stderr);
 
             char *report_msg_p2 = report_msg_p1;
             report_msg_p2 += snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "Line %lu ", line_count);
@@ -173,6 +171,7 @@ const char *test_rawline_merge()
                 return report_msg;
             }
             // TODO: Check line position inside string
+            // TODO: Check consequential line numbers
             // check content
             if (strcmp(ll->content, LOGICAL_LINES_CONTENT[line_count - 1]) != 0)
             {
