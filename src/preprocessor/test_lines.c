@@ -155,23 +155,32 @@ const char *test_rawline_merge()
             char *report_msg_p2 = report_msg_p1;
             report_msg_p2 += snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "Line %lu ", line_count);
 
-            // check line count
-            if (ll->index[0].row != LOGICAL_LINES_STARTS[line_count - 1])
-            {
-                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "was reported as line %lu, instead of %u", ll->index[0].row, LOGICAL_LINES_STARTS[line_count - 1]);
-                return report_msg;
-            }
-            // check number of lines
-            size_t rl_count = 1;
+            // check number of lines and line positioning
+            size_t rl_count = 0;
+            size_t rl_pos = 0;
             while (ll->index[rl_count].row != 0)
+            {
+                // check line count
+                if (ll->index[rl_count].row != LOGICAL_LINES_STARTS[line_count - 1] + rl_count)
+                {
+                    snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "raw_line %lu was reported as line %lu, instead of %lu", rl_count + 1, ll->index[rl_count].row, LOGICAL_LINES_STARTS[line_count - 1] + rl_count);
+                    return report_msg;
+                }
+                // check line pos
+                if (ll->index[rl_count].start != rl_pos)
+                {
+                    snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "raw_line %lu was reported as position %lu, instead of %lu", rl_count + 1, ll->index[rl_count].start, rl_pos);
+                    return report_msg;
+                }
+                // tracking lines and position
+                rl_pos += strlen(TEST_LINES[ll->index[rl_count].row - 1]);
                 rl_count++;
+            }
             if (rl_count != LOGICAL_LINES_COMPONENTS[line_count - 1])
             {
                 snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "has %lu raw lines inside (%u expected)", rl_count, LOGICAL_LINES_COMPONENTS[line_count - 1]);
                 return report_msg;
             }
-            // TODO: Check line position inside string
-            // TODO: Check consequential line numbers
             // check content
             if (strcmp(ll->content, LOGICAL_LINES_CONTENT[line_count - 1]) != 0)
             {
