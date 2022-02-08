@@ -257,7 +257,8 @@ static size_t all_tests(FILE *out, struct parsed_args_s options)
     // looping on all discovered file
     for (size_t i = 0; filetable[i].funcstable != NULL && continue_running; i++)
     {
-        if(options.filename!= NULL && fnmatch(options.filename, filetable[i].name, FNM_PATHNAME|FNM_PERIOD) != 0){
+        if (options.filename != NULL && fnmatch(options.filename, filetable[i].name, FNM_PATHNAME | FNM_PERIOD) != 0)
+        {
             fprintf(out, "Skipping tests from file '%s'\n\n", filetable[i].name);
             continue;
         }
@@ -271,8 +272,9 @@ static size_t all_tests(FILE *out, struct parsed_args_s options)
                     test_num_string_maxlen, runned_tests,
                     test_num_string_maxlen, num_tests,
                     FUNCTIONS_NAME_LENGTH, filetable[i].funcstable[j].name);
-                    
-            if (options.testname!= NULL && fnmatch(options.testname, filetable[i].funcstable[j].name,0)!= 0){
+
+            if (options.testname != NULL && fnmatch(options.testname, filetable[i].funcstable[j].name, 0) != 0)
+            {
                 fprintf(out, "[SKIP]\n");
                 continue;
             }
@@ -315,6 +317,8 @@ static size_t all_tests(FILE *out, struct parsed_args_s options)
                     fprintf(out, "\n");
                 }
             }
+            else
+                fprintf(out, TAB TAB "No output of the test on <stdout> and <stderr>\n");
 
             if (options.critical_fail && !result.result.success)
                 continue_running = false; // close at the fist fail
