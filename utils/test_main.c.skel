@@ -316,9 +316,9 @@ static size_t all_tests(FILE *out, struct parsed_args_s options)
 
                     fprintf(out, "\n");
                 }
+                else
+                    fprintf(out, TAB TAB "No output of the test on <stdout> and <stderr>\n");
             }
-            else
-                fprintf(out, TAB TAB "No output of the test on <stdout> and <stderr>\n");
 
             if (options.critical_fail && !result.result.success)
                 continue_running = false; // close at the fist fail
