@@ -173,6 +173,8 @@ struct logical_line_s *linestream_get(context_t *context, linestream_t *stream)
     // bookkeeping
     stream->rawline_readed += rawline_num + 1;
 
+    // TODO: warn if last non-whitespace char is ESCAPE_CHAR
+
     context_free(lcontext);
 
     return new_logical_line;
