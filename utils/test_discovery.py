@@ -15,6 +15,12 @@ VERSION = "1.0"
 
 logger = logging.getLogger(__name__)
 
+def to_name(val:int)->str:
+    letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    if(val < len(letters)):
+        return letters[val]
+    return to_name(val // len(letters) -1) + letters[val % len(letters)]
+
 
 class TestFunctions:
     """Iter through all the function found in the file"""
@@ -86,7 +92,7 @@ def make_test_main(filenames: List[str], main_skel: str, test_prefix: str, gen_s
     """Create the test main from the template"""
     funcs = []
     for id, filename in enumerate(filenames):
-        funcs.append((f"functable_{id}", filename, list(
+        funcs.append((f"functable_{to_name(id)}", filename, list(
             TestFunctions(filename, test_prefix))))
 
     # replacing integer constants and file names
