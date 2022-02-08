@@ -102,7 +102,6 @@ const char *test_rawlines()
     return NULL;
 }
 
-
 static const char *const TEST_MERGING_LINES[] = {
     "Line1",
     "This is line 2 \\",
@@ -111,6 +110,16 @@ static const char *const TEST_MERGING_LINES[] = {
     "Oh no, it's still going?",
     "Please kill me",
     NULL};
+
+// how many components should be in every logical line
+static const unsigned LOGICAL_LINES_COMPONENTS[] = {1, 4, 1};
+// how many components should be in every logical line
+static const unsigned LOGICAL_LINES_STARTS[] = {1, 2, 6};
+// whats inside each?
+static const char *const LOGICAL_LINES_CONTENT[] = {
+    "Line1",
+    "This is line 2  This is another lineOh no, it's still going?",
+    "Please kill me"};
 
 const char *test_rawline_merge()
 {
@@ -149,40 +158,28 @@ const char *test_rawline_merge()
             report_msg_p2 += snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "Line %lu ", line_count);
 
             // check line count
-            if (ll->index[0].row != line_count)
+            if (ll->index[0].row != LOGICAL_LINES_STARTS[line_count - 1])
             {
-                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "was reported as line %lu", ll->index[0].row);
+                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "was reported as line %lu, instead of %u", ll->index[0].row, LOGICAL_LINES_STARTS[line_count - 1]);
                 return report_msg;
             }
-            // check line start
-            if (ll->index[0].start != 0)
+            // check number of lines
+            size_t rl_count = 1;
+            while (ll->index[rl_count].row != 0)
+                rl_count++;
+            if (rl_count != LOGICAL_LINES_COMPONENTS[line_count - 1])
             {
-                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "started at %lu instead of 0", ll->index[0].start);
+                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "has %lu raw lines inside (%u expected)", rl_count, LOGICAL_LINES_COMPONENTS[line_count - 1]);
                 return report_msg;
             }
-            // check is a single line
-            if (ll->index[1].row != 0)
-            {
-                size_t rl_count = 1;
-                while (ll->index[rl_count].row != 0)
-                    rl_count++;
-
-                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "has %lu raw lines inside (1 expected)", rl_count);
-                return report_msg;
-            }
-            // check we did not go over the limit
-            if (TEST_MERGING_LINES[line_count - 1] == NULL)
-            {
-                snprintf(report_msg, REPORT_MSG_MAX_LEN, "Exceeded %lu lines, first unexpected line has content \"%s\"", line_count, ll->content);
-                return report_msg;
-            }
+            // TODO: Check line position inside string
             // check content
-            if (strcmp(ll->content, TEST_MERGING_LINES[line_count - 1]) != 0)
+            if (strcmp(ll->content, LOGICAL_LINES_CONTENT[line_count - 1]) != 0)
             {
-                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "was expected to be \"%s\", found instead \"%s\"", TEST_MERGING_LINES[line_count - 1], ll->content);
+                snprintf(report_msg_p2, REPORT_MSG_MAX_LEN - (report_msg_p2 - report_msg), "was expected to be \"%s\", found instead \"%s\"", LOGICAL_LINES_CONTENT[line_count - 1], ll->content);
                 return report_msg;
             }
         }
     }
-    return "The test worked, while it should have failed!";
+    return NULL;
 }
