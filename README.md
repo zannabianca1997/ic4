@@ -13,7 +13,7 @@ This is a sintetic roadmap:
 
 - [ ] Preprocessor
     - [V] Raw line detection
-    - [ ] Logical line merging
+    - [V] Logical line merging
     - [ ] Tokenization of lines
     - [ ] Preprocessor language
         - [ ] Conditionals
