@@ -17,10 +17,15 @@
 
 #include "../misc/bookmark.h"
 
-// contains all data of a single preprocessor token
+/**
+ * @brief Contain all data relative to a single preprocesso token
+ * 
+ */
 struct pp_token_s
 {
-    // the type of the token
+    /**
+     * @brief The type of the token 
+     */
     enum
     {
         // Code tokens
@@ -39,7 +44,7 @@ struct pp_token_s
         PP_TOK_NEWLINE
     } type;
 
-    struct bookmark_s mark;
+    struct bookmark_s mark; // Mark the start of the token
 
     union
     {
@@ -136,10 +141,17 @@ struct pp_token_s
     };
 };
 
-#ifdef DEBUG
+/**
+ * @brief Deallocate memory bound to token
+ * Deallocate memory bound to token (e.g. string content or identifiers names)
+ * @param token the token to deallocate
+ */
+void pp_tok_free(struct pp_token_s const *token);
+
+// --- PRINTING ---
 
 /**
- * @brief Print a token on buf, using maximum n chars
+ * @brief Print the token on buf, using maximum n chars
  *
  * @param buf the destination buffer
  * @param n maximum number of character to write
@@ -147,8 +159,19 @@ struct pp_token_s
  * 
  * @return the number of character it writed, or it would have written if n was great enough
  */
-int snprintf_tok(char *buf, int n, struct pp_token_s const *token)
+int snprintf_tok(char *buf, int n, struct pp_token_s const *token);
 
+#ifdef DEBUG
+/**
+ * @brief Print a human readable representation token on buf, using maximum n chars
+ *
+ * @param buf the destination buffer
+ * @param n maximum number of character to write
+ * @param token the token to print
+ * 
+ * @return the number of character it writed, or it would have written if n was great enough
+ */
+int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token)
 #endif
 
 #endif
