@@ -43,8 +43,8 @@ struct pp_token_s
         PP_TOK_OTHER,      // not recognized chars
 
         // Structural tokens
-        
-        PP_TOK_NEWLINE     // end of logical line. Needed for directives end
+
+        PP_TOK_NEWLINE     // end of logical line. Needed for detecting directives end
     } type;
 
     struct bookmark_s mark; // Mark the start of the token
