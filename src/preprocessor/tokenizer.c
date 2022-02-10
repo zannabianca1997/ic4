@@ -377,6 +377,8 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
         stream->cursor += best_chars; // update the cursor
         // if the token is non-null the cycle will break
 
+        // TODO: if best_chars == 0 (all parsing function failed) emit an "OTHER" token
+
         if (stream->cursor == strlen(stream->current_line->content))
         {
             // line is completed
