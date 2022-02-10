@@ -172,7 +172,7 @@ typedef struct pp_tokstream_s pp_tokstream_t;
  * 
  * @param context the context for which the token is needed
  * @param stream the stream from which the token is taken
- * @return struct pp_token_s* the taken token
+ * @return struct pp_token_s* the taken token, or NULL if source has exausted
  */
 struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream);
 
