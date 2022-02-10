@@ -10,17 +10,21 @@
  * @copyright Copyright (c) 2022
  */
 
-#include <stdbool.h>
-#include <ctype.h>
+#include <stdlib.h>
+#include <stdbool.h> // bool
+#include <ctype.h>   // isalpha, isalnum, isdigit
 
 #include "../misc/context/context.h"
 #include "../misc/bookmark.h"
 #include "../misc/log/log.h"
 
+#include "messages.cat.h"
+
 #include "tokenizer.h"
 #include "tokenizerco.h"
 
 #include "lines.h"
+#include "linesco.h"
 
 #define PUNCTUATOR_LENGTH 3
 
@@ -119,7 +123,7 @@ static const struct
 /**
  * @brief Contain the data for a token stream
  */
-struct pp_tokenstream_s
+struct pp_tokstream_s
 {
     linestream_t *source; // the source of the lines
 
@@ -127,3 +131,29 @@ struct pp_tokenstream_s
     size_t cursor;                       // pointing to the next char that need to be processed
     bool is_line_directive;              // mark if this line is a directive (first non-whitespace character is #)
 };
+
+// --- STREAM MANAGING ---
+
+pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source)
+{
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_OPENING);
+
+    pp_tokstream_t *new_stream = malloc(sizeof(pp_tokstream_t));
+    if (new_stream == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_OPEN);
+
+    new_stream->source = source;
+    new_stream->current_line = NULL;
+
+    context_free(lcontext);
+
+    return new_stream;
+}
+
+void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close){
+    if(recursive_close)
+    linestream_close(stream->source,recursive_close);
+
+    line_free(stream->current_line);
+    free(stream);
+}

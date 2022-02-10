@@ -11,5 +11,7 @@ LINESTREAM:
     CONTEXT_READING "reading logical line"
 
 TOKENIZER:
+    MALLOC_FAIL_OPEN "Malloc failed in creating token stream struct"
+
 
     CONTEXT_OPENING "opening tokenstream"
