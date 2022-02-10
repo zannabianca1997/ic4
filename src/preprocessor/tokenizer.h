@@ -44,8 +44,10 @@ struct pp_token_s
 
         // Structural tokens
 
-        PP_TOK_WHITESPACE,
-        PP_TOK_NEWLINE
+        PP_TOK_WHITESPACE, /**< Any amount of whitespace or comments
+                            *   Never emitted twice in a row
+                            */
+        PP_TOK_NEWLINE     // end of logical line. Needed for directives end
     } type;
 
     struct bookmark_s mark; // Mark the start of the token
