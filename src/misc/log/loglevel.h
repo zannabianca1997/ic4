@@ -19,4 +19,6 @@ enum loglevel_e {
     LOG_ERROR = 4
 };
 
+// TODO: Add and implement LOG_CRITICAL and LOG_INFO
+
 #endif // _LOGLEVEL_H
