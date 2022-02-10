@@ -1,6 +1,14 @@
-/*
-    Generate a stream of preprocessing tokens from a stream of logical lines
-*/
+/**
+ * @file tokenizer.h
+ * @author zannabianca199712 <zannabianca199712@gmail.com>
+ * @brief Generate a stream of preprocessing tokens from a stream of logical lines
+ * @version 0.1
+ * @date 2022-02-10
+ * 
+ * Interface to tokenizer.c main functionalities
+ * 
+ * @copyright Copyright (c) 2022
+ */
 
 #ifndef _TOKENIZER_H
 #define _TOKENIZER_H
@@ -127,5 +135,20 @@ struct pp_token_s
         } kind;
     };
 };
+
+#ifdef DEBUG
+
+/**
+ * @brief Print a token on buf, using maximum n chars
+ *
+ * @param buf the destination buffer
+ * @param n maximum number of character to write
+ * @param token the token to print
+ * 
+ * @return the number of character it writed, or it would have written if n was great enough
+ */
+int snprintf_tok(char *buf, int n, struct pp_token_s const *token)
+
+#endif
 
 #endif
