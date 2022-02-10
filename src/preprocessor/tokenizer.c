@@ -398,3 +398,57 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
     context_free(lcontext);
     return new_token;
 }
+
+// --- PRINTING FUNCTIONS ---
+
+int pp_fprintf_tok(FILE *file, struct pp_token_s const *token)
+{
+    switch (token->type)
+    {
+    case PP_TOK_IDENTIFIER:
+        return fprintf(file, "%s", token->content);
+
+    case PP_TOK_PP_NUMBER:
+    case PP_TOK_STRING_LIT:
+    case PP_TOK_CHAR_CONST:
+    case PP_TOK_HEADER:
+    case PP_TOK_PUNCTUATOR:
+    case PP_TOK_OTHER:
+
+    case PP_TOK_DIRECTIVE_START:
+    case PP_TOK_DIRECTIVE_STOP:
+        return fprintf(file, "Not implemented");
+
+    case PP_TOK_ERROR:
+        return fprintf(file, TOKENIZER_PRINT_ERROR, token->error_msg);
+    }
+
+    log_error(NULL, TOKENIZER_PRINT_UNKNOW);
+}
+
+#ifdef DEBUG
+int pp_fprintf_repr_tok(FILE *file, struct pp_token_s const *token)
+{
+    switch (token->type)
+    {
+    case PP_TOK_IDENTIFIER:
+        return fprintf(file, TOKENIZER_PRINT_REPR_IDENTIFIER, token->mark.row, token->mark.col, token->content);
+
+    case PP_TOK_PP_NUMBER:
+    case PP_TOK_STRING_LIT:
+    case PP_TOK_CHAR_CONST:
+    case PP_TOK_HEADER:
+    case PP_TOK_PUNCTUATOR:
+    case PP_TOK_OTHER:
+
+    case PP_TOK_DIRECTIVE_START:
+    case PP_TOK_DIRECTIVE_STOP:
+        return fprintf(file, "Not implemented");
+
+    case PP_TOK_ERROR:
+        return fprintf(file, TOKENIZER_PRINT_REPR_ERROR, token->mark.row, token->mark.col, token->error_msg);
+    }
+
+    log_error(NULL, TOKENIZER_PRINT_REPR_UNKNOW);
+}
+#endif
