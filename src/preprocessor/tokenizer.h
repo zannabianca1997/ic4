@@ -105,12 +105,17 @@ struct pp_token_s
 
             // assignements
 
-            PUNC_ASSIGN,     // assign to
-            PUNC_ADD_ASSIGN, // sub and assign to
-            PUNC_SUB_ASSIGN, // subtract and assign to
-            PUNC_MUL_ASSIGN, // multiply and assign to
-            PUNC_DIV_ASSIGN, // divide and assign to
-            PUNC_MOD_ASSIGN, // modulus and assign to
+            PUNC_ASSIGN,            // assign to
+            PUNC_ADD_ASSIGN,        // sub and assign to
+            PUNC_SUB_ASSIGN,        // subtract and assign to
+            PUNC_MUL_ASSIGN,        // multiply and assign to
+            PUNC_DIV_ASSIGN,        // divide and assign to
+            PUNC_MOD_ASSIGN,        // modulus and assign to
+            PUNC_BIT_AND_ASSIGN,    // bitwise and and assign to
+            PUNC_BIT_OR_ASSIGN,     // bitwise or and assign to
+            PUNC_BIT_XOR_ASSIGN,    // bitwise xor and assign to
+            PUNC_BIT_LSHIFT_ASSIGN, // bitwise left shift and assign to
+            PUNC_BIT_RSHIFT_ASSIGN, // bitwise right shift and assign to
 
             // augment and decrease
             PUNC_AUGMENT, // augment
