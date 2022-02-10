@@ -10,9 +10,10 @@
  * @copyright Copyright (c) 2022
  */
 
-#include <stdlib.h>
+#include <stdlib.h>  // malloc, realloc, free
 #include <stdbool.h> // bool
-#include <ctype.h>   // isalpha, isalnum, isdigit
+#include <ctype.h>   // isalpha, isalnum, isdigit, isspace
+#include <string.h>  // strlen
 
 #include "../misc/context/context.h"
 #include "../misc/bookmark.h"
@@ -150,10 +151,122 @@ pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source)
     return new_stream;
 }
 
-void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close){
-    if(recursive_close)
-    linestream_close(stream->source,recursive_close);
+void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close)
+{
+    if (recursive_close)
+        linestream_close(stream->source, recursive_close);
 
     line_free(stream->current_line);
     free(stream);
 }
+
+// --- UTILITY ---
+
+#ifdef __GNUC__
+__attribute_const__
+#endif
+    /**
+ * @brief Check if a char can be part of an identifier
+ * @param ch the char to check
+ */
+    static bool
+    is_identifier_char(char ch)
+{
+    return isalnum(ch) || (ch == '_');
+}
+
+#ifdef __GNUC__
+__attribute_const__
+#endif
+    /**
+ * @brief Check if a char can be the start of an identifier
+ * @param ch the char to check
+ */
+    static bool
+    is_identifier_start_char(char ch)
+{
+    return isalpha(ch) || (ch == '_');
+}
+
+// --- TOKEN PARSING FUNCTION ---
+
+/**
+ * @brief The type of a funtion that parse a type of token.
+ * 
+ * @param context the context in which the token is parsed
+ * @param stream the stream from which the token is parsed
+ * @param n the number of chars the token occupy
+ * @return the token parsed, or NULL if no token is to emit. token.mark is uninizialized
+ */
+typedef struct pp_token_s *(*parsing_fun_ptr_t)(context_t *context, struct pp_tokstream_s const *stream, size_t *n);
+
+// eat all whitespace, give no tokens
+static struct pp_token_s *parse_whitespace(
+    #ifdef __GNUC__
+    __attribute__((unused))
+    #endif
+    context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+{
+    size_t space_len = 0;
+    while (stream->current_line->content[stream->cursor + space_len] != '\0' &&
+           isspace(stream->current_line->content[stream->cursor + space_len]))
+        space_len++;
+
+    *n = space_len;
+    return NULL;
+}
+
+// parse an identifier
+static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+{
+    // short circuit
+    if (!is_identifier_start_char(stream->current_line->content[stream->cursor]))
+    {
+        *n = 0;
+        return NULL;
+    }
+
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_IDENTIFIER);
+
+    // allocate space for the identifier
+    char *name = malloc(strlen(stream->current_line->content) - stream->cursor + 1);
+    if (name == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_IDENTIFIER);
+
+    // copy chars until they can be copied
+    size_t namelen = 0;
+    do
+    {
+        name[namelen] = stream->current_line->content[stream->cursor + namelen];
+        namelen++;
+    } while (stream->current_line->content[stream->cursor + namelen] != '\0' &&
+             is_identifier_char(stream->current_line->content[stream->cursor + namelen]));
+
+    // 0-terminate name
+    name[namelen] = '\0';
+
+    // shrink name
+    char *new_name = realloc(name, namelen + 1);
+    if (new_name == NULL)
+        log_warning(lcontext, TOKENIZER_MALLOC_FAIL_SHRINKIDENTIFIER); // continue with unshrinked name
+    else
+        name = new_name;
+
+    // create token
+    struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
+    if (new_token == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+    new_token->type = PP_TOK_IDENTIFIER;
+    new_token->content = name;
+
+    context_free(lcontext);
+
+    *n = namelen;
+    return new_token;
+}
+
+static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
+    &parse_whitespace,
+    &parse_identifier,
+};

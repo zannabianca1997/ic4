@@ -12,6 +12,9 @@ LINESTREAM:
 
 TOKENIZER:
     MALLOC_FAIL_OPEN "Malloc failed in creating token stream struct"
-
+    MALLOC_FAIL_IDENTIFIER "Malloc failed in allocating space for identifier name"
+    MALLOC_FAIL_SHRINKIDENTIFIER "Malloc failed in shrinking space for identifier name. This will occupy more memory"
+    MALLOC_FAIL_TOKEN "Malloc failde in creating token struct"
 
     CONTEXT_OPENING "opening tokenstream"
+    CONTEXT_IDENTIFIER "parsing identifier"
