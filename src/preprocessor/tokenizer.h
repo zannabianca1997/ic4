@@ -15,7 +15,9 @@
 
 #include <stdbool.h>
 
+#include "../misc/context/context.h"
 #include "../misc/bookmark.h"
+#include "lines.h"
 
 // --- TOKENS ---
 
@@ -137,7 +139,7 @@ struct pp_token_s
 
             // -- PREPROCESSOR
 
-            PUNC_HASHTAG, // for directive start and stringize
+            PUNC_HASHTAG,  // for directive start and stringize
             PUNC_TOKPASTE, // token pasting
         } kind;
     };
@@ -152,9 +154,16 @@ void pp_tok_free(struct pp_token_s const *token);
 
 // --- TOKENSTREAM ---
 
-// --- PRINTING ---
+typedef struct pp_tokstream_s pp_tokstream_t;
 
-/**
+pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source);
+void pp_tokstream_close(context_t *context, pp_tokstream_t *stream);
+
+struct pp_token_s *pp_tokstream_next(context_t *context, pp_tokstream_t *stream)
+
+    // --- PRINTING ---
+
+    /**
  * @brief Print the token on buf, using maximum n chars
  *
  * @param buf the destination buffer
@@ -163,7 +172,7 @@ void pp_tok_free(struct pp_token_s const *token);
  * 
  * @return the number of character it writed, or it would have written if n was great enough
  */
-int snprintf_tok(char *buf, int n, struct pp_token_s const *token);
+    int snprintf_tok(char *buf, int n, struct pp_token_s const *token);
 
 #ifdef DEBUG
 /**
