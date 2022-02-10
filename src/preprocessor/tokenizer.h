@@ -199,7 +199,7 @@ int snprintf_tok(char *buf, int n, struct pp_token_s const *token);
  * 
  * @return the number of character it writed, or it would have written if n was great enough
  */
-int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token)
+int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token);
 #endif
 
 #endif
