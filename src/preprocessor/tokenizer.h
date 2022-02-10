@@ -182,30 +182,4 @@ typedef struct pp_tokstream_s pp_tokstream_t;
  */
 struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream);
 
-// --- PRINTING ---
-
-/**
- * @brief Print the token on buf, using maximum n chars
- *
- * @param buf the destination buffer
- * @param n maximum number of character to write
- * @param token the token to print
- * 
- * @return the number of character it writed, or it would have written if n was great enough
- */
-int snprintf_tok(char *buf, int n, struct pp_token_s const *token);
-
-#ifdef DEBUG
-/**
- * @brief Print a human readable representation token on buf, using maximum n chars
- *
- * @param buf the destination buffer
- * @param n maximum number of character to write
- * @param token the token to print
- * 
- * @return the number of character it writed, or it would have written if n was great enough
- */
-int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token);
-#endif
-
-#endif
+#endif // _TOKENIZER_H

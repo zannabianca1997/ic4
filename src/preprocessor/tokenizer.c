@@ -387,12 +387,12 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
 // --- PRINTING FUNCTIONS ---
 
-int snprintf_tok(char *buf, int n, struct pp_token_s const *token)
+int fprintf_tok(FILE *file, struct pp_token_s const *token)
 {
     switch (token->type)
     {
     case PP_TOK_IDENTIFIER:
-        return snprintf(buf, n, "%s", token->content);
+        return fprint(file, "%s", token->content);
 
     case PP_TOK_PP_NUMBER:
     case PP_TOK_STRING_LIT:
@@ -403,23 +403,22 @@ int snprintf_tok(char *buf, int n, struct pp_token_s const *token)
 
     case PP_TOK_DIRECTIVE_START:
     case PP_TOK_DIRECTIVE_STOP:
-        strncpy(buf, "Not implemented", n);
-        return strlen("Not implemented");
+        return fprintf(file, "Not implemented");
 
     case PP_TOK_ERROR:
-        return snprintf(buf, n, TOKENIZER_PRINT_ERROR, token->error_msg);
+        return fprintf(file, TOKENIZER_PRINT_ERROR, token->error_msg);
     }
 
     log_error(NULL, TOKENIZER_PRINT_UNKNOW);
 }
 
 #ifdef DEBUG
-int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token)
+int fprintf_repr_tok(FILE *file, struct pp_token_s const *token)
 {
     switch (token->type)
     {
     case PP_TOK_IDENTIFIER:
-        return snprintf(buf, n, TOKENIZER_PRINT_REPR_IDENTIFIER, token->mark.row, token->mark.col, token->content);
+        return fprintf(file, TOKENIZER_PRINT_REPR_IDENTIFIER, token->mark.row, token->mark.col, token->content);
 
     case PP_TOK_PP_NUMBER:
     case PP_TOK_STRING_LIT:
@@ -430,13 +429,11 @@ int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token)
 
     case PP_TOK_DIRECTIVE_START:
     case PP_TOK_DIRECTIVE_STOP:
-        strncpy(buf, "Not implemented", n);
-        return strlen("Not implemented");
+        return fprintf(file, "Not implemented");
 
     case PP_TOK_ERROR:
-        return snprintf(buf, n, TOKENIZER_PRINT_REPR_ERROR, token->mark.row, token->mark.col, token->error_msg);
+        return fprintf(file, TOKENIZER_PRINT_REPR_ERROR, token->mark.row, token->mark.col, token->error_msg);
     }
-
 
     log_error(NULL, TOKENIZER_PRINT_REPR_UNKNOW);
 }
