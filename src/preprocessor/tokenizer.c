@@ -164,7 +164,7 @@ void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close)
 
 // --- TOKEN END OF LIFE ---
 
-void pp_tok_free(struct pp_token_s const *token)
+void pp_tok_free(struct pp_token_s *token)
 {
     if (token->type == PP_TOK_IDENTIFIER ||
         token->type == PP_TOK_PP_NUMBER ||

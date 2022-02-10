@@ -163,7 +163,7 @@ struct pp_token_s
  * Deallocate memory bound to token (e.g. string content or identifiers names)
  * @param token the token to deallocate
  */
-void pp_tok_free(struct pp_token_s const *token);
+void pp_tok_free(struct pp_token_s *token);
 
 // --- TOKENSTREAM ---
 
