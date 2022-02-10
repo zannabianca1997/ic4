@@ -376,6 +376,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
     } while (new_token == NULL); // break at the first non-null token found
 
     // TODO: check if newline is a directive and an include
+    // TODO: bookmark the token
 
     // count the token
     stream->tokens_given++;
@@ -386,3 +387,13 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
 // --- PRINTING FUNCTIONS ---
 
+int snprintf_tok(char *buf, int n, struct pp_token_s const *token){
+    strncpy(buf, "Not implemented", n);
+    return strlen("Not implemented");
+}
+
+#ifdef DEBUG
+int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token){
+    
+}
+#endif

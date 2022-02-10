@@ -22,3 +22,8 @@ TOKENIZER:
     CONTEXT_IDENTIFIER "parsing identifier"
     CONTEXT_MULTILINE "parsing multiline comment"
     CONTEXT_GETTING "getting a new token"
+
+TOKENIZER_PRINT:
+    IDENTIFIER "<identifier pos=\"%lu:%lu\" name=\"%s\">"
+
+    ERROR "<error pos=\"%lu:%lu\" msg=\"%s\">"
