@@ -162,6 +162,20 @@ void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close)
     free(stream);
 }
 
+// --- TOKEN END OF LIFE ---
+
+void pp_tok_free(struct pp_token_s const *token)
+{
+    if (token->type == PP_TOK_IDENTIFIER ||
+        token->type == PP_TOK_PP_NUMBER ||
+        token->type == PP_TOK_STRING_LIT ||
+        token->type == PP_TOK_OTHER)
+        free(token->content);
+    if (token->type == PP_TOK_HEADER)
+        free(token->header_name);
+    free(token);
+}
+
 // --- UTILITY ---
 
 #ifdef __GNUC__
@@ -392,7 +406,7 @@ int pp_fprintf_tok(FILE *file, struct pp_token_s const *token)
     switch (token->type)
     {
     case PP_TOK_IDENTIFIER:
-        return fprint(file, "%s", token->content);
+        return fprintf(file, "%s", token->content);
 
     case PP_TOK_PP_NUMBER:
     case PP_TOK_STRING_LIT:
