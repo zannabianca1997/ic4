@@ -10,6 +10,9 @@
  * @copyright Copyright (c) 2022
  */
 
+#include <stdbool.h>
+#include <ctype.h>
+
 #include "../misc/context/context.h"
 #include "../misc/bookmark.h"
 #include "../misc/log/log.h"
@@ -111,4 +114,16 @@ static const struct
 
     {"#", PUNC_STRINGIZE}, // stringize
     {"##", PUNC_TOKPASTE}, // token pasting
+};
+
+/**
+ * @brief Contain the data for a token stream
+ */
+struct pp_tokenstream_s
+{
+    linestream_t *source; // the source of the lines
+
+    struct logical_line_s *current_line; // the line that's being tokenized
+    size_t cursor;                       // pointing to the next char that need to be processed
+    bool is_line_directive;              // mark if this line is a directive (first non-whitespace character is #)
 };
