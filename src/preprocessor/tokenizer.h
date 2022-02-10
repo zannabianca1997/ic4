@@ -42,10 +42,13 @@ struct pp_token_s
         PP_TOK_PUNCTUATOR, // punctuators
         PP_TOK_OTHER,      // not recognized chars
 
-        // Directives detections
+        // In-Band structure info
 
         PP_TOK_DIRECTIVE_START, // directive start
-        PP_TOK_DIRECTIVE_STOP   // end of directive
+        PP_TOK_DIRECTIVE_STOP,  // end of directive
+
+        PP_TOK_ERROR /**< tokenizer error. Will be thrown when we have
+                      *   line and filename context */
     } type;
 
     struct bookmark_s mark; // Mark the start of the token
@@ -149,6 +152,9 @@ struct pp_token_s
             PUNC_STRINGIZE, // stringize
             PUNC_TOKPASTE,  // token pasting
         } kind;
+
+        // error message
+        char const *error_msg;
     };
 };
 
