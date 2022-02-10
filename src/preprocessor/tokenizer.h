@@ -66,7 +66,7 @@ struct pp_token_s
         char value;
 
         // Punctuators
-        enum
+        enum punctuator_e
         {
             // -- OPERATORS
 
@@ -119,7 +119,7 @@ struct pp_token_s
             PUNC_BIT_RSHIFT_ASSIGN, // bitwise right shift and assign to
 
             // augment and decrease
-            
+
             PUNC_AUGMENT, // augment
             PUNC_DECR,    // decrease
 
