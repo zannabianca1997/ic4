@@ -266,6 +266,12 @@ static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstre
     return new_token;
 }
 
+// TODO: parse string literals
+// TODO: parse char consts
+// TODO: parst punctuators
+
+// TODO: parse header names
+
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_whitespace,
     &parse_identifier,
