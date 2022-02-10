@@ -30,7 +30,7 @@
 #define PUNCTUATOR_LENGTH 3
 
 /**
- * @brief Table of punctuators
+ * @brief Table of punctuators. 
  * 
  * Connect the text of a punctuator to its enum value
  */
@@ -130,7 +130,9 @@ struct pp_tokstream_s
 
     struct logical_line_s *current_line; // the line that's being tokenized
     size_t cursor;                       // pointing to the next char that need to be processed
+    size_t tokens_given;                 // number of tokens extracted (for include checking)
     bool is_line_directive;              // mark if this line is a directive (first non-whitespace character is #)
+    bool is_line_include;                // mark if this line is an include (directive == true, first token after DIRECTIVE_START is an `include` identifier)
 };
 
 // --- STREAM MANAGING ---
@@ -188,7 +190,7 @@ __attribute_const__
     return isalpha(ch) || (ch == '_');
 }
 
-// --- TOKEN PARSING FUNCTION ---
+// --- TOKEN PARSING FUNCTIONS ---
 
 /**
  * @brief The type of a funtion that parse a type of token.
@@ -202,10 +204,11 @@ typedef struct pp_token_s *(*parsing_fun_ptr_t)(context_t *context, struct pp_to
 
 // eat all whitespace, give no tokens
 static struct pp_token_s *parse_whitespace(
-    #ifdef __GNUC__
+#ifdef __GNUC__
     __attribute__((unused))
-    #endif
-    context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+#endif
+    context_t *context,
+    struct pp_tokstream_s const *stream, size_t *n)
 {
     size_t space_len = 0;
     while (stream->current_line->content[stream->cursor + space_len] != '\0' &&
@@ -269,10 +272,117 @@ static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstre
 // TODO: parse string literals
 // TODO: parse char consts
 // TODO: parst punctuators
-
+// TODO: parse comments
 // TODO: parse header names
 
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_whitespace,
     &parse_identifier,
-};
+    NULL};
+
+// --- MULTILINE COMMENTS SPECIAL RULE ---
+
+static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
+{
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_MULTILINE);
+    stream->cursor += 2; // jump the "/*"
+    do
+    {
+        for (; stream->current_line->content[stream->cursor] != '\0'; stream->cursor++)
+            if (stream->current_line->content[stream->cursor] == '*' &&
+                stream->current_line->content[stream->cursor + 1] == '/')
+            {
+                stream->cursor += 2; // jump the "*/"
+                return true;
+            }
+
+        // line exausted, go to the next without updating flags
+        line_free(stream->current_line);
+        stream->current_line = linestream_get(lcontext, stream);
+    } while (stream->current_line != NULL);
+
+    // file ended inside multiline!
+    return false;
+}
+
+// --- TOKEN PARSING MANAGER ---
+
+struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
+{
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_GETTING);
+
+    struct pp_token_s *new_token = NULL;
+
+    do
+    {
+        // checking if we need a new line
+        if (stream->current_line == NULL)
+        {
+            // get a new line from the source
+            stream->current_line = linestream_get(context, stream->source);
+            if (stream->current_line == NULL)
+                return NULL; // source exausted
+
+            stream->cursor = 0;
+            stream->tokens_given = 0;
+
+            stream->is_line_directive = false;
+            stream->is_line_include = false;
+        }
+
+        // multiline comments are the only token that can span multiple lines, so they get a special treatement
+        if (stream->current_line->content[stream->cursor] == '/' &&
+            stream->current_line->content[stream->cursor + 1] == '*')
+            if (!parse_multiline_comment(lcontext, stream))
+            {
+                // error in parsing multiline comment
+                new_token = malloc(sizeof(struct pp_token_s));
+                if (new_token == NULL)
+                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+                new_token->type = PP_TOK_ERROR;
+                new_token->error_msg = TOKENIZER_EOF_MULTILINE;
+
+                break;
+            }
+
+        // Greedy parsing: try all the parsing functions and chose
+        // the one that take the most chars
+        size_t best_chars = 0;
+        for (size_t i = 0; PARSING_FUNCTIONS[i] != NULL; i++)
+        {
+            // try parse a type of token
+            size_t try_chars;
+            struct pp_token_s *try_token = PARSING_FUNCTIONS[i](lcontext, stream, &try_chars);
+            if (try_chars > best_chars)
+            {
+                new_token = try_token;
+                best_chars = try_chars;
+            }
+        }
+        stream->cursor += best_chars; // update the cursor
+        // if the token is non-null the cycle will break
+
+        if (stream->cursor == strlen(stream->current_line->content))
+        {
+            // line is completed
+            if (stream->is_line_directive)
+                new_token->type = PP_TOK_DIRECTIVE_STOP;
+
+            line_free(stream->current_line);
+            stream->current_line = NULL;
+        }
+
+    } while (new_token == NULL); // break at the first non-null token found
+
+    // TODO: check if newline is a directive and an include
+
+    // count the token
+    stream->tokens_given++;
+
+    context_free(lcontext);
+    return new_token;
+}
+
+// --- PRINTING FUNCTIONS ---
+
