@@ -24,6 +24,10 @@ TOKENIZER:
     CONTEXT_GETTING "getting a new token"
 
 TOKENIZER_PRINT:
-    IDENTIFIER "<identifier pos=\"%lu:%lu\" name=\"%s\">"
+    REPR_IDENTIFIER "<identifier pos=\"%lu:%lu\" name=\"%s\">"
 
-    ERROR "<error pos=\"%lu:%lu\" msg=\"%s\">"
+    ERROR "/* %s */"
+    REPR_ERROR "<error pos=\"%lu:%lu\" msg=\"%s\">"
+
+    UNKNOW "snprintf_tok called with value outside enum"
+    REPR_UNKNOW "snprintf_repr_tok called with value outside enum"

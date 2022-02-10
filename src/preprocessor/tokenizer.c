@@ -298,7 +298,7 @@ static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
 
         // line exausted, go to the next without updating flags
         line_free(stream->current_line);
-        stream->current_line = linestream_get(lcontext, stream);
+        stream->current_line = linestream_get(lcontext, stream->source);
     } while (stream->current_line != NULL);
 
     // file ended inside multiline!
@@ -387,13 +387,57 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
 // --- PRINTING FUNCTIONS ---
 
-int snprintf_tok(char *buf, int n, struct pp_token_s const *token){
-    strncpy(buf, "Not implemented", n);
-    return strlen("Not implemented");
+int snprintf_tok(char *buf, int n, struct pp_token_s const *token)
+{
+    switch (token->type)
+    {
+    case PP_TOK_IDENTIFIER:
+        return snprintf(buf, n, "%s", token->content);
+
+    case PP_TOK_PP_NUMBER:
+    case PP_TOK_STRING_LIT:
+    case PP_TOK_CHAR_CONST:
+    case PP_TOK_HEADER:
+    case PP_TOK_PUNCTUATOR:
+    case PP_TOK_OTHER:
+
+    case PP_TOK_DIRECTIVE_START:
+    case PP_TOK_DIRECTIVE_STOP:
+        strncpy(buf, "Not implemented", n);
+        return strlen("Not implemented");
+
+    case PP_TOK_ERROR:
+        return snprintf(buf, n, TOKENIZER_PRINT_ERROR, token->error_msg);
+    }
+
+    log_error(NULL, TOKENIZER_PRINT_UNKNOW);
 }
 
 #ifdef DEBUG
-int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token){
-    
+int snprintf_repr_tok(char *buf, int n, struct pp_token_s const *token)
+{
+    switch (token->type)
+    {
+    case PP_TOK_IDENTIFIER:
+        return snprintf(buf, n, TOKENIZER_PRINT_REPR_IDENTIFIER, token->mark.row, token->mark.col, token->content);
+
+    case PP_TOK_PP_NUMBER:
+    case PP_TOK_STRING_LIT:
+    case PP_TOK_CHAR_CONST:
+    case PP_TOK_HEADER:
+    case PP_TOK_PUNCTUATOR:
+    case PP_TOK_OTHER:
+
+    case PP_TOK_DIRECTIVE_START:
+    case PP_TOK_DIRECTIVE_STOP:
+        strncpy(buf, "Not implemented", n);
+        return strlen("Not implemented");
+
+    case PP_TOK_ERROR:
+        return snprintf(buf, n, TOKENIZER_PRINT_REPR_ERROR, token->mark.row, token->mark.col, token->error_msg);
+    }
+
+
+    log_error(NULL, TOKENIZER_PRINT_REPR_UNKNOW);
 }
 #endif
