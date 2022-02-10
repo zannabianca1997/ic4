@@ -17,6 +17,8 @@
 
 #include "../misc/bookmark.h"
 
+// --- TOKENS ---
+
 /**
  * @brief Contain all data relative to a single preprocesso token
  * 
@@ -147,6 +149,8 @@ struct pp_token_s
  * @param token the token to deallocate
  */
 void pp_tok_free(struct pp_token_s const *token);
+
+// --- TOKENSTREAM ---
 
 // --- PRINTING ---
 
