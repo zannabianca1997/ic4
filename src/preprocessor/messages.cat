@@ -7,4 +7,9 @@ LINESTREAM:
     MALLOC_FAIL_SHRINKBUFFER "realloc failed in shrinking linebuffer"
     MALLOC_FAIL_SHRINKLINES "realloc failed in shrinking raw line marker"
 
+    CONTEXT_OPENING "opening linestream"
     CONTEXT_READING "reading logical line"
+
+TOKENIZER:
+
+    CONTEXT_OPENING "opening tokenstream"

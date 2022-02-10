@@ -42,13 +42,16 @@ struct linestream_s
 
 linestream_t *linestream_open(context_t *context, FILE *source)
 {
+    context_t *lcontext = context_new(context, LINESTREAM_CONTEXT_OPENING);
+
     linestream_t *new_stream = malloc(sizeof(linestream_t));
     if (new_stream == NULL)
-        log_error(context, LINESTREAM_MALLOC_FAIL_OPEN);
+        log_error(lcontext, LINESTREAM_MALLOC_FAIL_OPEN);
 
     new_stream->source = source;
     new_stream->rawline_readed = 0;
 
+    context_free(lcontext);
     return new_stream;
 }
 void linestream_close(linestream_t *stream, bool recursive_close)
