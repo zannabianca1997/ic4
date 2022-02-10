@@ -387,7 +387,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
 // --- PRINTING FUNCTIONS ---
 
-int fprintf_tok(FILE *file, struct pp_token_s const *token)
+int pp_fprintf_tok(FILE *file, struct pp_token_s const *token)
 {
     switch (token->type)
     {
@@ -413,7 +413,7 @@ int fprintf_tok(FILE *file, struct pp_token_s const *token)
 }
 
 #ifdef DEBUG
-int fprintf_repr_tok(FILE *file, struct pp_token_s const *token)
+int pp_fprintf_repr_tok(FILE *file, struct pp_token_s const *token)
 {
     switch (token->type)
     {

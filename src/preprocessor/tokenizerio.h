@@ -24,7 +24,7 @@
  * 
  * @return On success, the total number of characters written is returned. If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
  */
-int fprintf_tok(FILE *file, struct pp_token_s const *token);
+int pp_fprintf_tok(FILE *file, struct pp_token_s const *token);
 
 #ifdef DEBUG
 /**
@@ -35,7 +35,7 @@ int fprintf_tok(FILE *file, struct pp_token_s const *token);
  * 
  * @return On success, the total number of characters written is returned. If a writing error occurs, the error indicator (ferror) is set and a negative number is returned.
  */
-int fprintf_repr_tok(FILE *file, struct pp_token_s const *token);
+int pp_fprintf_repr_tok(FILE *file, struct pp_token_s const *token);
 #endif
 
 #endif // _TOKENIZERIO_H
