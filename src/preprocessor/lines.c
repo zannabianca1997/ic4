@@ -51,9 +51,9 @@ linestream_t *linestream_open(context_t *context, FILE *source)
 
     return new_stream;
 }
-void linestream_close(linestream_t *stream, bool close_file)
+void linestream_close(linestream_t *stream, bool recursive_close)
 {
-    if (close_file)
+    if (recursive_close)
         fclose(stream->source);
     free(stream);
 }
