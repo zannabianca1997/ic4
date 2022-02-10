@@ -313,6 +313,7 @@ static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
         // line exausted, go to the next without updating flags
         line_free(stream->current_line);
         stream->current_line = linestream_get(lcontext, stream->source);
+        stream->cursor = 0;
     } while (stream->current_line != NULL);
 
     // file ended inside multiline!
