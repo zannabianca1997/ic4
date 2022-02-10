@@ -1,11 +1,12 @@
 /**
  * @file tokenizer.h
  * @author zannabianca199712 <zannabianca199712@gmail.com>
- * @brief Generate a stream of preprocessing tokens from a stream of logical lines
+ * @brief Generate a stream of preprocessing tokens
  * @version 0.1
  * @date 2022-02-10
  * 
- * Interface to tokenizer.c main functionalities
+ * Interface to tokenizer.c main functionalities: 
+ * generation of a stream of preprocessing tokens.
  * 
  * @copyright Copyright (c) 2022
  */
@@ -17,7 +18,6 @@
 
 #include "../misc/context/context.h"
 #include "../misc/bookmark.h"
-#include "lines.h"
 
 // --- TOKENS ---
 
@@ -154,12 +154,20 @@ void pp_tok_free(struct pp_token_s const *token);
 
 // --- TOKENSTREAM ---
 
+/**
+ * @brief Contain all data regarding a token stream
+ * 
+ */
 typedef struct pp_tokstream_s pp_tokstream_t;
 
-pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source);
-void pp_tokstream_close(context_t *context, pp_tokstream_t *stream);
-
-struct pp_token_s *pp_tokstream_next(context_t *context, pp_tokstream_t *stream);
+/**
+ * @brief Get the next token in the stream
+ * 
+ * @param context the context for which the token is needed
+ * @param stream the stream from which the token is taken
+ * @return struct pp_token_s* the taken token
+ */
+struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream);
 
 // --- PRINTING ---
 
