@@ -159,11 +159,11 @@ typedef struct pp_tokstream_s pp_tokstream_t;
 pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source);
 void pp_tokstream_close(context_t *context, pp_tokstream_t *stream);
 
-struct pp_token_s *pp_tokstream_next(context_t *context, pp_tokstream_t *stream)
+struct pp_token_s *pp_tokstream_next(context_t *context, pp_tokstream_t *stream);
 
-    // --- PRINTING ---
+// --- PRINTING ---
 
-    /**
+/**
  * @brief Print the token on buf, using maximum n chars
  *
  * @param buf the destination buffer
@@ -172,7 +172,7 @@ struct pp_token_s *pp_tokstream_next(context_t *context, pp_tokstream_t *stream)
  * 
  * @return the number of character it writed, or it would have written if n was great enough
  */
-    int snprintf_tok(char *buf, int n, struct pp_token_s const *token);
+int snprintf_tok(char *buf, int n, struct pp_token_s const *token);
 
 #ifdef DEBUG
 /**
