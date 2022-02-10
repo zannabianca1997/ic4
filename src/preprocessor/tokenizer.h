@@ -42,9 +42,10 @@ struct pp_token_s
         PP_TOK_PUNCTUATOR, // punctuators
         PP_TOK_OTHER,      // not recognized chars
 
-        // Structural tokens
+        // Directives detections
 
-        PP_TOK_NEWLINE     // end of logical line. Needed for detecting directives end
+        PP_TOK_DIRECTIVE_START, // directive start
+        PP_TOK_DIRECTIVE_STOP   // end of directive
     } type;
 
     struct bookmark_s mark; // Mark the start of the token
@@ -138,8 +139,8 @@ struct pp_token_s
 
             // -- PREPROCESSOR
 
-            PUNC_HASHTAG,  // for directive start and stringize
-            PUNC_TOKPASTE, // token pasting
+            PUNC_STRINGIZE, // stringize
+            PUNC_TOKPASTE,  // token pasting
         } kind;
     };
 };
