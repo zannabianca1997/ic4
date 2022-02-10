@@ -79,6 +79,7 @@ struct pp_token_s
             PUNC_MOD,          // modulus
 
             // comparators
+
             PUNC_EQ,      // equal to
             PUNC_NEQ,     // not equal to
             PUNC_LESS,    // less than
@@ -118,6 +119,7 @@ struct pp_token_s
             PUNC_BIT_RSHIFT_ASSIGN, // bitwise right shift and assign to
 
             // augment and decrease
+            
             PUNC_AUGMENT, // augment
             PUNC_DECR,    // decrease
 
