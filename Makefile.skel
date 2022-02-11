@@ -77,7 +77,7 @@ DISCOVER_ARGS :=  -source_dir $(SOURCE_DIR) -debug_dir $(DEBUG_DIR) -release_dir
 CREATION_SRC_TREE_MD5 := {creation_src_tree_md5}
 
 # checking md5
-ifneq ($(CREATION_SRC_TREE_MD5), $(word 1, $(shell ls -R $(SOURCE_DIR) | md5sum)))
+ifneq ($(CREATION_SRC_TREE_MD5), $(shell find $(SOURCE_DIR) | sort | md5sum | cut -d " " -f1))
     $(shell $(RM) $(MAKEFILE_NAME)) # at the end make will detect the missing makefile and regenerate it
 endif
 

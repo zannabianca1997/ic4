@@ -79,10 +79,12 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
                      for p in files if p.name.endswith(".cat.h")]
     catalog_dirs = set(p.parent for p in catalog_files)
 
-    main_file = (source_dir / source).resolve().relative_to(source_dir.absolute())
-    other_files = set(p.resolve().relative_to(source_dir.absolute()) for p in files if not p.name.endswith(".cat.h"))
+    main_file = (
+        source_dir / source).resolve().relative_to(source_dir.absolute())
+    other_files = set(p.resolve().relative_to(source_dir.absolute())
+                      for p in files if not p.name.endswith(".cat.h"))
     other_files.discard(main_file)
-    
+
     # sorting to guarantee repeatability
     catalog_files, catalog_dirs, other_files = (
         sorted(paths)
@@ -97,30 +99,21 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
 
     return rule
 
-def calculate_md5(source_dir:str)-> str:
+
+def calculate_md5(source_dir: str) -> str:
     """calculate the md5 of a directory listing
         should return the same that $(word 1, $(shell ls -R $(SOURCE_DIR) | md5sum))"""
-    md5sum = subprocess.Popen(["md5sum"], stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+    md5sum = subprocess.Popen(f"find {source_dir} | sort | md5sum | cut -d \" \" -f1", shell=True,
+                              stdin=subprocess.DEVNULL,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
 
-    ls = subprocess.Popen(["ls", "-R",  source_dir],
-                         stdin=subprocess.DEVNULL,
-                         stdout=md5sum.stdin,
-                         stderr=subprocess.PIPE)
-
-    _, ls_err = ls.communicate()
-    if ls_err:
-        print(f"Error while listing {source_dir}", file=stderr)
-        print(ls_err.decode("utf-8"), file=stderr)
-        exit(1)
-    
     md5sum_out, md5sum_err = md5sum.communicate()
     if md5sum_err:
         print(f"Error while calculating md5sum of {source_dir}", file=stderr)
         print(md5sum_err.decode("utf-8"), file=stderr)
         exit(1)
-    
+
     return md5sum_out.decode("utf-8").split()[0]
 
 
