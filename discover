@@ -121,33 +121,6 @@ def get_argparser() -> ArgumentParser:
     return parser
 
 
-def need_to_update(old_makefile: str, new_makefile: str) -> bool:
-    """Check if we need to update the makefile"""
-
-    # splitting in logical lines
-    old_makefile_lines: List[str] = ["\\"]
-    for line in old_makefile.splitlines():
-        if old_makefile_lines[-1].endswith("\\"):
-            old_makefile_lines[-1] = old_makefile_lines[-1][:-1] + line
-        else:
-            old_makefile_lines.append(line)
-
-    new_makefile_lines: List[str] = ["\\"]
-    for line in new_makefile.splitlines():
-        if new_makefile_lines[-1].endswith("\\"):
-            new_makefile_lines[-1] = new_makefile_lines[-1][:-1] + line
-        else:
-            new_makefile_lines.append(line)
-
-    # deleting comments (only full line ones) and blank lines
-    old_makefile_lines = [
-        line for line in old_makefile_lines if line.strip() and not line.strip().startswith("#")]
-    new_makefile_lines = [
-        line for line in new_makefile_lines if line.strip() and not line.strip().startswith("#")]
-
-    return old_makefile_lines != new_makefile_lines
-
-
 def main(argv):
     parsed_args = get_argparser().parse_args(argv[1:])
 
@@ -205,9 +178,6 @@ def main(argv):
                                          fromdesc=f"Old {parsed_args.outputfile}", todesc=f"New {parsed_args.outputfile}",
                                          context=True),
                     file=parsed_args.gendiffs)
-            if not need_to_update(old_makefile, new_makefile):
-                print("Makefile is up-to-date")
-                return  # avoid updating the file, so it won't regenerate all recipes
 
     if parsed_args.outputfile.strip() != "-":
         with open(parsed_args.outputfile, "w") as makefile:
