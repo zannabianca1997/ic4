@@ -22,7 +22,7 @@ CDEBUG_FLAGS := -O0 -DDEBUG -DCHECK_ERRORLEVELS_VALIDITY -DCHECK_LOGTARGET_PTR -
 CRELEASE_FLAGS := -Werror -O3
 LDFLAGS := 
 
-# system commands
+# system commands 
 RM := rm -rf
 MKDIR := mkdir -p
 
@@ -79,10 +79,13 @@ TEST_BINARY := $(BUILD_DIR)/$(TEST_BINARY_NAME)
 # --- OTHER ---
 
 # makefile name
-MAKEFILE_NAME := $(abspath $(lastword $(MAKEFILE_LIST)))
+MAKEFILE_NAME := $(lastword $(MAKEFILE_LIST))
 
 # makefile skeleton name
 MAKEFILE_SKEL := {makefile_skel}
+
+# all targets depends on makefile components
+.EXTRA_PREREQS := $(MAKEFILE_SKEL) $(DISCOVER_SCRIPT)
 
 # discover script call
 DISCOVER_ARGS :=  -source_dir $(SOURCE_DIR) -debug_dir $(DEBUG_DIR) -release_dir $(RELEASE_DIR) \
@@ -96,26 +99,26 @@ DISCOVER_ARGS :=  -source_dir $(SOURCE_DIR) -debug_dir $(DEBUG_DIR) -release_dir
 
 .PHONY: all build test test_build catalogs clean
 
-all: catalogs test build $(MAKEFILE_NAME)
+all: catalogs test build 
 
-build: $(BINARY) $(MAKEFILE_NAME)
+build: $(BINARY) 
 
-test: test_build $(MAKEFILE_NAME)
+test: test_build 
 	$(TEST_BINARY) $(TEST_ARGS)
 
-test_build: $(TEST_BINARY) $(MAKEFILE_NAME)
+test_build: $(TEST_BINARY) 
 
 catalogs: $(CATALOG_HEADERS)
 
-clean: $(MAKEFILE_NAME)
+clean: 
 	$(RM) $(BUILD_DIR)
 
 # --- LINKER TARGETS ---
 
-$(BINARY): $(MAIN_OBJ) $(OBJECTS) $(MAKEFILE_NAME) | $(dir $(BINARY))
+$(BINARY): $(MAIN_OBJ) $(OBJECTS) | $(dir $(BINARY))
 	$(CC) $(LDFLAGS) $(MAIN_OBJ) $(OBJECTS) -o $@
 
-$(TEST_BINARY): $(TEST_MAIN_OBJ) $(OBJECTS) $(TEST_OBJECTS) $(MAKEFILE_NAME) | $(dir $(TEST_BINARY))
+$(TEST_BINARY): $(TEST_MAIN_OBJ) $(OBJECTS) $(TEST_OBJECTS) | $(dir $(TEST_BINARY))
 	$(CC) $(LDFLAGS) $(TEST_MAIN_OBJ) $(OBJECTS) $(TEST_OBJECTS) -o  $@
 
 # --- COMPILE RULES ---
@@ -124,21 +127,21 @@ $(TEST_BINARY): $(TEST_MAIN_OBJ) $(OBJECTS) $(TEST_OBJECTS) $(MAKEFILE_NAME) | $
 
 # --- COMPILE TEST RULES ---
 
-$(TEST_MAIN_OBJ): $(BUILD_DIR)/$(TEST_MAIN_NAME) $(MAKEFILE_NAME) | $(dir $(TEST_MAIN_OBJ))
+$(TEST_MAIN_OBJ): $(BUILD_DIR)/$(TEST_MAIN_NAME) | $(dir $(TEST_MAIN_OBJ))
 	$(CC) $(CFLAGS)  -c $< -o $@
 
 {compile_test_rules}
 
-# --- GENERATION OF TEST_MAIN ---
+# --- GENERATION OF TEST_MAIN --- 
 
-$(BUILD_DIR)/$(TEST_MAIN_NAME): $(TEST_SOURCES) $(TEST_DISCOVERY_SCRIPT) $(TEST_MAIN_SKEL) $(MAKEFILE_NAME) | $(dir $(BUILD_DIR)/$(TEST_MAIN_NAME))
+$(BUILD_DIR)/$(TEST_MAIN_NAME): $(TEST_SOURCES) $(TEST_DISCOVERY_SCRIPT) $(TEST_MAIN_SKEL) | $(dir $(BUILD_DIR)/$(TEST_MAIN_NAME))
 	$(TEST_DISCOVERY_SCRIPT) $(TEST_SOURCES) --test_prefix $(TEST_PREFIX) --main_skel $(TEST_MAIN_SKEL) -o $@
 
 # --- CATALOGS GENERATION RULES ---
 
 {catalog_rules}
 
-# --- DIRECTORY CREATION ---
+# --- DIRECTORY CREATION --- 
 
 {directory_rules}
 
@@ -147,5 +150,5 @@ $(BUILD_DIR)/:
 
 # --- MAKEFILE REGENERATION ---
 
-$(MAKEFILE_NAME): $(DISCOVER_SCRIPT) $(MAKEFILE_SKEL)
+$(MAKEFILE_NAME): $(SOURCE_DIR)/$(MAIN_NAME) $(SOURCES) $(TEST_SOURCES)
 	$(DISCOVER_SCRIPT) -f $(DISCOVER_ARGS) -mskel $(MAKEFILE_SKEL) $(MAKEFILE_NAME)

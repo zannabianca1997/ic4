@@ -1,6 +1,6 @@
 #!/bin/env python3
 """
-    Auto generate a basic makefile, with source exploration and catalog update
+    Auto generate a basic makefile, with source exploration and catalog update 
 """
 
 from argparse import ArgumentParser, FileType
@@ -15,7 +15,7 @@ from typing import Dict, List, Set, Tuple
 
 DIRECTORY_RULE = "$(BUILD_DIR)/{dirname}/:\n\t$(MKDIR) $@"
 
-CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(MAKEFILE_NAME) $(CATALOG_SCRIPT) | $(dir $(BUILD_DIR)/{cat_header_name})\n\t$(CATALOG_SCRIPT) $< -o $@"
+CATALOG_RULE = "$(BUILD_DIR)/{cat_header_name}: $(SOURCE_DIR)/{cat_name} $(CATALOG_SCRIPT) | $(dir $(BUILD_DIR)/{cat_header_name})\n\t$(CATALOG_SCRIPT) $< -o $@"
 
 
 PARAMETER: Dict[str, Tuple[str, str]] = {
@@ -68,7 +68,7 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
     output, output_err = p.communicate()
 
     if output_err:
-        print(f"Error while reading includes of {source}")
+        print(f"Error while reading includes of {source}", file=stderr)
         print(output_err.decode("utf-8"), file=stderr)
         exit(1)
 
@@ -79,12 +79,19 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
                      for p in files if p.name.endswith(".cat.h")]
     catalog_dirs = set(p.parent for p in catalog_files)
 
-    source_files = [p.resolve().relative_to(source_dir.absolute())
-                    for p in files if not p.name.endswith(".cat.h")]
+    main_file = (source_dir / source).resolve().relative_to(source_dir.absolute())
+    other_files = set(p.resolve().relative_to(source_dir.absolute()) for p in files if not p.name.endswith(".cat.h"))
+    other_files.discard(main_file)
+    
+    # sorting to guarantee repeatability
+    catalog_files, catalog_dirs, other_files = (
+        sorted(paths)
+        for paths in (catalog_files, catalog_dirs, other_files)
+    )
 
-    rule = f"""$(BUILD_DIR)/{source.with_suffix(".o")}: \\
-    {" ".join(f"$(SOURCE_DIR)/{str(p)}" for p in source_files)} \\
-    {" ".join(f"$(BUILD_DIR)/{str(p)}" for p in catalog_files)} $(MAKEFILE_NAME) | \\
+    rule = f"""$(BUILD_DIR)/{source.with_suffix(".o")}: $(SOURCE_DIR)/{str(main_file)} \\
+    {" ".join(f"$(SOURCE_DIR)/{str(p)}" for p in other_files)} \\
+    {" ".join(f"$(BUILD_DIR)/{str(p)}" for p in catalog_files)} | \\
     $(dir $(BUILD_DIR)/{source.with_suffix(".o")})
 \t$(CC) $(CFLAGS) {" ".join(f"-I$(BUILD_DIR)/{str(p)}" for p in catalog_dirs)} -c $< -o $@"""
 
