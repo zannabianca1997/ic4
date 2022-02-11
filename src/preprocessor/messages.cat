@@ -1,7 +1,7 @@
 LINESTREAM:
-    MALLOC_FAIL_OPEN "Malloc failed in creating linestream struct"
+    MALLOC_FAIL_OPEN "malloc failed in creating linestream struct"
 
-    MALLOC_FAIL_LOGICALLINE "Malloc failed in creating logical line struct"
+    MALLOC_FAIL_LOGICALLINE "malloc failed in creating logical line struct"
     MALLOC_FAIL_EXTENDBUFFER "realloc failed in extending linebuffer"
     MALLOC_FAIL_EXTENDLINES "realloc failed in extending raw line marker" 
     MALLOC_FAIL_SHRINKBUFFER "realloc failed in shrinking linebuffer"
@@ -11,10 +11,10 @@ LINESTREAM:
     CONTEXT_READING "reading logical line"
 
 TOKENIZER:
-    MALLOC_FAIL_OPEN "Malloc failed in creating token stream struct"
-    MALLOC_FAIL_IDENTIFIER "Malloc failed in allocating space for identifier name"
-    MALLOC_FAIL_SHRINKIDENTIFIER "Malloc failed in shrinking space for identifier name. This will occupy more memory"
-    MALLOC_FAIL_TOKEN "Malloc failde in creating token struct"
+    MALLOC_FAIL_OPEN "malloc failed in creating token stream struct"
+    MALLOC_FAIL_IDENTIFIER "malloc failed in allocating space for identifier name"
+    MALLOC_FAIL_SHRINKIDENTIFIER "malloc failed in shrinking space for identifier name. This will occupy more memory"
+    MALLOC_FAIL_TOKEN "malloc failde in creating token struct"
 
     EOF_MULTILINE "Unexpected EOF while scanning multiline comment"
 
