@@ -188,15 +188,13 @@ def main(argv):
 
     new_makefile = parsed_args.mskel.read().format(**parameters)
 
-    if not parsed_args.force and parsed_args.outputfile.strip() != "-" and Path(parsed_args.outputfile).is_file():
-        with open(parsed_args.outputfile, "r") as old_makefile_f:
-            old_makefile = old_makefile_f.read()
-            if parsed_args.gendiffs is not None:
-                print(
-                    HtmlDiff().make_file(old_makefile.splitlines(), new_makefile.splitlines(),
-                                         fromdesc=f"Old {parsed_args.outputfile}", todesc=f"New {parsed_args.outputfile}",
-                                         context=True),
-                    file=parsed_args.gendiffs)
+    if parsed_args.gendiffs is not None and parsed_args.outputfile.strip() != "-" and Path(parsed_args.outputfile).is_file():
+        with open(parsed_args.outputfile, "r") as old_makefile:
+            print(
+                HtmlDiff().make_file(old_makefile.read().splitlines(), new_makefile.splitlines(),
+                                     fromdesc=f"Old {parsed_args.outputfile}", todesc=f"New {parsed_args.outputfile}",
+                                     context=True),
+                file=parsed_args.gendiffs)
 
     if parsed_args.outputfile.strip() != "-":
         with open(parsed_args.outputfile, "w") as makefile:
