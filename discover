@@ -5,11 +5,12 @@
 
 from argparse import ArgumentParser, FileType
 from datetime import datetime
+from difflib import HtmlDiff
 from itertools import chain
 from pathlib import Path
 import subprocess
-from sys import stderr
-from typing import Dict, Set, Tuple
+from sys import stderr, stdout
+from typing import Dict, List, Set, Tuple
 
 
 DIRECTORY_RULE = "$(BUILD_DIR)/{dirname}/:\n\t$(MKDIR) $@"
@@ -31,7 +32,8 @@ PARAMETER: Dict[str, Tuple[str, str]] = {
     "test_main_skel": ("utils/test_main.c.skel", "File from where the test main will be generated")
 }
 
-def examine_source_tree(source_dir: str, test_prefix:str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
+
+def examine_source_tree(source_dir: str, test_prefix: str) -> Tuple[Set[Path], Set[Path], Set[Path], Set[Path], Set[Path]]:
     """Search source_dir and it's subdirectories for file of the type *.c, test_*.c, *.h, *.cat"""
     source_dir: Path = Path(source_dir)
 
@@ -70,12 +72,15 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
         print(output_err.decode("utf-8"), file=stderr)
         exit(1)
 
-    files =  [Path(p) for p in output.decode("utf-8").split(":", maxsplit=1)[1].replace("\\\n", "").split()]
+    files = [Path(p) for p in output.decode("utf-8").split(":",
+                                                           maxsplit=1)[1].replace("\\\n", "").split()]
 
-    catalog_files = [(source.parent / p) for p in files if p.name.endswith(".cat.h")]
+    catalog_files = [(source.parent / p)
+                     for p in files if p.name.endswith(".cat.h")]
     catalog_dirs = set(p.parent for p in catalog_files)
 
-    source_files = [p.resolve().relative_to(source_dir.absolute()) for p in files if not p.name.endswith(".cat.h")]
+    source_files = [p.resolve().relative_to(source_dir.absolute())
+                    for p in files if not p.name.endswith(".cat.h")]
 
     rule = f"""$(BUILD_DIR)/{source.with_suffix(".o")}: \\
     {" ".join(f"$(SOURCE_DIR)/{str(p)}" for p in source_files)} \\
@@ -86,13 +91,13 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
     return rule
 
 
-
-
 def get_argparser() -> ArgumentParser:
     """Prepare a argument parser for cli invocation"""
     parser = ArgumentParser(description=__doc__)
 
-    parser.add_argument("outputfile", nargs="?", type=FileType("w"), default=open("Makefile", "w"),
+    # TODO: change all argumets from - prefix to -- prefix
+
+    parser.add_argument("outputfile", nargs="?", type=str, default="Makefile",
                         help="The output Makefile. If absent defaults to \"Makefile\"")
     parser.add_argument("-mskel", nargs="?", type=FileType("r"), default=open("Makefile.skel", "r"),
                         help="The input Makefile skeleton. If absent defaults to \"Makefile.skel\"")
@@ -101,16 +106,55 @@ def get_argparser() -> ArgumentParser:
         parser.add_argument(f"-{par_name}", type=str,
                             default=par_default, help=par_descr)
 
+    parser.add_argument("-gendiffs", metavar="DIFFS.HTML", type=FileType("w"),
+                        help="If a new makefile is written, the differences are outputted to DIFFS.HTML")
+    parser.add_argument("-force", "-f",  action="store_true", default=False,
+                        help="If set the makefile is regenerated even if equal to the old one")
+
     return parser
+
+
+def need_to_update(old_makefile: str, new_makefile: str) -> bool:
+    """Check if we need to update the makefile"""
+
+    # splitting in logical lines
+    old_makefile_lines: List[str] = ["\\"]
+    for line in old_makefile.splitlines():
+        if old_makefile_lines[-1].endswith("\\"):
+            old_makefile_lines[-1] = old_makefile_lines[-1][:-1] + line
+        else:
+            old_makefile_lines.append(line)
+
+    new_makefile_lines: List[str] = ["\\"]
+    for line in new_makefile.splitlines():
+        if new_makefile_lines[-1].endswith("\\"):
+            new_makefile_lines[-1] = new_makefile_lines[-1][:-1] + line
+        else:
+            new_makefile_lines.append(line)
+
+    # deleting comments (only full line ones) and blank lines
+    old_makefile_lines = [
+        line for line in old_makefile_lines if line.strip() and not line.strip().startswith("#")]
+    new_makefile_lines = [
+        line for line in new_makefile_lines if line.strip() and not line.strip().startswith("#")]
+
+    return old_makefile_lines != new_makefile_lines
 
 
 def main(argv):
     parsed_args = get_argparser().parse_args(argv[1:])
 
-    source_files, test_source_files, headers_files, catalog_files, directories = examine_source_tree(parsed_args.source_dir, parsed_args.test_prefix)
+    source_files, test_source_files, headers_files, catalog_files, directories = examine_source_tree(
+        parsed_args.source_dir, parsed_args.test_prefix)
 
     # remove main from source files
     source_files.discard(Path(parsed_args.main_name))
+
+    # sorting all sets. This guarantee repeatability
+    source_files, test_source_files, headers_files, catalog_files, directories = (
+        sorted(paths)
+        for paths in (source_files, test_source_files, headers_files, catalog_files, directories)
+    )
 
     parameters = {name: vars(parsed_args)[name] for name in PARAMETER}
     parameters["date"] = datetime.now()
@@ -143,8 +187,26 @@ def main(argv):
     parameters["directory_rules"] = "\n\n".join(
         DIRECTORY_RULE.format(dirname=str(p)) for p in directories)
 
-    print(parsed_args.mskel.read().format(**parameters), file=parsed_args.outputfile)
-    parsed_args.outputfile.close()
+    new_makefile = parsed_args.mskel.read().format(**parameters)
+
+    if not parsed_args.force and parsed_args.outputfile.strip() != "-" and Path(parsed_args.outputfile).is_file():
+        with open(parsed_args.outputfile, "r") as old_makefile_f:
+            old_makefile = old_makefile_f.read()
+            if parsed_args.gendiffs is not None:
+                print(
+                    HtmlDiff().make_file(old_makefile.splitlines(), new_makefile.splitlines(),
+                                         fromdesc=f"Old {parsed_args.outputfile}", todesc=f"New {parsed_args.outputfile}",
+                                         context=True),
+                    file=parsed_args.gendiffs)
+            if not need_to_update(old_makefile, new_makefile):
+                print("Makefile is up-to-date")
+                return  # avoid updating the file, so it won't regenerate all recipes
+
+    if parsed_args.outputfile.strip() != "-":
+        with open(parsed_args.outputfile, "w") as makefile:
+            makefile.write(new_makefile)
+    else:
+        stdout.write(new_makefile)
 
 
 if __name__ == "__main__":
