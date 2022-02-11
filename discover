@@ -97,6 +97,32 @@ def make_compile_rule(source: Path, source_dir: Path) -> str:
 
     return rule
 
+def calculate_md5(source_dir:str)-> str:
+    """calculate the md5 of a directory listing
+        should return the same that $(word 1, $(shell ls -R $(SOURCE_DIR) | md5sum))"""
+    md5sum = subprocess.Popen(["md5sum"], stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+
+    ls = subprocess.Popen(["ls", "-R",  source_dir],
+                         stdin=subprocess.DEVNULL,
+                         stdout=md5sum.stdin,
+                         stderr=subprocess.PIPE)
+
+    _, ls_err = ls.communicate()
+    if ls_err:
+        print(f"Error while listing {source_dir}", file=stderr)
+        print(ls_err.decode("utf-8"), file=stderr)
+        exit(1)
+    
+    md5sum_out, md5sum_err = md5sum.communicate()
+    if md5sum_err:
+        print(f"Error while calculating md5sum of {source_dir}", file=stderr)
+        print(md5sum_err.decode("utf-8"), file=stderr)
+        exit(1)
+    
+    return md5sum_out.decode("utf-8").split()[0]
+
 
 def get_argparser() -> ArgumentParser:
     """Prepare a argument parser for cli invocation"""
@@ -157,6 +183,8 @@ def main(argv):
         f"$(SOURCE_DIR)/{str(p)}" for p in catalog_files)
     parameters["catalog_header"] = " ".join(
         f"$(BUILD_DIR)/{str(p.with_suffix('.cat.h'))}" for p in catalog_files)
+
+    parameters["creation_src_tree_md5"] = calculate_md5(parsed_args.source_dir)
 
     parameters["compile_rules"] = make_compile_rule(Path(parsed_args.main_name), Path(parsed_args.source_dir))+"\n\n" + "\n\n".join(
         make_compile_rule(p, Path(parsed_args.source_dir)) for p in source_files)
