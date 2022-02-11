@@ -176,6 +176,40 @@ void pp_tok_free(struct pp_token_s *token)
     free(token);
 }
 
+// --- TOKEN COMPARATION ---
+
+bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b){
+    if(a->type != b->type)
+        return false;
+
+    switch (a->type)
+    {
+    case PP_TOK_IDENTIFIER:
+    case PP_TOK_PP_NUMBER:
+    case PP_TOK_STRING_LIT:
+    case PP_TOK_OTHER:
+        return strcmp(a->content,b->content) == 0;
+
+    case PP_TOK_CHAR_CONST:
+        return a->value == b->value;
+
+    case PP_TOK_HEADER:
+        return a->is_angled == b->is_angled && strcmp(a->header_name, b->header_name) == 0;
+
+    case PP_TOK_PUNCTUATOR:
+        return a->kind == b->kind;
+
+    case PP_TOK_DIRECTIVE_START:
+    case PP_TOK_DIRECTIVE_STOP:
+        return true; //contentless
+
+    case PP_TOK_ERROR:
+        return strcmp(a->error_msg, b->error_msg) == 0;
+    }
+    
+    log_error(NULL, TOKENIZER_CMP_UNKNOW);
+}
+
 // --- UTILITY ---
 
 #ifdef __GNUC__

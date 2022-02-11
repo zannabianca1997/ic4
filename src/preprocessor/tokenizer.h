@@ -165,6 +165,18 @@ struct pp_token_s
  */
 void pp_tok_free(struct pp_token_s *token);
 
+/**
+ * @brief Compare two tokens.
+ * 
+ * Do not check token.mark: comparation is position indipendent
+ * 
+ * @param a one of the token to compare
+ * @param b the other token to compare
+ * @return true the two token are equal
+ * @return false the two token are differen
+ */
+bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b);
+
 // --- TOKENSTREAM ---
 
 /**
