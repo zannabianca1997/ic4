@@ -157,8 +157,8 @@ void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close)
 {
     if (recursive_close)
         linestream_close(stream->source, recursive_close);
-
-    line_free(stream->current_line);
+    if (stream->current_line != NULL)
+        line_free(stream->current_line);
     free(stream);
 }
 
@@ -178,8 +178,9 @@ void pp_tok_free(struct pp_token_s *token)
 
 // --- TOKEN COMPARATION ---
 
-bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b){
-    if(a->type != b->type)
+bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b)
+{
+    if (a->type != b->type)
         return false;
 
     switch (a->type)
@@ -188,7 +189,7 @@ bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b){
     case PP_TOK_PP_NUMBER:
     case PP_TOK_STRING_LIT:
     case PP_TOK_OTHER:
-        return strcmp(a->content,b->content) == 0;
+        return strcmp(a->content, b->content) == 0;
 
     case PP_TOK_CHAR_CONST:
         return a->value == b->value;
@@ -206,7 +207,7 @@ bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b){
     case PP_TOK_ERROR:
         return strcmp(a->error_msg, b->error_msg) == 0;
     }
-    
+
     log_error(NULL, TOKENIZER_CMP_UNKNOW);
 }
 
