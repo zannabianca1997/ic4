@@ -16,7 +16,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
-#include "test_streamconpare.h"
+#include "test_streamcompare.h"
 
 /**
  * @brief All data regarding a streamcompare
@@ -28,12 +28,12 @@ struct streamcompare_s
      * @brief the expected data
      * 
      */
-    void *expected;
+    char *expected;
     /**
      * @brief the expected data remaining
      * 
      */
-    void const *expected_remain;
+    char const *expected_remain;
     /**
      * @brief len of unmatched data
      */
@@ -58,7 +58,7 @@ struct streamcompare_s
 
 // -- stream function
 
-static ssize_t write(void *cookie, const void *buf, size_t nbytes)
+static ssize_t write(void *cookie, const char *buf, size_t nbytes)
 {
     struct streamcompare_s *stream = cookie;
 
@@ -88,7 +88,7 @@ static ssize_t write(void *cookie, const void *buf, size_t nbytes)
     else
     {
         // stream is still valid
-        stream->expected_remain = (void const *)(((char const *)(stream->expected_remain)) + nbytes);
+        stream->expected_remain += nbytes;
         stream->remain_len -= nbytes;
         // mark write as success
         return nbytes;
@@ -104,7 +104,8 @@ static int close(void *cookie)
 
     // free expected buffer
     free(stream->expected);
-    stream->expected = stream->expected_remain = NULL;
+    stream->expected = NULL;
+    stream->expected_remain = NULL;
     stream->remain_len = 0;
 
     // mark stream as closed
@@ -113,7 +114,7 @@ static int close(void *cookie)
     return 0;
 }
 
-streamcompare_t *streamcompare_new(const void *expected, size_t nbytes)
+streamcompare_t *streamcompare_new(const char *expected, size_t nbytes)
 {
     // allocate memory
     streamcompare_t *new_stream = malloc(sizeof(streamcompare_t));
@@ -141,13 +142,9 @@ streamcompare_t *streamcompare_new(const void *expected, size_t nbytes)
     new_stream->open = true;
 
     // open FILE
-    new_stream->in_stream = fopencookie(new_stream, "w", (cookie_io_functions_t){
-        .read = NULL,
-        .write = &write,
-        .seek = NULL,
-        .close = &close
-    });
-    if(new_stream->in_stream == NULL){
+    new_stream->in_stream = fopencookie(new_stream, "w", (cookie_io_functions_t){.read = NULL, .write = &write, .seek = NULL, .close = &close});
+    if (new_stream->in_stream == NULL)
+    {
         free(new_stream->expected);
         free(new_stream);
         return NULL;
@@ -155,7 +152,8 @@ streamcompare_t *streamcompare_new(const void *expected, size_t nbytes)
 
     return new_stream;
 }
-bool streamcompare_free(streamcompare_t *stream){
+bool streamcompare_free(streamcompare_t *stream)
+{
     // flush and close stream
     fclose(stream->in_stream);
 
@@ -167,12 +165,15 @@ bool streamcompare_free(streamcompare_t *stream){
 
     return last_check;
 }
-FILE *streamcompare_getfile(streamcompare_t *stream){
+FILE *streamcompare_getfile(streamcompare_t *stream)
+{
     return stream->in_stream;
 }
-bool streamcompare_check(streamcompare_t *stream){
+bool streamcompare_check(streamcompare_t *stream)
+{
     return stream->check;
 }
-bool streamcompare_open(streamcompare_t *stream){
+bool streamcompare_open(streamcompare_t *stream)
+{
     return stream->open;
 }

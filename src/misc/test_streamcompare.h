@@ -23,7 +23,7 @@ typedef struct streamcompare_s streamcompare_t;
  * @param expected the expected output
  * @return streamcompare_t* the streamcompare
  */
-streamcompare_t *streamcompare_new(const void *expected, size_t nbytes);
+streamcompare_t *streamcompare_new(const char *expected, size_t nbytes);
 /**
  * @brief free resources from a streamcompare
  * 
