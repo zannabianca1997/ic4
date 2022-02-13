@@ -87,138 +87,139 @@ static const struct
                        {PUNC_TOKPASTE, "token pasting"},
                        {0, NULL}};
 
-#define TEST(CASE, TEXT, EXP_XML)                                                             \
-    const char *test_tokenize_##CASE()                                                        \
-    {                                                                                         \
-                                                                                              \
-        context_t *lcontext = context_new(NULL, "Testing tokenizer for" #CASE);               \
-                                                                                              \
-        /* opening the various streams */                                                     \
-        FILE *text_f = fmemopen(TEXT, strlen(TEXT), "r");                                     \
-        if (text_f == NULL)                                                                   \
-            return "Cannot open memory as stream";                                            \
-        linestream_t *lines = linestream_open(lcontext, text_f);                              \
-        if (lines == NULL)                                                                    \
-            return "Cannot open linestream";                                                  \
-        pp_tokstream_t *pp_tokstm = pp_tokstream_open(lcontext, lines);                       \
-        if (pp_tokstm == NULL)                                                                \
-            return "Cannot open tokenstream";                                                 \
-                                                                                              \
-        /* creating end buffer */                                                             \
-        size_t out_size;                                                                      \
-        char *out_buf;                                                                        \
-        FILE *output = open_memstream(&out_buf, &out_size);                                   \
-        if (output == NULL)                                                                   \
-            return "open_memstream failed to open output buffer";                             \
-                                                                                              \
-        /* creating xml stream */                                                             \
-        xml_tag_t *root_tag = xml_tag_new("tokens");                                          \
-        if (root_tag == NULL)                                                                 \
-            return "Cannot create root tag";                                                  \
-        xml_stream_t *xml_stm = xml_stream_open(output, root_tag);                            \
-        if (xml_stm == NULL)                                                                  \
-            return "Cannot open xml stream";                                                  \
-        xml_tag_free(root_tag);                                                               \
-                                                                                              \
-        /* travasing streams */                                                               \
-        for (                                                                                 \
-            struct pp_token_s *tok = pp_tokstream_get(lcontext, pp_tokstm);                   \
-            tok != NULL;                                                                      \
-            pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm))                    \
-        {                                                                                     \
-            /* tag for tokens*/                                                               \
-            xml_tag_t *tok_tag = xml_tag_new("token");                                        \
-            if (root_tag == NULL)                                                             \
-                return "Cannot create token tag";                                             \
-                                                                                              \
-            /* fill with attributes */                                                        \
-            switch (tok->type)                                                                \
-            {                                                                                 \
-            case PP_TOK_IDENTIFIER:                                                           \
-                xml_tag_attribute_set(tok_tag, "type", "identifier");                         \
-                xml_tag_attribute_set(tok_tag, "content", tok->content);                      \
-                break;                                                                        \
-            case PP_TOK_PP_NUMBER:                                                            \
-                xml_tag_attribute_set(tok_tag, "type", "preprocessor number");                \
-                xml_tag_attribute_set(tok_tag, "content", tok->content);                      \
-                break;                                                                        \
-            case PP_TOK_STRING_LIT:                                                           \
-                xml_tag_attribute_set(tok_tag, "type", "string literal");                     \
-                xml_tag_attribute_set(tok_tag, "content", tok->content);                      \
-                break;                                                                        \
-            case PP_TOK_CHAR_CONST:                                                           \
-                xml_tag_attribute_set(tok_tag, "type", "char constant");                      \
-                char valstr[2] = {tok->value, '\0'};                                          \
-                xml_tag_attribute_set(tok_tag, "value", valstr);                              \
-                break;                                                                        \
-            case PP_TOK_HEADER:                                                               \
-                xml_tag_attribute_set(tok_tag, "type", "header name");                        \
-                xml_tag_attribute_set(tok_tag, "name", tok->header_name);                     \
-                xml_tag_attribute_set(tok_tag, "angled", tok->is_angled ? "yes" : "no");      \
-                break;                                                                        \
-            case PP_TOK_PUNCTUATOR:                                                           \
-                xml_tag_attribute_set(tok_tag, "type", "punctuator");                         \
-                xml_tag_attribute_set(tok_tag, "kind", "unknown");                            \
-                /* finding human readable description*/                                       \
-                for (size_t i = 0; PUNC_KIND_NAMES[i].name != NULL; i++)                      \
-                    if (PUNC_KIND_NAMES[i].kind == tok->kind)                                 \
-                    {                                                                         \
-                        xml_tag_attribute_set(tok_tag, "kind", PUNC_KIND_NAMES[i].name);      \
-                        break;                                                                \
-                    }                                                                         \
-                break;                                                                        \
-            case PP_TOK_OTHER:                                                                \
-                xml_tag_attribute_set(tok_tag, "type", "other");                              \
-                xml_tag_attribute_set(tok_tag, "content", tok->content);                      \
-                break;                                                                        \
-                                                                                              \
-            case PP_TOK_DIRECTIVE_START:                                                      \
-                xml_tag_attribute_set(tok_tag, "type", "directive start");                    \
-                break;                                                                        \
-            case PP_TOK_DIRECTIVE_STOP:                                                       \
-                xml_tag_attribute_set(tok_tag, "type", "directive end");                      \
-                break;                                                                        \
-                                                                                              \
-            case PP_TOK_ERROR:                                                                \
-                xml_tag_attribute_set(tok_tag, "type", "error");                              \
-                xml_tag_attribute_set(tok_tag, "msg", tok->error_msg);                        \
-                break;                                                                        \
-            }                                                                                 \
-                                                                                              \
-            /* write on stream*/                                                              \
-            if (!xml_stream_tag_empty(xml_stm, tok_tag))                                      \
-                return "Cannot write token tag on xml stream";                                \
-            xml_tag_free(tok_tag);                                                            \
-        }                                                                                     \
-                                                                                              \
-        /*terminate streams, and close underliyng resources*/                                 \
-        xml_stream_close(xml_stm, true);                                                      \
-        pp_tokstream_close(pp_tokstm, true);                                                  \
-                                                                                              \
-        /* don't need context anymore */                                                      \
-        context_free(lcontext);                                                               \
-                                                                                              \
-        /* now the memstream was closed by xml_stream_close, so we can check the content */   \
-                                                                                              \
-        /* check result */                                                                    \
-        if (strcmp(EXP_XML, out_buf) == 0)                                                    \
-        {                                                                                     \
-            /* xml out corrispond*/                                                           \
-            free(out_buf);                                                                    \
-            return NULL;                                                                      \
-        }                                                                                     \
-                                                                                              \
-        char *out_msg;                                                                        \
-        size_t out_msg_len;                                                                   \
-        FILE *out_msg_f = open_memstream(&out_msg, &out_msg_len);                             \
-        if (out_msg_f == NULL)                                                                \
-            return "Cannot open buffer for output message";                                   \
-        fprintf(out_msg_f,                                                                    \
-                "\nTest text was:\n\t%s\nExpected result was:\n\t%s\nObtained instead\n\t%s", \
-                TEXT, EXP_XML, out_buf);                                                      \
-        fclose(out_msg_f);                                                                    \
-                                                                                              \
-        return out_msg;                                                                       \
+static const char *_test_tokenize(char const *testcase, char const *text, char const *exp_xml)
+{
+    context_t *lcontext = context_new(NULL, testcase);
+
+    /* opening the various streams */
+    FILE *text_f = fmemopen(text, strlen(text), "r");
+    if (text_f == NULL)
+        return "Cannot open memory as stream";
+    linestream_t *lines = linestream_open(lcontext, text_f);
+    if (lines == NULL)
+        return "Cannot open linestream";
+    pp_tokstream_t *pp_tokstm = pp_tokstream_open(lcontext, lines);
+    if (pp_tokstm == NULL)
+        return "Cannot open tokenstream";
+
+    /* creating end buffer */
+    size_t out_size;
+    char *out_buf;
+    FILE *output = open_memstream(&out_buf, &out_size);
+    if (output == NULL)
+        return "open_memstream failed to open output buffer";
+
+    /* creating xml stream */
+    xml_tag_t *root_tag = xml_tag_new("tokens");
+    if (root_tag == NULL)
+        return "Cannot create root tag";
+    xml_stream_t *xml_stm = xml_stream_open(output, root_tag);
+    if (xml_stm == NULL)
+        return "Cannot open xml stream";
+    xml_tag_free(root_tag);
+
+    /* travasing streams */
+    for (
+        struct pp_token_s *tok = pp_tokstream_get(lcontext, pp_tokstm);
+        tok != NULL;
+        pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm))
+    { /* tag for tokens*/
+        xml_tag_t *tok_tag = xml_tag_new("token");
+        if (root_tag == NULL)
+            return "Cannot create token tag";
+
+        /* fill with attributes */
+        switch (tok->type)
+        {
+        case PP_TOK_IDENTIFIER:
+            xml_tag_attribute_set(tok_tag, "type", "identifier");
+            xml_tag_attribute_set(tok_tag, "content", tok->content);
+            break;
+        case PP_TOK_PP_NUMBER:
+            xml_tag_attribute_set(tok_tag, "type", "preprocessor number");
+            xml_tag_attribute_set(tok_tag, "content", tok->content);
+            break;
+        case PP_TOK_STRING_LIT:
+            xml_tag_attribute_set(tok_tag, "type", "string literal");
+            xml_tag_attribute_set(tok_tag, "content", tok->content);
+            break;
+        case PP_TOK_CHAR_CONST:
+            xml_tag_attribute_set(tok_tag, "type", "char constant");
+            char valstr[2] = {tok->value, '\0'};
+            xml_tag_attribute_set(tok_tag, "value", valstr);
+            break;
+        case PP_TOK_HEADER:
+            xml_tag_attribute_set(tok_tag, "type", "header name");
+            xml_tag_attribute_set(tok_tag, "name", tok->header_name);
+            xml_tag_attribute_set(tok_tag, "angled", tok->is_angled ? "yes" : "no");
+            break;
+        case PP_TOK_PUNCTUATOR:
+            xml_tag_attribute_set(tok_tag, "type", "punctuator");
+            xml_tag_attribute_set(tok_tag, "kind", "unknown"); /* finding human readable description*/
+            for (size_t i = 0; PUNC_KIND_NAMES[i].name != NULL; i++)
+                if (PUNC_KIND_NAMES[i].kind == tok->kind)
+                {
+                    xml_tag_attribute_set(tok_tag, "kind", PUNC_KIND_NAMES[i].name);
+                    break;
+                }
+            break;
+        case PP_TOK_OTHER:
+            xml_tag_attribute_set(tok_tag, "type", "other");
+            xml_tag_attribute_set(tok_tag, "content", tok->content);
+            break;
+
+        case PP_TOK_DIRECTIVE_START:
+            xml_tag_attribute_set(tok_tag, "type", "directive start");
+            break;
+        case PP_TOK_DIRECTIVE_STOP:
+            xml_tag_attribute_set(tok_tag, "type", "directive end");
+            break;
+
+        case PP_TOK_ERROR:
+            xml_tag_attribute_set(tok_tag, "type", "error");
+            xml_tag_attribute_set(tok_tag, "msg", tok->error_msg);
+            break;
+        }
+
+        /* write on stream*/
+        if (!xml_stream_tag_empty(xml_stm, tok_tag))
+            return "Cannot write token tag on xml stream";
+        xml_tag_free(tok_tag);
+    }
+
+    /*terminate streams, and close underliyng resources*/
+    xml_stream_close(xml_stm, true);
+    pp_tokstream_close(pp_tokstm, true);
+
+    /* don't need context anymore */
+    context_free(lcontext);
+
+    /* now the memstream was closed by xml_stream_close, so we can check the content */
+
+    /* check result */
+    if (strcmp(exp_xml, out_buf) == 0)
+    { /* xml out corrispond*/
+        free(out_buf);
+        return NULL;
+    }
+
+    char *out_msg;
+    size_t out_msg_len;
+    FILE *out_msg_f = open_memstream(&out_msg, &out_msg_len);
+    if (out_msg_f == NULL)
+        return "Cannot open buffer for output message";
+    fprintf(out_msg_f,
+            "\nTest text was:\n\t%s\nExpected result was:\n\t%s\nObtained instead\n\t%s",
+            text, exp_xml, out_buf);
+    fclose(out_msg_f);
+
+    return out_msg;
+}
+
+#define TEST(TESTCASE, TEXT, EXP_XML)                                          \
+    const char *test_tokenize_##TESTCASE()                                     \
+    {                                                                          \
+        return _test_tokenize("Testing tokenizing " #TESTCASE, TEXT, EXP_XML); \
     }
 
 // --- TESTS ---
@@ -291,9 +292,8 @@ TEST(multiline_str_literals,                                                    
      "<token content=\"this is /* not a comment */ \" type=\"string literal\" />"\
      "</tokens>")
 TEST(multiline_unended,
-"foo /* bar ops this is not ended...",
+     "foo /* bar ops this is not ended...",
      "<tokens>"
      "<token content=\"foo\" type=\"identifier\" />"
      "<token msg=\"Unexpected EOF while scanning multiline comment\" type=\"error\" />"
-     "</tokens>"
-)
+     "</tokens>")
