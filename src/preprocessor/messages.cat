@@ -24,12 +24,3 @@ TOKENIZER:
     CONTEXT_GETTING "getting a new token"
 
     CMP_UNKNOW "pp_tok_cmp called with value outside enum"
-
-TOKENIZER_PRINT:
-    REPR_IDENTIFIER "<identifier pos=\"%lu:%lu\" name=\"%s\">"
-
-    ERROR "/* %s */"
-    REPR_ERROR "<error pos=\"%lu:%lu\" msg=\"%s\">"
-
-    UNKNOW "snprintf_tok called with value outside enum"
-    REPR_UNKNOW "snprintf_repr_tok called with value outside enum"
