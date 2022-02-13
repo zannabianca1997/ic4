@@ -485,10 +485,9 @@ static bool write_tag(xml_stream_t *stream, xml_tag_t const *tag, enum tag_types
         if (fprintf(stream->target, " %s=\"", tag->attributes[i].name) == EOF)
             return false;
         // printing escaped attribute value
-        fflush(stream->target);
         if (fprintf(stream->escaped_target, "%s", tag->attributes[i].value) == EOF)
             return false;
-        fflush(stream->escaped_target);
+        fflush(stream->escaped_target); // force to write on the stream
         // printing end of attribute value
         if (fprintf(stream->target, "\"") == EOF)
             return false;
@@ -570,30 +569,32 @@ static ssize_t escaped_write(void *cookie, const char *buf, size_t size)
 
 int xml_stream_putc(int ch, xml_stream_t *stream)
 {
-    fflush(stream->target);
-    return fputc(ch, stream->escaped_target);
+    int res = fputc(ch, stream->escaped_target);
     fflush(stream->escaped_target);
+    
+    return res;
 }
 int xml_stream_puts(const char *s, xml_stream_t *stream)
 {
-    fflush(stream->target);
-    return fputs(s, stream->escaped_target);
+    int res =  fputs(s, stream->escaped_target);
     fflush(stream->escaped_target);
+
+    return res;
 }
 int xml_stream_printf(xml_stream_t *stream, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    fflush(stream->target);
-    int result = vfprintf(stream->escaped_target, fmt, ap);
+    int res = vfprintf(stream->escaped_target, fmt, ap);
     fflush(stream->escaped_target);
     va_end(ap);
 
-    return result;
+    return res;
 }
 int xml_stream_vprintf(xml_stream_t *stream, const char *fmt, va_list ap)
 {
-    fflush(stream->target);
-    return vfprintf(stream->escaped_target, fmt, ap);
+    int res =  vfprintf(stream->escaped_target, fmt, ap);
     fflush(stream->escaped_target);
+
+    return res;
 }
