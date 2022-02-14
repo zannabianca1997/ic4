@@ -22,13 +22,18 @@ static const char *const TEST_LINES[] = {
     "Line1",
     "This is line 2 ",
     " This is another line",
-    "",
     "Oh no, it's still going?",
     "Please kill me",
     NULL};
 
+// TODO: refactor out buffers (open_memstream is better)
+
 static char linebuf[LINES_BUF_MAX_LEN + 1];
 static char report_msg[REPORT_MSG_MAX_LEN + 1];
+
+// TODO: refactor to use xml output
+// TODO: test new line splitting
+// TODO: check missed escaping warning
 
 const char *test_rawlines()
 {
@@ -106,15 +111,14 @@ static const char *const TEST_MERGING_LINES[] = {
     "Line1",
     "This is line 2 \\",
     " This is another line\\",
-    "\\",
     "Oh no, it's still going?",
     "Please kill me",
     NULL};
 
 // how many components should be in every logical line
-static const unsigned LOGICAL_LINES_COMPONENTS[] = {1, 4, 1};
-// how many components should be in every logical line
-static const unsigned LOGICAL_LINES_STARTS[] = {1, 2, 6};
+static const unsigned LOGICAL_LINES_COMPONENTS[] = {1, 3, 1};
+// where the logical lines should start
+static const unsigned LOGICAL_LINES_STARTS[] = {1, 2, 5};
 // whats inside each?
 static const char *const LOGICAL_LINES_CONTENT[] = {
     "Line1",
