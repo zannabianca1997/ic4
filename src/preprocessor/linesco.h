@@ -16,10 +16,6 @@
 // open a linestream from file
 linestream_t *linestream_open(context_t *context, FILE *source);
 
-// close a linestream
-// if recursive_close the underling stream is closed too
-void linestream_close(linestream_t *stream, bool recursive_close);
-
 //TODO: write linestream setup struct (e.g. if warn of \ as last non-ws char, or last line is non-empty)
 
 #endif // _LINESCO_H

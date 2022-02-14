@@ -31,15 +31,4 @@
  */
 pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source);
 
-/**
- * @brief Close a token stream
- * 
- * Close a token stream, freeing the resources allocates with it.
- * If recursive_close is true, the underlying stream is closed too, and instructed to close it's source
- * 
- * @param stream the stream to close
- * @param recursive_close if stream closure is to propagate
- */
-void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close);
-
 #endif // _TOKENIZERCO_H

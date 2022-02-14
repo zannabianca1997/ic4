@@ -8,6 +8,7 @@
 #define _LINES_H
 
 #include <stddef.h> // size_t
+#include <stdbool.h>
 
 #include "../misc/context/context.h"
 
@@ -41,5 +42,9 @@ typedef struct linestream_s linestream_t;
 
 // get the next line in a linestream
 struct logical_line_s *linestream_get(context_t *context, linestream_t *stream);
+
+// close a linestream
+// if recursive_close the underling stream is closed too
+void linestream_close(linestream_t *stream, bool recursive_close);
 
 #endif // _LINES_H

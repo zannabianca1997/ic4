@@ -41,7 +41,6 @@ struct pp_token_s
         PP_TOK_CHAR_CONST, // char constants
         PP_TOK_HEADER,     // Header names
         PP_TOK_PUNCTUATOR, // punctuators
-        PP_TOK_OTHER,      // not recognized chars
 
         // In-Band structure info
 
@@ -56,7 +55,7 @@ struct pp_token_s
 
     union
     {
-        // identifiers, pp_number, string literals, other
+        // identifiers, pp_number, string literals
         char *content;
 
         // header names
@@ -156,7 +155,7 @@ struct pp_token_s
 
         // error message
         struct {
-            char const *msg;
+            char *msg;
             enum loglevel_e severity; } error;
     };
 };
@@ -196,5 +195,16 @@ typedef struct pp_tokstream_s pp_tokstream_t;
  * @return struct pp_token_s* the taken token, or NULL if source has exausted
  */
 struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream);
+
+/**
+ * @brief Close a token stream
+ * 
+ * Close a token stream, freeing the resources allocates with it.
+ * If recursive_close is true, the underlying stream is closed too, and instructed to close it's source
+ * 
+ * @param stream the stream to close
+ * @param recursive_close if stream closure is to propagate
+ */
+void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close);
 
 #endif // _TOKENIZER_H
