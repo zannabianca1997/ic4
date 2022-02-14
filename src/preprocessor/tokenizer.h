@@ -55,14 +55,21 @@ struct pp_token_s
 
     union
     {
-        // identifiers, pp_number, string literals
-        char *content;
+        // identifiers, pp_number
+        char *name;
+
+        // string literals
+        struct
+        {
+            char *value;
+            size_t len;
+        } string;
 
         // header names
         struct
         {
-            char *name; // the name of the header
-            bool is_angled;    // if the header is angled or not
+            char *name;     // the name of the header
+            bool is_angled; // if the header is angled or not
         } header;
 
         // char consts
@@ -154,9 +161,11 @@ struct pp_token_s
         } punc_kind;
 
         // error message
-        struct {
+        struct
+        {
             char *msg;
-            enum loglevel_e severity; } error;
+            enum loglevel_e severity;
+        } error;
     };
 };
 

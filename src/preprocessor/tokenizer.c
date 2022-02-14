@@ -169,7 +169,7 @@ void pp_tok_free(struct pp_token_s *token)
     if (token->type == PP_TOK_IDENTIFIER ||
         token->type == PP_TOK_PP_NUMBER ||
         token->type == PP_TOK_STRING_LIT)
-        free(token->content);
+        free(token->name);
     if (token->type == PP_TOK_HEADER)
         free(token->header.name);
     if (token->type == PP_TOK_ERROR)
@@ -189,7 +189,7 @@ bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b)
     case PP_TOK_IDENTIFIER:
     case PP_TOK_PP_NUMBER:
     case PP_TOK_STRING_LIT:
-        return strcmp(a->content, b->content) == 0;
+        return strcmp(a->name, b->name) == 0;
 
     case PP_TOK_CHAR_CONST:
         return a->char_value == b->char_value;
@@ -339,7 +339,7 @@ static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstre
         log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
 
     new_token->type = PP_TOK_IDENTIFIER;
-    new_token->content = name;
+    new_token->name = name;
 
     context_free(lcontext);
 
@@ -360,9 +360,9 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
 
     context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_PP_NUMBER);
 
-    // allocate space for the content
-    char *content = malloc(strlen(stream->current_line->content) - stream->cursor + 1);
-    if (content == NULL)
+    // allocate space for the name
+    char *name = malloc(strlen(stream->current_line->content) - stream->cursor + 1);
+    if (name == NULL)
         log_error(lcontext, TOKENIZER_MALLOC_FAIL_PP_NUMBER);
 
     // count copied chars
@@ -370,7 +370,7 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
 
     // consume optional perion
     if (stream->current_line->content[stream->cursor + numlen] == '.')
-        content[numlen++] = '.';
+        name[numlen++] = '.';
 
     // check required digit
     if (!isdigit(stream->current_line->content[stream->cursor + numlen]))
@@ -381,7 +381,7 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
 
     do
     {
-        content[numlen] = stream->current_line->content[stream->cursor + numlen];
+        name[numlen] = stream->current_line->content[stream->cursor + numlen];
         numlen++;
     } while (stream->current_line->content[stream->cursor + numlen] != '\0' &&              // if the line is still going and
              (is_identifier_char(stream->current_line->content[stream->cursor + numlen]) || // next char is digit, or alpha, or underscore
@@ -389,15 +389,15 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
               (is_sign(stream->current_line->content[stream->cursor + numlen]) &&           // ora a sign, but only if
                is_exp_start(stream->current_line->content[stream->cursor + numlen - 1])))); // preceeded by a exponent start
 
-    // 0-terminate content
-    content[numlen] = '\0';
+    // 0-terminate name
+    name[numlen] = '\0';
 
     // shrink name
-    char *new_content = realloc(content, numlen + 1);
+    char *new_content = realloc(name, numlen + 1);
     if (new_content == NULL)
-        log_warning(lcontext, TOKENIZER_MALLOC_FAIL_SHRINKPP_NUMBER); // continue with unshrinked content
+        log_warning(lcontext, TOKENIZER_MALLOC_FAIL_SHRINKPP_NUMBER); // continue with unshrinked name
     else
-        content = new_content;
+        name = new_content;
 
     // create token
     struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
@@ -405,7 +405,7 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
         log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
 
     new_token->type = PP_TOK_PP_NUMBER;
-    new_token->content = content;
+    new_token->name = name;
 
     context_free(lcontext);
 
@@ -621,7 +621,8 @@ static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tok
         log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
 
     new_token->type = PP_TOK_STRING_LIT;
-    new_token->content = content;
+    new_token->string.value = content;
+    new_token->string.len = writtenchars+1;
 
     context_free(lcontext);
 
