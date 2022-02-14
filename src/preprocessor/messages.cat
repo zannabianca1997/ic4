@@ -13,10 +13,14 @@ LINESTREAM:
 TOKENIZER:
     MALLOC_FAIL_OPEN "malloc failed in creating token stream struct"
     MALLOC_FAIL_IDENTIFIER "malloc failed in allocating space for identifier name"
+    MALLOC_FAIL_ERROR "malloc failed in allocating space for error message"
     MALLOC_FAIL_SHRINKIDENTIFIER "malloc failed in shrinking space for identifier name. This will occupy more memory"
     MALLOC_FAIL_TOKEN "malloc failde in creating token struct"
 
     EOF_MULTILINE "Unexpected EOF while scanning multiline comment"
+
+    STRAY_CHAR_OPEN "Stray \""
+    STRAY_CHAR_CLOSE "\" in the input"
 
     CONTEXT_OPENING "opening tokenstream"
     CONTEXT_IDENTIFIER "parsing identifier"

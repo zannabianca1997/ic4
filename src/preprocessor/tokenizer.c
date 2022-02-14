@@ -12,12 +12,13 @@
 
 #include <stdlib.h>  // malloc, realloc, free
 #include <stdbool.h> // bool
-#include <ctype.h>   // isalpha, isalnum, isdigit, isspace
+#include <ctype.h>   // isalpha, isalnum, isdigit, isspace, isprint
 #include <string.h>  // strlen
 
 #include "../misc/context/context.h"
 #include "../misc/bookmark.h"
 #include "../misc/log/log.h"
+#include "../misc/charescape.h"
 
 #include "messages.cat.h"
 
@@ -25,7 +26,6 @@
 #include "tokenizerco.h"
 
 #include "lines.h"
-#include "linesco.h"
 
 #define PUNCTUATOR_LENGTH 3
 
@@ -168,11 +168,12 @@ void pp_tok_free(struct pp_token_s *token)
 {
     if (token->type == PP_TOK_IDENTIFIER ||
         token->type == PP_TOK_PP_NUMBER ||
-        token->type == PP_TOK_STRING_LIT ||
-        token->type == PP_TOK_OTHER)
+        token->type == PP_TOK_STRING_LIT)
         free(token->content);
     if (token->type == PP_TOK_HEADER)
         free(token->header.name);
+    if (token->type == PP_TOK_ERROR)
+        free(token->error.msg);
     free(token);
 }
 
@@ -188,7 +189,6 @@ bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b)
     case PP_TOK_IDENTIFIER:
     case PP_TOK_PP_NUMBER:
     case PP_TOK_STRING_LIT:
-    case PP_TOK_OTHER:
         return strcmp(a->content, b->content) == 0;
 
     case PP_TOK_CHAR_CONST:
@@ -361,6 +361,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 {
     context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_GETTING);
 
+    // the token parsed
     struct pp_token_s *new_token = NULL;
 
     do
@@ -391,7 +392,12 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
                     log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
 
                 new_token->type = PP_TOK_ERROR;
-                new_token->error.msg = TOKENIZER_EOF_MULTILINE;
+
+                new_token->error.msg = malloc(strlen(TOKENIZER_EOF_MULTILINE) + 1);
+                if (new_token->error.msg == NULL)
+                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
+                strcpy(new_token->error.msg, TOKENIZER_EOF_MULTILINE);
+
                 new_token->error.severity = LOG_ERROR;
 
                 break;
@@ -414,8 +420,6 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
         stream->cursor += best_chars; // update the cursor
         // if the token is non-null the cycle will break
 
-        // TODO: if best_chars == 0 (all parsing function failed) emit an "OTHER" token
-
         if (stream->cursor == strlen(stream->current_line->content))
         {
             // line is completed
@@ -424,6 +428,26 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
             line_free(stream->current_line);
             stream->current_line = NULL;
+        }
+        else if (best_chars == 0)
+        {
+            // all tokenization failed, collecting stray char
+            char stray = stream->current_line->content[stream->cursor++];
+
+            // creating error token
+            new_token = malloc(sizeof(struct pp_token_s));
+            if (new_token == NULL)
+                log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+            new_token->type = PP_TOK_ERROR;
+            new_token->error.severity = LOG_ERROR;
+
+            new_token->error.msg = malloc(strlen(TOKENIZER_STRAY_CHAR_OPEN) +
+                                          strlen(CHARESCAPE(stray)) +
+                                          strlen(TOKENIZER_STRAY_CHAR_CLOSE) + 1);
+            if (new_token->error.msg == NULL)
+                log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
+            strcat(strcat(strcpy(new_token->error.msg, TOKENIZER_STRAY_CHAR_OPEN), CHARESCAPE(stray)), TOKENIZER_STRAY_CHAR_CLOSE);
         }
 
     } while (new_token == NULL); // break at the first non-null token found

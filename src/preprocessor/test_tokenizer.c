@@ -169,10 +169,6 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
                     break;
                 }
             break;
-        case PP_TOK_OTHER:
-            xml_tag_attribute_set(tok_tag, "type", "other");
-            xml_tag_attribute_set(tok_tag, "content", tok->content);
-            break;
 
         case PP_TOK_DIRECTIVE_START:
             xml_tag_attribute_set(tok_tag, "type", "directive start");
@@ -255,8 +251,20 @@ TEST(space,
      " ",
      "<tokens>"
      "</tokens>")
+TEST(tab,
+     "\t",
+     "<tokens>"
+     "</tokens>")
+TEST(empty_line,
+     "\t   \t \t     \t",
+     "<tokens>"
+     "</tokens>")
 TEST(newline,
      "\n",
+     "<tokens>"
+     "</tokens>")
+TEST(empty_lines,
+     "\t   \t \n\t     \t",
      "<tokens>"
      "</tokens>")
 TEST(mixed_ws,
@@ -323,4 +331,27 @@ TEST(multiline_unended,
      "<tokens>"
      "<token content=\"foo\" type=\"identifier\" />"
      "<token msg=\"Unexpected EOF while scanning multiline comment\" severity=\"error\" type=\"error\" />"
+     "</tokens>")
+
+// -- stray chars
+
+TEST(stray_at,
+     "@",
+     "<tokens>"
+     "<token msg=\"Stray &quot;@&quot; in the input\" severity=\"error\" type=\"error\" />"
+     "</tokens>")
+TEST(stray_dollar,
+     "$",
+     "<tokens>"
+     "<token msg=\"Stray &quot;$&quot; in the input\" severity=\"error\" type=\"error\" />"
+     "</tokens>")
+TEST(stray_backtick,
+     "`",
+     "<tokens>"
+     "<token msg=\"Stray &quot;`&quot; in the input\" severity=\"error\" type=\"error\" />"
+     "</tokens>")
+TEST(stray_backslash,
+     "\\",
+     "<tokens>"
+     "<token msg=\"Stray &quot;\\\\&quot; in the input\" severity=\"error\" type=\"error\" />"
      "</tokens>")
