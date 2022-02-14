@@ -239,6 +239,32 @@ __attribute_const__
     return isalpha(ch) || (ch == '_');
 }
 
+#ifdef __GNUC__
+__attribute_const__
+#endif
+    /**
+ * @brief Check if a char is a sign
+ * @param ch the char to check
+ */
+    static bool
+    is_sign(char ch)
+{
+    return (ch == '+') || (ch == '-');
+}
+
+#ifdef __GNUC__
+__attribute_const__
+#endif
+    /**
+ * @brief Check if a char can be start of an exponent
+ * @param ch the char to check
+ */
+    static bool
+    is_exp_start(char ch)
+{
+    return (ch == 'e') || (ch == 'E') ||
+           (ch == 'p') || (ch == 'P');
+}
 // --- TOKEN PARSING FUNCTIONS ---
 
 /**
@@ -267,6 +293,9 @@ static struct pp_token_s *parse_whitespace(
     *n = space_len;
     return NULL;
 }
+
+/* TODO: both parse_identifier and parse_pp_number use a dinamically allocated buffer 
+         of the same lenght of the line. maybe use open_memstream?*/
 
 // parse an identifier
 static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
@@ -318,6 +347,72 @@ static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstre
     return new_token;
 }
 
+// parse a preprocessor number
+static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+{
+    // short circuit
+    if (!(stream->current_line->content[stream->cursor] == '.' || isdigit(stream->current_line->content[stream->cursor])))
+    {
+        // preprocessing numbers must begin with a period or a digit
+        *n = 0;
+        return NULL;
+    }
+
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_PP_NUMBER);
+
+    // allocate space for the content
+    char *content = malloc(strlen(stream->current_line->content) - stream->cursor + 1);
+    if (content == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_PP_NUMBER);
+
+    // count copied chars
+    size_t numlen = 0;
+
+    // consume optional perion
+    if (stream->current_line->content[stream->cursor + numlen] == '.')
+        content[numlen++] = '.';
+
+    // check required digit
+    if (!isdigit(stream->current_line->content[stream->cursor + numlen]))
+    {
+        *n = 0;
+        return NULL;
+    }
+
+    do
+    {
+        content[numlen] = stream->current_line->content[stream->cursor + numlen];
+        numlen++;
+    } while (stream->current_line->content[stream->cursor + numlen] != '\0' &&              // if the line is still going and
+             (is_identifier_char(stream->current_line->content[stream->cursor + numlen]) || // next char is digit, or alpha, or underscore
+              stream->current_line->content[stream->cursor + numlen] == '.' ||              // or a period
+              (is_sign(stream->current_line->content[stream->cursor + numlen]) &&           // ora a sign, but only if
+               is_exp_start(stream->current_line->content[stream->cursor + numlen - 1])))); // preceeded by a exponent start
+
+    // 0-terminate content
+    content[numlen] = '\0';
+
+    // shrink name
+    char *new_content = realloc(content, numlen + 1);
+    if (new_content == NULL)
+        log_warning(lcontext, TOKENIZER_MALLOC_FAIL_SHRINKPP_NUMBER); // continue with unshrinked content
+    else
+        content = new_content;
+
+    // create token
+    struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
+    if (new_token == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+    new_token->type = PP_TOK_PP_NUMBER;
+    new_token->content = content;
+
+    context_free(lcontext);
+
+    *n = numlen;
+    return new_token;
+}
+
 // TODO: parse string literals
 // TODO: parse char consts
 // TODO: parst punctuators
@@ -327,6 +422,7 @@ static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstre
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_whitespace,
     &parse_identifier,
+    &parse_pp_number,
     NULL};
 
 // --- MULTILINE COMMENTS SPECIAL RULE ---
