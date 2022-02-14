@@ -413,6 +413,9 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
             struct pp_token_s *try_token = PARSING_FUNCTIONS[i](lcontext, stream, &try_chars);
             if (try_chars > best_chars)
             {
+                // found a longer token, destroing the other
+                if (new_token != NULL)
+                    pp_tok_free(new_token);
                 new_token = try_token;
                 best_chars = try_chars;
             }
