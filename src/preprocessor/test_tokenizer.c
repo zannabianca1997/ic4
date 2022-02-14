@@ -245,6 +245,8 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
 
 // --- TESTS ---
 
+// print('"' + inp.replace('"','\\"').replace("><", '>"\n"<') + '"') # a simple python one-liner to convert the xml output into the input
+
 // -- whitespaces
 
 TEST(space,
@@ -289,21 +291,91 @@ TEST(underscore_id,
      "<tokens>"
      "<token content=\"_contain_under___scores\" type=\"identifier\" />"
      "</tokens>")
-/*
-TODO: add other/pp_num to parse this
-TEST(number_wrongid,
-     "9_start_wt_num",
-     "<tokens>"
-     "<token content=\"_contain_under___scores\" type=\"identifier\" />"
-     "</tokens>")
-*/
 TEST(identifiers,
-     "  foo\nbar32 \\\n baz_hlle \t _bara",
+     "  foo\nbar32 \\\n baz_hlle ans \t _bara",
      "<tokens>"
      "<token content=\"foo\" type=\"identifier\" />"
      "<token content=\"bar32\" type=\"identifier\" />"
      "<token content=\"baz_hlle\" type=\"identifier\" />"
+     "<token content=\"ans\" type=\"identifier\" />"
      "<token content=\"_bara\" type=\"identifier\" />"
+     "</tokens>")
+
+// -- preprocessor numbers
+
+TEST(ints,
+     "1 23 \n 42 456 22 \n789203\n 3",
+     "<tokens>"
+     "<token content=\"1\" type=\"preprocessor number\" />"
+     "<token content=\"23\" type=\"preprocessor number\" />"
+     "<token content=\"42\" type=\"preprocessor number\" />"
+     "<token content=\"456\" type=\"preprocessor number\" />"
+     "<token content=\"22\" type=\"preprocessor number\" />"
+     "<token content=\"789203\" type=\"preprocessor number\" />"
+     "<token content=\"3\" type=\"preprocessor number\" />"
+     "</tokens>")
+TEST(floats,
+     "1. 2.3 \n 42. 4.56 2.2 \n78.9203\n 3.",
+     "<tokens>"
+     "<token content=\"1.\" type=\"preprocessor number\" />"
+     "<token content=\"2.3\" type=\"preprocessor number\" />"
+     "<token content=\"42.\" type=\"preprocessor number\" />"
+     "<token content=\"4.56\" type=\"preprocessor number\" />"
+     "<token content=\"2.2\" type=\"preprocessor number\" />"
+     "<token content=\"78.9203\" type=\"preprocessor number\" />"
+     "<token content=\"3.\" type=\"preprocessor number\" />"
+     "</tokens>")
+TEST(leading_dots,
+     ".1 .23 \n .42 .456 .22 \n.789203\n .3",
+     "<tokens>"
+     "<token content=\".1\" type=\"preprocessor number\" />"
+     "<token content=\".23\" type=\"preprocessor number\" />"
+     "<token content=\".42\" type=\"preprocessor number\" />"
+     "<token content=\".456\" type=\"preprocessor number\" />"
+     "<token content=\".22\" type=\"preprocessor number\" />"
+     "<token content=\".789203\" type=\"preprocessor number\" />"
+     "<token content=\".3\" type=\"preprocessor number\" />"
+     "</tokens>")
+TEST(exponents,
+     "1.e5 2.3e+5 \n 42e-23 .46E+34 2.2E-1 \n.789203p2\n 3.p+86",
+     "<tokens>"
+     "<token content=\"1.e5\" type=\"preprocessor number\" />"
+     "<token content=\"2.3e+5\" type=\"preprocessor number\" />"
+     "<token content=\"42e-23\" type=\"preprocessor number\" />"
+     "<token content=\".46E+34\" type=\"preprocessor number\" />"
+     "<token content=\"2.2E-1\" type=\"preprocessor number\" />"
+     "<token content=\".789203p2\" type=\"preprocessor number\" />"
+     "<token content=\"3.p+86\" type=\"preprocessor number\" />"
+     "</tokens>")
+TEST(strange_numbers,
+     "1.e849dh34h7...34c.c34.c05 2.3...exb5 \n 0d.e.a.d.b.e.e.f .4..6E 1ex",
+     "<tokens>"
+     "<token content=\"1.e849dh34h7...34c.c34.c05\" type=\"preprocessor number\" />"
+     "<token content=\"2.3...exb5\" type=\"preprocessor number\" />"
+     "<token content=\"0d.e.a.d.b.e.e.f\" type=\"preprocessor number\" />"
+     "<token content=\".4..6E\" type=\"preprocessor number\" />"
+     "<token content=\"1ex\" type=\"preprocessor number\" />"
+     "</tokens>")
+/* 
+    This exemplify how the preprocessor can mislead.
+    Instead of the valid c code 0xE + 12, it is parsed as a single invalid number
+*/
+TEST(misleading_parse,
+     "0xE+12",
+     "<tokens>"
+     "<token content=\"0xE+12\" type=\"preprocessor number\" />"
+     "</tokens>")
+
+// --- number and id interaction
+TEST(number_seems_id,
+     "123abc_def",
+     "<tokens>"
+     "<token content=\"123abc_def\" type=\"preprocessor number\" />"
+     "</tokens>")
+TEST(id_seems_number,
+     "x123456",
+     "<tokens>"
+     "<token content=\"x123456\" type=\"identifier\" />"
      "</tokens>")
 
 // -- multiline comments
