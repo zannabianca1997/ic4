@@ -294,8 +294,8 @@ static struct pp_token_s *parse_whitespace(
     return NULL;
 }
 
-/* TODO: both parse_identifier and parse_pp_number use a dinamically allocated buffer 
-         of the same lenght of the line. maybe use open_memstream?*/
+/* TODO: both parse_identifier, parse_pp_number and parse_string_literal use a dinamically allocated buffer 
+         of the same lenght of the line. maybe use open_memstream or a ANSI growing buffer? */
 
 // parse an identifier
 static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
@@ -629,9 +629,28 @@ static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tok
     return new_token;
 }
 
+// eat a comment, give no token
+static struct pp_token_s *parse_comment(
+#ifdef __GNUC__
+    __attribute__((unused))
+#endif
+    context_t *context,
+    struct pp_tokstream_s const *stream, size_t *n)
+{
+    if (!(stream->current_line->content[stream->cursor] == '/' &&
+          stream->current_line->content[stream->cursor + 1] == '/'))
+    {
+        *n = 0;
+        return NULL; // not a comment
+    }
+
+    // eat all the line unconditionally
+    *n = strlen(stream->current_line->content) - stream->cursor;
+    return NULL;
+}
+
 // TODO: parse char consts
 // TODO: parst punctuators
-// TODO: parse comments
 // TODO: parse header names
 
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
@@ -639,6 +658,7 @@ static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_identifier,
     &parse_pp_number,
     &parse_string_literal,
+    &parse_comment,
     NULL};
 
 // --- MULTILINE COMMENTS SPECIAL RULE ---
