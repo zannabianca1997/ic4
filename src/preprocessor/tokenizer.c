@@ -413,7 +413,222 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
     return new_token;
 }
 
-// TODO: parse string literals
+//  parse a string literal
+static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+{
+    // short circuit
+    if (!(stream->current_line->content[stream->cursor] == '\"'))
+    {
+        // string literals must begin with a "
+        *n = 0;
+        return NULL;
+    }
+
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_STRING);
+
+    // allocate space for the content
+    char *content = malloc(strlen(stream->current_line->content) - stream->cursor + 1);
+    if (content == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_STRING);
+
+    // count readed chars
+    size_t takenchars = 1; // already took the initial "
+    // count written chars
+    size_t writtenchars = 0; // are different from takenchars cause escape sequences
+
+    while (stream->current_line->content[stream->cursor + takenchars] != '\"')
+    {
+        if (stream->current_line->content[stream->cursor + takenchars] == '\0')
+        {
+            // newline during string literal
+
+            struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
+            if (new_token == NULL)
+                log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+            new_token->type = PP_TOK_ERROR;
+
+            new_token->error.msg = malloc(strlen(TOKENIZER_NL_STRINGLIT) + 1);
+            if (new_token->error.msg == NULL)
+                log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
+            strcpy(new_token->error.msg, TOKENIZER_NL_STRINGLIT);
+
+            new_token->error.severity = LOG_ERROR;
+
+            context_free(lcontext);
+            free(content);
+
+            *n = takenchars;
+            return new_token;
+        }
+        else if (stream->current_line->content[stream->cursor + takenchars] == '\\')
+        {
+            // start of escape char
+            takenchars++;
+
+            // we know it's not the end of the line cause
+            // it would be an escaped newline, so we can safely check next char
+            switch (stream->current_line->content[stream->cursor + takenchars++])
+            {
+            case 't':
+                content[writtenchars++] = '\t';
+                break;
+            case 'n':
+                content[writtenchars++] = '\n';
+                break;
+            case 'r':
+                content[writtenchars++] = '\r';
+                break;
+            case '\"':
+                content[writtenchars++] = '\"';
+                break;
+            case '\'':
+                content[writtenchars++] = '\'';
+                break;
+            case '\\':
+                content[writtenchars++] = '\\';
+                break;
+
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            {
+                // octal digit
+                char ch = stream->current_line->content[stream->cursor + takenchars - 1] - '0';
+                // get up to other two octal digits
+                char nextc = stream->current_line->content[stream->cursor + takenchars];
+                if (nextc >= '0' && nextc <= '7')
+                {
+                    takenchars++;
+                    ch = 8 * ch + (nextc - '0');
+                    nextc = stream->current_line->content[stream->cursor + takenchars];
+                    if (nextc >= '0' && nextc <= '7')
+                    {
+                        takenchars++;
+                        ch = 8 * ch + (nextc - '0');
+                    }
+                }
+                // put the readed code in the string
+                content[writtenchars++] = ch;
+                break;
+            }
+
+            case 'x':
+            {
+                // hex digit
+                char ch = 0, nextc;
+                // implementation require us to take as many hex digits are there
+                while (isxdigit(nextc = stream->current_line->content[stream->cursor + takenchars]))
+                {
+                    takenchars++;
+                    switch (nextc)
+                    {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        ch = 16 * ch + (nextc - '0');
+                        break;
+                    case 'a':
+                    case 'b':
+                    case 'c':
+                    case 'd':
+                    case 'e':
+                    case 'f':
+                        ch = 16 * ch + (nextc + 10 - 'a');
+                        break;
+                    case 'A':
+                    case 'B':
+                    case 'C':
+                    case 'D':
+                    case 'E':
+                    case 'F':
+                        ch = 16 * ch + (nextc + 10 - 'A');
+                        break;
+                    }
+                }
+                // put the readed code in the string
+                content[writtenchars++] = ch;
+                break;
+            }
+
+            case 'u':
+                // unicode literals are unimplemented
+            default:
+            {
+                // unknow escape sequence
+                struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
+                if (new_token == NULL)
+                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+                new_token->type = PP_TOK_ERROR;
+
+                if (stream->current_line->content[stream->cursor + takenchars - 1] == 'u')
+                {
+                    new_token->error.msg = malloc(strlen(TOKENIZER_ESCAPE_UNICODE) + 1);
+                    if (new_token->error.msg == NULL)
+                        log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
+                    strcpy(new_token->error.msg, TOKENIZER_ESCAPE_UNICODE);
+                }
+                else
+                {
+                    new_token->error.msg = malloc(strlen(TOKENIZER_ESCAPE_UNKNOW) + 1);
+                    if (new_token->error.msg == NULL)
+                        log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
+                    strcpy(new_token->error.msg, TOKENIZER_ESCAPE_UNKNOW);
+                }
+
+                new_token->error.severity = LOG_ERROR;
+
+                context_free(lcontext);
+                free(content);
+
+                *n = takenchars;
+                return new_token;
+            }
+            }
+        }
+        else
+            // simple copy
+            content[writtenchars++] = stream->current_line->content[stream->cursor + takenchars++];
+    }
+    takenchars++; // take the last "
+
+    // 0-terminate content
+    content[writtenchars] = '\0';
+
+    // shrink content
+    char *new_content = realloc(content, writtenchars + 1);
+    if (new_content == NULL)
+        log_warning(lcontext, TOKENIZER_MALLOC_FAIL_SHRINKSTRING); // continue with unshrinked content
+    else
+        content = new_content;
+
+    // create token
+    struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
+    if (new_token == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+    new_token->type = PP_TOK_STRING_LIT;
+    new_token->content = content;
+
+    context_free(lcontext);
+
+    *n = takenchars;
+    return new_token;
+}
+
 // TODO: parse char consts
 // TODO: parst punctuators
 // TODO: parse comments
@@ -423,6 +638,7 @@ static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_whitespace,
     &parse_identifier,
     &parse_pp_number,
+    &parse_string_literal,
     NULL};
 
 // --- MULTILINE COMMENTS SPECIAL RULE ---
