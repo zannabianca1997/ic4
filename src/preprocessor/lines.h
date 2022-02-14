@@ -40,7 +40,14 @@ void line_free(struct logical_line_s *line);
 // contain all the data for a stream of logical lines
 typedef struct linestream_s linestream_t;
 
-// get the next line in a linestream
+/**
+ * @brief Get the next logical line in a linestream.
+ * Return NULL if stream is exausted. Empty line are skipped.
+ * 
+ * @param context the context needing these lines
+ * @param stream the source of the lines
+ * @return struct logical_line_s* the recovered line, or NULL if stream is exausted
+ */
 struct logical_line_s *linestream_get(context_t *context, linestream_t *stream);
 
 // close a linestream
