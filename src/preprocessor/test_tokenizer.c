@@ -138,20 +138,19 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
         {
         case PP_TOK_IDENTIFIER:
             xml_tag_attribute_set(tok_tag, "type", "identifier");
-            xml_tag_attribute_set(tok_tag, "content", tok->content);
+            xml_tag_attribute_set(tok_tag, "name", tok->name);
             break;
         case PP_TOK_PP_NUMBER:
             xml_tag_attribute_set(tok_tag, "type", "preprocessor number");
-            xml_tag_attribute_set(tok_tag, "content", tok->content);
+            xml_tag_attribute_set(tok_tag, "name", tok->name);
             break;
         case PP_TOK_STRING_LIT:
             xml_tag_attribute_set(tok_tag, "type", "string literal");
-            xml_tag_attribute_set(tok_tag, "content", tok->content);
+            xml_tag_attribute_set_with_len(tok_tag, "content", tok->string.value, tok->string.len);
             break;
         case PP_TOK_CHAR_CONST:
             xml_tag_attribute_set(tok_tag, "type", "char constant");
-            char valstr[2] = {tok->char_value, '\0'}; // local variabile is OK, it will be copied istantly
-            xml_tag_attribute_set(tok_tag, "value", valstr);
+            xml_tag_attribute_set_with_len(tok_tag, "value", &tok->char_value, 1);
             break;
         case PP_TOK_HEADER:
             xml_tag_attribute_set(tok_tag, "type", "header name");
@@ -279,26 +278,26 @@ TEST(mixed_ws,
 TEST(identifier,
      "hello",
      "<tokens>"
-     "<token content=\"hello\" type=\"identifier\" />"
+     "<token name=\"hello\" type=\"identifier\" />"
      "</tokens>")
 TEST(num_id,
      "by42",
      "<tokens>"
-     "<token content=\"by42\" type=\"identifier\" />"
+     "<token name=\"by42\" type=\"identifier\" />"
      "</tokens>")
 TEST(underscore_id,
      "_contain_under___scores",
      "<tokens>"
-     "<token content=\"_contain_under___scores\" type=\"identifier\" />"
+     "<token name=\"_contain_under___scores\" type=\"identifier\" />"
      "</tokens>")
 TEST(identifiers,
      "  foo\nbar32 \\\n baz_hlle ans \t _bara",
      "<tokens>"
-     "<token content=\"foo\" type=\"identifier\" />"
-     "<token content=\"bar32\" type=\"identifier\" />"
-     "<token content=\"baz_hlle\" type=\"identifier\" />"
-     "<token content=\"ans\" type=\"identifier\" />"
-     "<token content=\"_bara\" type=\"identifier\" />"
+     "<token name=\"foo\" type=\"identifier\" />"
+     "<token name=\"bar32\" type=\"identifier\" />"
+     "<token name=\"baz_hlle\" type=\"identifier\" />"
+     "<token name=\"ans\" type=\"identifier\" />"
+     "<token name=\"_bara\" type=\"identifier\" />"
      "</tokens>")
 
 // -- preprocessor numbers
@@ -306,55 +305,55 @@ TEST(identifiers,
 TEST(ints,
      "1 23 \n 42 456 22 \n789203\n 3",
      "<tokens>"
-     "<token content=\"1\" type=\"preprocessor number\" />"
-     "<token content=\"23\" type=\"preprocessor number\" />"
-     "<token content=\"42\" type=\"preprocessor number\" />"
-     "<token content=\"456\" type=\"preprocessor number\" />"
-     "<token content=\"22\" type=\"preprocessor number\" />"
-     "<token content=\"789203\" type=\"preprocessor number\" />"
-     "<token content=\"3\" type=\"preprocessor number\" />"
+     "<token name=\"1\" type=\"preprocessor number\" />"
+     "<token name=\"23\" type=\"preprocessor number\" />"
+     "<token name=\"42\" type=\"preprocessor number\" />"
+     "<token name=\"456\" type=\"preprocessor number\" />"
+     "<token name=\"22\" type=\"preprocessor number\" />"
+     "<token name=\"789203\" type=\"preprocessor number\" />"
+     "<token name=\"3\" type=\"preprocessor number\" />"
      "</tokens>")
 TEST(floats,
      "1. 2.3 \n 42. 4.56 2.2 \n78.9203\n 3.",
      "<tokens>"
-     "<token content=\"1.\" type=\"preprocessor number\" />"
-     "<token content=\"2.3\" type=\"preprocessor number\" />"
-     "<token content=\"42.\" type=\"preprocessor number\" />"
-     "<token content=\"4.56\" type=\"preprocessor number\" />"
-     "<token content=\"2.2\" type=\"preprocessor number\" />"
-     "<token content=\"78.9203\" type=\"preprocessor number\" />"
-     "<token content=\"3.\" type=\"preprocessor number\" />"
+     "<token name=\"1.\" type=\"preprocessor number\" />"
+     "<token name=\"2.3\" type=\"preprocessor number\" />"
+     "<token name=\"42.\" type=\"preprocessor number\" />"
+     "<token name=\"4.56\" type=\"preprocessor number\" />"
+     "<token name=\"2.2\" type=\"preprocessor number\" />"
+     "<token name=\"78.9203\" type=\"preprocessor number\" />"
+     "<token name=\"3.\" type=\"preprocessor number\" />"
      "</tokens>")
 TEST(leading_dots,
      ".1 .23 \n .42 .456 .22 \n.789203\n .3",
      "<tokens>"
-     "<token content=\".1\" type=\"preprocessor number\" />"
-     "<token content=\".23\" type=\"preprocessor number\" />"
-     "<token content=\".42\" type=\"preprocessor number\" />"
-     "<token content=\".456\" type=\"preprocessor number\" />"
-     "<token content=\".22\" type=\"preprocessor number\" />"
-     "<token content=\".789203\" type=\"preprocessor number\" />"
-     "<token content=\".3\" type=\"preprocessor number\" />"
+     "<token name=\".1\" type=\"preprocessor number\" />"
+     "<token name=\".23\" type=\"preprocessor number\" />"
+     "<token name=\".42\" type=\"preprocessor number\" />"
+     "<token name=\".456\" type=\"preprocessor number\" />"
+     "<token name=\".22\" type=\"preprocessor number\" />"
+     "<token name=\".789203\" type=\"preprocessor number\" />"
+     "<token name=\".3\" type=\"preprocessor number\" />"
      "</tokens>")
 TEST(exponents,
      "1.e5 2.3e+5 \n 42e-23 .46E+34 2.2E-1 \n.789203p2\n 3.p+86",
      "<tokens>"
-     "<token content=\"1.e5\" type=\"preprocessor number\" />"
-     "<token content=\"2.3e+5\" type=\"preprocessor number\" />"
-     "<token content=\"42e-23\" type=\"preprocessor number\" />"
-     "<token content=\".46E+34\" type=\"preprocessor number\" />"
-     "<token content=\"2.2E-1\" type=\"preprocessor number\" />"
-     "<token content=\".789203p2\" type=\"preprocessor number\" />"
-     "<token content=\"3.p+86\" type=\"preprocessor number\" />"
+     "<token name=\"1.e5\" type=\"preprocessor number\" />"
+     "<token name=\"2.3e+5\" type=\"preprocessor number\" />"
+     "<token name=\"42e-23\" type=\"preprocessor number\" />"
+     "<token name=\".46E+34\" type=\"preprocessor number\" />"
+     "<token name=\"2.2E-1\" type=\"preprocessor number\" />"
+     "<token name=\".789203p2\" type=\"preprocessor number\" />"
+     "<token name=\"3.p+86\" type=\"preprocessor number\" />"
      "</tokens>")
 TEST(strange_numbers,
      "1.e849dh34h7...34c.c34.c05 2.3...exb5 \n 0d.e.a.d.b.e.e.f .4..6E 1ex",
      "<tokens>"
-     "<token content=\"1.e849dh34h7...34c.c34.c05\" type=\"preprocessor number\" />"
-     "<token content=\"2.3...exb5\" type=\"preprocessor number\" />"
-     "<token content=\"0d.e.a.d.b.e.e.f\" type=\"preprocessor number\" />"
-     "<token content=\".4..6E\" type=\"preprocessor number\" />"
-     "<token content=\"1ex\" type=\"preprocessor number\" />"
+     "<token name=\"1.e849dh34h7...34c.c34.c05\" type=\"preprocessor number\" />"
+     "<token name=\"2.3...exb5\" type=\"preprocessor number\" />"
+     "<token name=\"0d.e.a.d.b.e.e.f\" type=\"preprocessor number\" />"
+     "<token name=\".4..6E\" type=\"preprocessor number\" />"
+     "<token name=\"1ex\" type=\"preprocessor number\" />"
      "</tokens>")
 /* 
     This exemplify how the preprocessor can mislead.
@@ -363,19 +362,19 @@ TEST(strange_numbers,
 TEST(misleading_parse,
      "0xE+12",
      "<tokens>"
-     "<token content=\"0xE+12\" type=\"preprocessor number\" />"
+     "<token name=\"0xE+12\" type=\"preprocessor number\" />"
      "</tokens>")
 
 // -- number and id interaction
 TEST(number_seems_id,
      "123abc_def",
      "<tokens>"
-     "<token content=\"123abc_def\" type=\"preprocessor number\" />"
+     "<token name=\"123abc_def\" type=\"preprocessor number\" />"
      "</tokens>")
 TEST(id_seems_number,
      "x123456",
      "<tokens>"
-     "<token content=\"x123456\" type=\"identifier\" />"
+     "<token name=\"x123456\" type=\"identifier\" />"
      "</tokens>")
 
 // -- string literals
@@ -409,7 +408,7 @@ TEST(strlit_identifier,
      "\"this is a string\"this_is_a_id",
      "<tokens>"
      "<token content=\"this is a string\" type=\"string literal\" />"
-     "<token content=\"this_is_a_id\" type=\"identifier\" />"
+     "<token name=\"this_is_a_id\" type=\"identifier\" />"
      "</tokens>")
 
 // -- multiline comments
@@ -421,13 +420,13 @@ TEST(multiline_as_ws,
 TEST(multiline_tok_divide,
      "foo/* This will divide the tokens */bar",
      "<tokens>"
-     "<token content=\"foo\" type=\"identifier\" />"
-     "<token content=\"bar\" type=\"identifier\" />"
+     "<token name=\"foo\" type=\"identifier\" />"
+     "<token name=\"bar\" type=\"identifier\" />"
      "</tokens>")
 TEST(multiline_unended,
      "foo /* bar ops this is not ended...",
      "<tokens>"
-     "<token content=\"foo\" type=\"identifier\" />"
+     "<token name=\"foo\" type=\"identifier\" />"
      "<token msg=\"Unexpected EOF while scanning multiline comment\" severity=\"error\" type=\"error\" />"
      "</tokens>")
 

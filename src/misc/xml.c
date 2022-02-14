@@ -48,6 +48,11 @@ struct xml_tag_s
          * value is not XML escaped
          */
         char *value;
+        /**
+         * @brief The length of the value
+         * This permit NUL to be in the field
+         */
+        size_t value_len;
     } * attributes;
 };
 
@@ -96,7 +101,7 @@ xml_tag_t *xml_tag_copy(xml_tag_t const *tag)
     new_tag->attributes_space = tag->attributes_num;
     new_tag->attributes_num = 0;
     for (size_t i = 0; i < tag->attributes_num; i++)
-        if (!xml_tag_attribute_set(new_tag, tag->attributes[i].name, tag->attributes[i].value))
+        if (!xml_tag_attribute_set_with_len(new_tag, tag->attributes[i].name, tag->attributes[i].value, tag->attributes[i].value_len))
         {
             xml_tag_free(new_tag);
             return NULL;
@@ -155,7 +160,7 @@ const char *xml_tag_name_get(xml_tag_t const *tag)
     return tag->name;
 }
 
-bool xml_tag_attribute_set(xml_tag_t *tag, const char *name, const char *value)
+bool xml_tag_attribute_set_with_len(xml_tag_t *tag, const char *name, const char *value, size_t len)
 {
     if (!check_name(name))
         return false;
@@ -171,12 +176,13 @@ bool xml_tag_attribute_set(xml_tag_t *tag, const char *name, const char *value)
         if (value != NULL)
         {
             // allocating space for new value
-            char *new_attr_value = realloc(tag->attributes[idx].value, strlen(value) + 1);
+            char *new_attr_value = realloc(tag->attributes[idx].value, len);
             if (new_attr_value == NULL)
                 return false;
             tag->attributes[idx].value = new_attr_value;
 
-            strcpy(tag->attributes[idx].value, value);
+            memcpy(tag->attributes[idx].value, value, len);
+            tag->attributes[idx].value_len = len;
         }
         else
         {
@@ -200,7 +206,7 @@ bool xml_tag_attribute_set(xml_tag_t *tag, const char *name, const char *value)
 
         // in memory
         char *name_mem = malloc(strlen(name) + 1);
-        char *value_mem = malloc(strlen(value) + 1);
+        char *value_mem = malloc(len);
         if (name_mem == NULL || value_mem == NULL)
         {
             if (name_mem != NULL)
@@ -230,14 +236,19 @@ bool xml_tag_attribute_set(xml_tag_t *tag, const char *name, const char *value)
         // now idx is free
         tag->attributes[idx].name = name_mem;
         tag->attributes[idx].value = value_mem;
+        tag->attributes[idx].value_len = len;
 
         // coping strings
         strcpy(tag->attributes[idx].name, name);
-        strcpy(tag->attributes[idx].value, value);
+        memcpy(tag->attributes[idx].value, value, len);
     }
     return true;
 }
-const char *xml_tag_attribute_get(xml_tag_t const *tag, const char *name)
+bool xml_tag_attribute_set(xml_tag_t *tag, const char *name, const char *value)
+{
+    return xml_tag_attribute_set_with_len(tag, name, value, strlen(value) + 1);
+}
+const char *xml_tag_attribute_get_with_len(xml_tag_t const *tag, const char *name, size_t *len)
 {
     // searching for attribute
     size_t idx;
@@ -245,7 +256,14 @@ const char *xml_tag_attribute_get(xml_tag_t const *tag, const char *name)
         ;
     if (strcmp(tag->attributes[idx].name, name) != 0)
         return NULL; // attribute is missing
+
+    if (len != NULL)
+        *len = tag->attributes[idx].value_len;
     return tag->attributes[idx].value;
+}
+const char *xml_tag_attribute_get(xml_tag_t const *tag, const char *name)
+{
+    return xml_tag_attribute_get_with_len(tag, name, NULL);
 }
 
 static int clamp_to_int(size_t x)
@@ -571,12 +589,12 @@ int xml_stream_putc(int ch, xml_stream_t *stream)
 {
     int res = fputc(ch, stream->escaped_target);
     fflush(stream->escaped_target);
-    
+
     return res;
 }
 int xml_stream_puts(const char *s, xml_stream_t *stream)
 {
-    int res =  fputs(s, stream->escaped_target);
+    int res = fputs(s, stream->escaped_target);
     fflush(stream->escaped_target);
 
     return res;
@@ -593,7 +611,7 @@ int xml_stream_printf(xml_stream_t *stream, const char *fmt, ...)
 }
 int xml_stream_vprintf(xml_stream_t *stream, const char *fmt, va_list ap)
 {
-    int res =  vfprintf(stream->escaped_target, fmt, ap);
+    int res = vfprintf(stream->escaped_target, fmt, ap);
     fflush(stream->escaped_target);
 
     return res;

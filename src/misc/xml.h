@@ -72,7 +72,20 @@ const char *xml_tag_name_get(xml_tag_t const *tag);
  */
 bool xml_tag_attribute_set(xml_tag_t *tag, const char *name, const char *value);
 /**
- * @brief Get the value of an attribute of an xml tag.
+ * @brief Set a non 0-terminated attribute of an xml tag.
+ * If attribute wasn't present it's created.
+ * If value is NULL the tag is destroyed, if present.
+ * 
+ * @param tag the tag to modify
+ * @param name the name of the attribute
+ * @param value the content of the attribute, or NULL to destroy it
+ * @param len the length in byte of the value
+ * @return true Set was successfull
+ * @return false Set failed
+ */
+bool xml_tag_attribute_set_with_len(xml_tag_t *tag, const char *name, const char *value, size_t len);
+/**
+ * @brief Get the value of an attribute of a xml tag.
  * Return NULL if the attribute is missing
  * 
  * @param tag the tag to read
@@ -80,6 +93,16 @@ bool xml_tag_attribute_set(xml_tag_t *tag, const char *name, const char *value);
  * @return const char* the value retrieved, or NULL if missing
  */
 const char *xml_tag_attribute_get(xml_tag_t const *tag, const char *name);
+/**
+ * @brief Get the value of a  non 0-terminated attribute of a xml tag.
+ * Return NULL if the attribute is missing
+ * 
+ * @param tag the tag to read
+ * @param name the name of the attribute
+ * @param len where to store the length, or NULL if not needed
+ * @return const char* the value retrieved, or NULL if missing
+ */
+const char *xml_tag_attribute_get_with_len(xml_tag_t const *tag, const char *name, size_t *len);
 
 /**
  * @brief Compare two tags.
