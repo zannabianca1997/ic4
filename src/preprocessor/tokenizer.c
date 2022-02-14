@@ -172,7 +172,7 @@ void pp_tok_free(struct pp_token_s *token)
         token->type == PP_TOK_OTHER)
         free(token->content);
     if (token->type == PP_TOK_HEADER)
-        free(token->header_name);
+        free(token->header.name);
     free(token);
 }
 
@@ -192,20 +192,20 @@ bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b)
         return strcmp(a->content, b->content) == 0;
 
     case PP_TOK_CHAR_CONST:
-        return a->value == b->value;
+        return a->char_value == b->char_value;
 
     case PP_TOK_HEADER:
-        return a->is_angled == b->is_angled && strcmp(a->header_name, b->header_name) == 0;
+        return a->header.is_angled == b->header.is_angled && strcmp(a->header.name, b->header.name) == 0;
 
     case PP_TOK_PUNCTUATOR:
-        return a->kind == b->kind;
+        return a->punc_kind == b->punc_kind;
 
     case PP_TOK_DIRECTIVE_START:
     case PP_TOK_DIRECTIVE_STOP:
         return true; //contentless
 
     case PP_TOK_ERROR:
-        return strcmp(a->error_msg, b->error_msg) == 0;
+        return a->error.severity == b->error.severity && strcmp(a->error.msg, b->error.msg) == 0;
     }
 
     log_error(NULL, TOKENIZER_CMP_UNKNOW);
@@ -391,7 +391,8 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
                     log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
 
                 new_token->type = PP_TOK_ERROR;
-                new_token->error_msg = TOKENIZER_EOF_MULTILINE;
+                new_token->error.msg = TOKENIZER_EOF_MULTILINE;
+                new_token->error.severity = LOG_ERROR;
 
                 break;
             }

@@ -18,6 +18,7 @@
 
 #include "../misc/context/context.h"
 #include "../misc/bookmark.h"
+#include "../misc/log/loglevel.h"
 
 // --- TOKENS ---
 
@@ -61,12 +62,12 @@ struct pp_token_s
         // header names
         struct
         {
-            char *header_name; // the name of the header
+            char *name; // the name of the header
             bool is_angled;    // if the header is angled or not
-        };
+        } header;
 
         // char consts
-        char value;
+        char char_value;
 
         // Punctuators
         enum punctuator_e
@@ -151,10 +152,12 @@ struct pp_token_s
 
             PUNC_STRINGIZE, // stringize
             PUNC_TOKPASTE,  // token pasting
-        } kind;
+        } punc_kind;
 
         // error message
-        char const *error_msg;
+        struct {
+            char const *msg;
+            enum loglevel_e severity; } error;
     };
 };
 

@@ -150,20 +150,20 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
             break;
         case PP_TOK_CHAR_CONST:
             xml_tag_attribute_set(tok_tag, "type", "char constant");
-            char valstr[2] = {tok->value, '\0'}; // local variabile is OK, it will be copied istantly
+            char valstr[2] = {tok->char_value, '\0'}; // local variabile is OK, it will be copied istantly
             xml_tag_attribute_set(tok_tag, "value", valstr);
             break;
         case PP_TOK_HEADER:
             xml_tag_attribute_set(tok_tag, "type", "header name");
-            xml_tag_attribute_set(tok_tag, "name", tok->header_name);
-            xml_tag_attribute_set(tok_tag, "angled", tok->is_angled ? "yes" : "no");
+            xml_tag_attribute_set(tok_tag, "name", tok->header.name);
+            xml_tag_attribute_set(tok_tag, "angled", tok->header.is_angled ? "yes" : "no");
             break;
         case PP_TOK_PUNCTUATOR:
             xml_tag_attribute_set(tok_tag, "type", "punctuator");
             xml_tag_attribute_set(tok_tag, "kind", "unknown");
             // finding human readable description
             for (size_t i = 0; PUNC_KIND_NAMES[i].name != NULL; i++)
-                if (PUNC_KIND_NAMES[i].kind == tok->kind)
+                if (PUNC_KIND_NAMES[i].kind == tok->punc_kind)
                 {
                     xml_tag_attribute_set(tok_tag, "kind", PUNC_KIND_NAMES[i].name);
                     break;
@@ -183,7 +183,25 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
 
         case PP_TOK_ERROR:
             xml_tag_attribute_set(tok_tag, "type", "error");
-            xml_tag_attribute_set(tok_tag, "msg", tok->error_msg);
+            xml_tag_attribute_set(tok_tag, "msg", tok->error.msg);
+            switch (tok->error.severity)
+            {
+            case LOG_TRACE:
+                xml_tag_attribute_set(tok_tag, "severity", "trace");
+                break;
+            case LOG_DEBUG:
+                xml_tag_attribute_set(tok_tag, "severity", "debug");
+                break;
+            case LOG_PEDANTIC:
+                xml_tag_attribute_set(tok_tag, "severity", "pedantic");
+                break;
+            case LOG_WARNING:
+                xml_tag_attribute_set(tok_tag, "severity", "warning");
+                break;
+            case LOG_ERROR:
+                xml_tag_attribute_set(tok_tag, "severity", "error");
+                break;
+            }
             break;
         }
 
@@ -304,5 +322,5 @@ TEST(multiline_unended,
      "foo /* bar ops this is not ended...",
      "<tokens>"
      "<token content=\"foo\" type=\"identifier\" />"
-     "<token msg=\"Unexpected EOF while scanning multiline comment\" type=\"error\" />"
+     "<token msg=\"Unexpected EOF while scanning multiline comment\" severity=\"error\" type=\"error\" />"
      "</tokens>")
