@@ -93,7 +93,7 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
 
     // opening the various streams
 #pragma GCC diagnostic push
-// text is a const char *, but i don't want to copy it in a buffer, and "r" guarantee the read_only
+// text is a const char *, but i don't want to copy it in a buffer, and "r" guarantee it will be only read
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
     FILE *text_f = fmemopen(text, strlen(text), "r");
 #pragma GCC diagnostic pop
@@ -150,7 +150,7 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
             break;
         case PP_TOK_CHAR_CONST:
             xml_tag_attribute_set(tok_tag, "type", "char constant");
-            char valstr[2] = {tok->value, '\0'};
+            char valstr[2] = {tok->value, '\0'}; // local variabile is OK, it will be copied istantly
             xml_tag_attribute_set(tok_tag, "value", valstr);
             break;
         case PP_TOK_HEADER:
