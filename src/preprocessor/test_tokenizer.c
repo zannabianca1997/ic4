@@ -366,7 +366,7 @@ TEST(misleading_parse,
      "<token content=\"0xE+12\" type=\"preprocessor number\" />"
      "</tokens>")
 
-// --- number and id interaction
+// -- number and id interaction
 TEST(number_seems_id,
      "123abc_def",
      "<tokens>"
@@ -377,6 +377,35 @@ TEST(id_seems_number,
      "<tokens>"
      "<token content=\"x123456\" type=\"identifier\" />"
      "</tokens>")
+
+// -- string literals
+
+TEST(strlit_so_long,
+     "\"So long, and thanks for all the fish\"",
+     "<tokens>"
+     "<token content=\"So long, and thanks for all the fish\" type=\"string literal\" />"
+     "</tokens>")
+TEST(strlit_escape_chars,
+     "\"\\t \\n \\r \\\" \\\' \\\\\"",
+     "<tokens>"
+     "<token content=\"&#x09; &#x0a; &#x0d; &quot; &apos; \\\" type=\"string literal\" />"
+     "</tokens>")
+TEST(strlit_escape_octals,
+     "\"\\1 \\3 \\7m \\23 \\42 \\145 \\323 \\0104\"",
+     "<tokens>"
+     "<token content=\"&#x01; &#x03; &#x07;m &#x13; &quot; e &#xd3; &#x08;4\" type=\"string literal\" />"
+     "</tokens>")
+TEST(strlit_escape_hex,
+     "\"\\xa \\xba \\xfam \\x30\"",
+     "<tokens>"
+     "<token content=\"&#x0a; &#xba; &#xfa;m 0\" type=\"string literal\" />"
+     "</tokens>")
+TEST(strlit_nul,
+     "\" \\0 \"",
+     "<tokens>"
+     "<token content=\" &#x00; \" type=\"string literal\" />"
+     "</tokens>")
+
 
 // -- multiline comments
 
@@ -390,19 +419,32 @@ TEST(multiline_tok_divide,
      "<token content=\"foo\" type=\"identifier\" />"
      "<token content=\"bar\" type=\"identifier\" />"
      "</tokens>")
-#if 0     
-//TODO: multiline and strings                                               
-TEST(multiline_str_literals,                                                     
-     "\"this is /* not a comment */ \"",                                         
-     "<tokens>"                                                                  
-     "<token content=\"this is /* not a comment */ \" type=\"string literal\" />"
-     "</tokens>")
-#endif
 TEST(multiline_unended,
      "foo /* bar ops this is not ended...",
      "<tokens>"
      "<token content=\"foo\" type=\"identifier\" />"
      "<token msg=\"Unexpected EOF while scanning multiline comment\" severity=\"error\" type=\"error\" />"
+     "</tokens>")
+
+// -- comments and string literals
+
+TEST(mlcomm_in_strlit,
+     "\"this is /* not a comment */ \"",
+     "<tokens>"
+     "<token content=\"this is /* not a comment */ \" type=\"string literal\" />"
+     "</tokens>")
+TEST(strlit_in_mlcomm,
+     "/*this is \" not a string \" */",
+     "<tokens>"
+     "</tokens>")
+TEST(comm_in_strlit,
+     "\"this is // not a comment\"",
+     "<tokens>"
+     "<token content=\"this is // not a comment\" type=\"string literal\" />"
+     "</tokens>")
+TEST(strlit_in_comm,
+     "// this is \" not a string \"",
+     "<tokens>"
      "</tokens>")
 
 // -- stray chars
