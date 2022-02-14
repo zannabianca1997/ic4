@@ -411,6 +411,10 @@ TEST(strlit_identifier,
      "<token name=\"this_is_a_id\" type=\"identifier\" />"
      "</tokens>")
 
+// -- comments
+
+//TODO: test in-line comments
+
 // -- multiline comments
 
 TEST(multiline_as_ws,
