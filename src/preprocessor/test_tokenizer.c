@@ -405,8 +405,12 @@ TEST(strlit_nul,
      "<tokens>"
      "<token content=\" &#x00; \" type=\"string literal\" />"
      "</tokens>")
-//TODO: check interaction of strlits with nearby tokens
-
+TEST(strlit_identifier,
+     "\"this is a string\"this_is_a_id",
+     "<tokens>"
+     "<token content=\"this is a string\" type=\"string literal\" />"
+     "<token content=\"this_is_a_id\" type=\"identifier\" />"
+     "</tokens>")
 
 // -- multiline comments
 
