@@ -405,6 +405,7 @@ TEST(strlit_nul,
      "<tokens>"
      "<token content=\" &#x00; \" type=\"string literal\" />"
      "</tokens>")
+//TODO: check interaction of strlits with nearby tokens
 
 
 // -- multiline comments
