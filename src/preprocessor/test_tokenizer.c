@@ -91,8 +91,12 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
 {
     context_t *lcontext = context_new(NULL, testcase);
 
-    /* opening the various streams */
+    // opening the various streams
+#pragma GCC diagnostic push
+// text is a const char *, but i don't want to copy it in a buffer, and "r" guarantee the read_only
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
     FILE *text_f = fmemopen(text, strlen(text), "r");
+#pragma GCC diagnostic pop
     if (text_f == NULL)
         return "Cannot open memory as stream";
     linestream_t *lines = linestream_open(lcontext, text_f);
@@ -102,14 +106,14 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
     if (pp_tokstm == NULL)
         return "Cannot open tokenstream";
 
-    /* creating end buffer */
+    // creating end buffer
     size_t out_size;
     char *out_buf;
     FILE *output = open_memstream(&out_buf, &out_size);
     if (output == NULL)
         return "open_memstream failed to open output buffer";
 
-    /* creating xml stream */
+    // creating xml stream
     xml_tag_t *root_tag = xml_tag_new("tokens");
     if (root_tag == NULL)
         return "Cannot create root tag";
@@ -118,17 +122,18 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
         return "Cannot open xml stream";
     xml_tag_free(root_tag);
 
-    /* travasing streams */
+    // travasing streams
     for (
         struct pp_token_s *tok = pp_tokstream_get(lcontext, pp_tokstm);
         tok != NULL;
         pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm))
-    { /* tag for tokens*/
+    {
+        // tag for tokens
         xml_tag_t *tok_tag = xml_tag_new("token");
         if (root_tag == NULL)
             return "Cannot create token tag";
 
-        /* fill with attributes */
+        // fill with attributes
         switch (tok->type)
         {
         case PP_TOK_IDENTIFIER:
@@ -155,7 +160,8 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
             break;
         case PP_TOK_PUNCTUATOR:
             xml_tag_attribute_set(tok_tag, "type", "punctuator");
-            xml_tag_attribute_set(tok_tag, "kind", "unknown"); /* finding human readable description*/
+            xml_tag_attribute_set(tok_tag, "kind", "unknown");
+            // finding human readable description
             for (size_t i = 0; PUNC_KIND_NAMES[i].name != NULL; i++)
                 if (PUNC_KIND_NAMES[i].kind == tok->kind)
                 {
@@ -181,24 +187,25 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
             break;
         }
 
-        /* write on stream*/
+        // write on stream
         if (!xml_stream_tag_empty(xml_stm, tok_tag))
             return "Cannot write token tag on xml stream";
         xml_tag_free(tok_tag);
     }
 
-    /*terminate streams, and close underliyng resources*/
+    //terminate streams, and close underliyng resources
     xml_stream_close(xml_stm, true);
     pp_tokstream_close(pp_tokstm, true);
 
-    /* don't need context anymore */
+    // don't need context anymore
     context_free(lcontext);
 
-    /* now the memstream was closed by xml_stream_close, so we can check the content */
+    // now the memstream was closed by xml_stream_close, so we can check the content
 
-    /* check result */
+    // check result
     if (strcmp(exp_xml, out_buf) == 0)
-    { /* xml out corrispond*/
+    {
+        // xml_out corrispond
         free(out_buf);
         return NULL;
     }
@@ -285,12 +292,14 @@ TEST(multiline_tok_divide,
      "<token content=\"foo\" type=\"identifier\" />"
      "<token content=\"bar\" type=\"identifier\" />"
      "</tokens>")
-//TODO: multiline and strings                                                    \
-TEST(multiline_str_literals,                                                     \
-     "\"this is /* not a comment */ \"",                                         \
-     "<tokens>"                                                                  \
-     "<token content=\"this is /* not a comment */ \" type=\"string literal\" />"\
+#if 0     
+//TODO: multiline and strings                                               
+TEST(multiline_str_literals,                                                     
+     "\"this is /* not a comment */ \"",                                         
+     "<tokens>"                                                                  
+     "<token content=\"this is /* not a comment */ \" type=\"string literal\" />"
      "</tokens>")
+#endif
 TEST(multiline_unended,
      "foo /* bar ops this is not ended...",
      "<tokens>"
