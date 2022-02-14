@@ -503,7 +503,7 @@ static bool write_tag(xml_stream_t *stream, xml_tag_t const *tag, enum tag_types
         if (fprintf(stream->target, " %s=\"", tag->attributes[i].name) == EOF)
             return false;
         // printing escaped attribute value
-        if (fprintf(stream->escaped_target, "%s", tag->attributes[i].value) == EOF)
+        if (fwrite(tag->attributes[i].value, tag->attributes[i].value_len-1, 1, stream->escaped_target) != 1)
             return false;
         fflush(stream->escaped_target); // force to write on the stream
         // printing end of attribute value
