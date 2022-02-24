@@ -14,15 +14,17 @@ TOKENIZER:
     MALLOC_FAIL_OPEN "malloc failed in creating token stream struct"
     MALLOC_FAIL_IDENTIFIER "malloc failed in allocating space for identifier name"
     MALLOC_FAIL_PP_NUMBER "malloc failed in allocating space for preprocessor number content"
-    MALLOC_FAIL_STRING "malloc failed in allocating space for string literal content"
+    MALLOC_FAIL_STRING "malloc failed in allocating space for quoted literal content"
     MALLOC_FAIL_ERROR "malloc failed in allocating space for error message"
     MALLOC_FAIL_SHRINKIDENTIFIER "realloc failed in shrinking space for identifier name. This will occupy more memory"
     MALLOC_FAIL_SHRINKPP_NUMBER "realloc failed in shrinking space for for preprocessor number content. This will occupy more memory"
-    MALLOC_FAIL_SHRINKSTRING "realloc failed in shrinking space for for string literal content. This will occupy more memory"
+    MALLOC_FAIL_SHRINKSTRING "realloc failed in shrinking space for for quoted literal content. This will occupy more memory"
     MALLOC_FAIL_TOKEN "malloc failde in creating token struct"
 
     EOF_MULTILINE "Unexpected EOF while scanning multiline comment"
-    NL_STRINGLIT "Unexpected newline while scanning string literal"
+    NL_STRINGLIT "Unexpected newline while scanning quoted literal"
+
+    MULTI_CH_CHAR_LIT "Multicharacter char literal"
 
     ESCAPE_UNICODE "Unicode escape sequences are unimplemented"
     ESCAPE_UNKNOW "Unknow escape sequence"
@@ -34,6 +36,7 @@ TOKENIZER:
     CONTEXT_IDENTIFIER "parsing identifier"
     CONTEXT_PP_NUMBER "parsing preprocessor number"
     CONTEXT_STRING "parsing string literal"
+    CONTEXT_CHAR "parsing char literal"
     CONTEXT_MULTILINE "parsing multiline comment"
     CONTEXT_GETTING "getting a new token"
 

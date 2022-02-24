@@ -413,18 +413,22 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
     return new_token;
 }
 
-//  parse a string literal
-static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+/**
+ * @brief Parse a quoted string or char literal
+ * 
+ * @param quote the quote (" or ')
+ * @return struct pp_token_s* if non-null, the parsed quote
+ */
+static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_s const *stream, size_t *n, char quote)
 {
+
     // short circuit
-    if (!(stream->current_line->content[stream->cursor] == '\"'))
+    if (!(stream->current_line->content[stream->cursor] == quote))
     {
         // string literals must begin with a "
         *n = 0;
         return NULL;
     }
-
-    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_STRING);
 
     // allocate space for the content
     char *content = malloc(strlen(stream->current_line->content) - stream->cursor + 1);
@@ -436,7 +440,7 @@ static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tok
     // count written chars
     size_t writtenchars = 0; // are different from takenchars cause escape sequences
 
-    while (stream->current_line->content[stream->cursor + takenchars] != '\"')
+    while (stream->current_line->content[stream->cursor + takenchars] != quote)
     {
         if (stream->current_line->content[stream->cursor + takenchars] == '\0')
         {
@@ -622,12 +626,54 @@ static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tok
 
     new_token->type = PP_TOK_STRING_LIT;
     new_token->string.value = content;
-    new_token->string.len = writtenchars+1;
-
-    context_free(lcontext);
+    new_token->string.len = writtenchars + 1;
 
     *n = takenchars;
     return new_token;
+}
+
+// parse a string literal
+static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+{
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_STRING);
+    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, '\"');
+    context_free(lcontext);
+    return parsed;
+}
+
+// parse a char literal
+static struct pp_token_s *parse_char_literal(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
+{
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_STRING);
+    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, '\'');
+
+    if (parsed != NULL && parsed->type == PP_TOK_STRING_LIT)
+    {
+        // parsing went OK
+        if (parsed->string.len != 1)
+        {
+            // multi char string literal
+            parsed->type = PP_TOK_ERROR;
+            parsed->error.severity = LOG_ERROR;
+            parsed->error.msg = malloc(strlen(TOKENIZER_MULTI_CH_CHAR_LIT) + 1);
+            if (parsed->error.msg == NULL)
+                log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
+            strcpy(parsed->error.msg, TOKENIZER_MULTI_CH_CHAR_LIT);
+        }
+        else
+        {
+            // recovering content
+            char ch = parsed->string.value[0];
+            free(parsed->string.value);
+
+            // changing token
+            parsed->type = PP_TOK_CHAR_CONST;
+            parsed->char_value = ch;
+        }
+    }
+
+    context_free(lcontext);
+    return parsed;
 }
 
 // eat a comment, give no token
@@ -650,7 +696,6 @@ static struct pp_token_s *parse_comment(
     return NULL;
 }
 
-// TODO: parse char consts
 // TODO: parst punctuators
 // TODO: parse header names
 
@@ -660,6 +705,7 @@ static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_pp_number,
     &parse_string_literal,
     &parse_comment,
+    &parse_char_literal,
     NULL};
 
 // --- MULTILINE COMMENTS SPECIAL RULE ---
