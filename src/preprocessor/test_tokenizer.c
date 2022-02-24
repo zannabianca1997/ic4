@@ -244,8 +244,6 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
 
 // --- TESTS ---
 
-// print('"' + inp.replace('"','\\"').replace("><", '>"\n"<') + '"') # a simple python one-liner to convert the xml output into the input
-
 // -- whitespaces
 
 TEST(space,
@@ -413,7 +411,33 @@ TEST(strlit_identifier,
 
 // -- comments
 
-//TODO: test in-line comments
+TEST(inline_comment,
+     "// this is a comment",
+     "<tokens>"
+     "</tokens>")
+TEST(icomm_stop,
+     "// this is a comment\nthis is not",
+     "<tokens>"
+     "<token name=\"this\" type=\"identifier\" />"
+     "<token name=\"is\" type=\"identifier\" />"
+     "<token name=\"not\" type=\"identifier\" />"
+     "</tokens>")
+TEST(icomm_identifier,
+     "hello// this is a comment",
+     "<tokens>"
+     "<token name=\"hello\" type=\"identifier\" />"
+     "</tokens>")
+TEST(icomm_number,
+     "53// this is a comment",
+     "<tokens>"
+     "<token name=\"53\" type=\"preprocessor number\" />"
+     "</tokens>")
+TEST(icomm_continue,
+     "//this comment \\\n do not stop here \n but here",
+     "<tokens>"
+     "<token name=\"but\" type=\"identifier\" />"
+     "<token name=\"here\" type=\"identifier\" />"
+     "</tokens>")
 
 // -- multiline comments
 
