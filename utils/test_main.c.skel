@@ -387,7 +387,7 @@ static const struct parsed_args_s ARGS_DEFAULT = {
     .testname = NULL,
     .dry_run = false,
     .critical_fail = false,
-    .out_report = OUT_REPORT_ANOMALOUS_FAIL,
+    .out_report = OUT_REPORT_FAIL,
     .color = ANSI_DETECT};
 
 enum
@@ -406,8 +406,8 @@ static const struct argp_option ARGUMENT_PARSER_OPTIONS[] = {
     {"report-output", OPT_REPORT_OUTPUT, "REPORT-OUTPUT", 0, "What to do when a test write to <stdout> or <stderr>", 0},
     {"REPORT-OUTPUT:", 0, NULL, OPTION_DOC, "REPORT-OUTPUT should be one of the following (case insensitive):\n"
                                             "- ALWAYS: always report\n"
-                                            "- FAILS: report only if test failed\n"
-                                            "- ANOMALOUS-FAILS: report only if test closed without returning (default)\n"
+                                            "- FAILS: report only if test failed (default)\n"
+                                            "- ANOMALOUS-FAILS: report only if test closed without returning\n"
                                             "- NEVER: never report\n",
      0},
     {"color", OPT_COLOR, NULL, 0, "Use ANSI escape codes to color the output",0},
