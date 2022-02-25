@@ -15,7 +15,7 @@
 #include <ctype.h>   // isalpha, isalnum, isdigit, isspace, isprint
 #include <string.h>  // strlen
 
-#if 1
+#if 0
 #pragma GCC warning "<stdio.h> included for debug purposes"
 #include <stdio.h>
 #endif
@@ -38,6 +38,7 @@
  * @brief Table of punctuators. 
  * 
  * Connect the text of a punctuator to its enum value
+ * Terminated by a empty text
  */
 static const struct
 {
@@ -124,7 +125,8 @@ static const struct
 
     {"#", PUNC_STRINGIZE}, // stringize
     {"##", PUNC_TOKPASTE}, // token pasting
-};
+
+    {"", 0}}; //Terminator
 
 /**
  * @brief Contain the data for a token stream
@@ -300,7 +302,8 @@ static struct pp_token_s *parse_whitespace(
 }
 
 /* TODO: both parse_identifier, parse_pp_number and parse_string_literal use a dinamically allocated buffer 
-         of the same lenght of the line. maybe use open_memstream or a ANSI growing buffer? */
+         of the same lenght of the line. maybe use open_memstream or a ANSI growing buffer?
+         Another solution would be to scan the line first to measure the content, then copy it into the rigth size buffer */
 
 // parse an identifier
 static struct pp_token_s *parse_identifier(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
@@ -669,6 +672,51 @@ static struct pp_token_s *parse_char_literal(context_t *context, struct pp_tokst
     return parsed;
 }
 
+/**
+ * @brief Check if a string constain a given substring at the given index
+ * 
+ * @param string the string to check
+ * @param start the start of the substring
+ * @param substr the substring
+ * @return true the substring is present at the given index
+ * @return false the substring is not present at the given index
+ */
+static bool contains_at(const char *restrict string, size_t start, const char *restrict substr)
+{
+    string += start;
+    while (*substr)
+        if (*substr++ != *string++)
+            return false;
+    return true;
+}
+
+// parse a punctuator
+static struct pp_token_s *parse_punctuator(context_t *context, struct pp_tokstream_s const *stream, size_t *restrict n)
+{
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_PUNCT);
+
+    struct pp_token_s *new_token = NULL;
+    *n = 0;
+
+    for (size_t i = 0; strlen(PUNCTUATORS_STRINGS[i].str) > 0; i++)                                 // for all the punctuators
+        if (strlen(PUNCTUATORS_STRINGS[i].str) > *n &&                                              // if this punctuator is longer
+            contains_at(stream->current_line->content, stream->cursor, PUNCTUATORS_STRINGS[i].str)) // and it's present at the given point
+        {
+            *n = strlen(PUNCTUATORS_STRINGS[i].str);
+            if (new_token == NULL)
+            {
+                new_token = malloc(sizeof(struct pp_token_s));
+                if (new_token == NULL)
+                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+                new_token->type = PP_TOK_PUNCTUATOR;
+            }
+            new_token->punc_kind = PUNCTUATORS_STRINGS[i].punc;
+        }
+
+    context_free(lcontext);
+    return new_token;
+}
+
 // eat a comment, give no token
 static struct pp_token_s *parse_comment(
 #ifdef __GNUC__
@@ -689,7 +737,6 @@ static struct pp_token_s *parse_comment(
     return NULL;
 }
 
-// TODO: parst punctuators
 // TODO: parse header names
 
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
@@ -698,6 +745,7 @@ static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_pp_number,
     &parse_string_literal,
     &parse_char_literal,
+    &parse_punctuator,
     &parse_comment,
     NULL};
 

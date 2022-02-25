@@ -19,7 +19,7 @@ TOKENIZER:
     MALLOC_FAIL_SHRINKIDENTIFIER "realloc failed in shrinking space for identifier name. This will occupy more memory"
     MALLOC_FAIL_SHRINKPP_NUMBER "realloc failed in shrinking space for for preprocessor number content. This will occupy more memory"
     MALLOC_FAIL_SHRINKSTRING "realloc failed in shrinking space for for quoted literal content. This will occupy more memory"
-    MALLOC_FAIL_TOKEN "malloc failde in creating token struct"
+    MALLOC_FAIL_TOKEN "malloc failed in creating token struct"
 
     EOF_MULTILINE "Unexpected EOF while scanning multiline comment"
     NL_STRINGLIT "Unexpected newline while scanning quoted literal"
@@ -37,6 +37,7 @@ TOKENIZER:
     CONTEXT_PP_NUMBER "parsing preprocessor number"
     CONTEXT_STRING "parsing string literal"
     CONTEXT_CHAR "parsing char literal"
+    CONTEXT_PUNCT "parsing a punctuator"
     CONTEXT_MULTILINE "parsing multiline comment"
     CONTEXT_GETTING "getting a new token"
 
