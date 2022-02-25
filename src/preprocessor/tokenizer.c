@@ -15,6 +15,11 @@
 #include <ctype.h>   // isalpha, isalnum, isdigit, isspace, isprint
 #include <string.h>  // strlen
 
+#if 1
+#pragma GCC warning "<stdio.h> included for debug purposes"
+#include <stdio.h>
+#endif
+
 #include "../misc/context/context.h"
 #include "../misc/bookmark.h"
 #include "../misc/log/log.h"
@@ -430,6 +435,11 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
         return NULL;
     }
 
+    // create token
+    struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
+    if (new_token == NULL)
+        log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
     // allocate space for the content
     char *content = malloc(strlen(stream->current_line->content) - stream->cursor + 1);
     if (content == NULL)
@@ -444,12 +454,7 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
     {
         if (stream->current_line->content[stream->cursor + takenchars] == '\0')
         {
-            // newline during string literal
-
-            struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
-            if (new_token == NULL)
-                log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
-
+            // newline during quoted literal
             new_token->type = PP_TOK_ERROR;
 
             new_token->error.msg = malloc(strlen(TOKENIZER_NL_STRINGLIT) + 1);
@@ -459,7 +464,6 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
 
             new_token->error.severity = LOG_ERROR;
 
-            context_free(lcontext);
             free(content);
 
             *n = takenchars;
@@ -572,10 +576,6 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
             default:
             {
                 // unknow escape sequence
-                struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
-                if (new_token == NULL)
-                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
-
                 new_token->type = PP_TOK_ERROR;
 
                 if (stream->current_line->content[stream->cursor + takenchars - 1] == 'u')
@@ -594,8 +594,6 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
                 }
 
                 new_token->error.severity = LOG_ERROR;
-
-                context_free(lcontext);
                 free(content);
 
                 *n = takenchars;
@@ -618,11 +616,6 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
         log_warning(lcontext, TOKENIZER_MALLOC_FAIL_SHRINKSTRING); // continue with unshrinked content
     else
         content = new_content;
-
-    // create token
-    struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
-    if (new_token == NULL)
-        log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
 
     new_token->type = PP_TOK_STRING_LIT;
     new_token->string.value = content;
@@ -704,8 +697,8 @@ static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_identifier,
     &parse_pp_number,
     &parse_string_literal,
-    &parse_comment,
     &parse_char_literal,
+    &parse_comment,
     NULL};
 
 // --- MULTILINE COMMENTS SPECIAL RULE ---
@@ -831,7 +824,6 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
                 log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
             strcat(strcat(strcpy(new_token->error.msg, TOKENIZER_STRAY_CHAR_OPEN), CHARESCAPE(stray)), TOKENIZER_STRAY_CHAR_CLOSE);
         }
-
     } while (new_token == NULL); // break at the first non-null token found
 
     // TODO: check if newline is a directive and an include
