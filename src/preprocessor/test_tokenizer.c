@@ -48,7 +48,7 @@ static const struct
                        {PUNC_COLON, "colon"},
 
                        {PUNC_BIT_NOT, "bitwise not"},
-                       {PUNC_BIT_AND, "bitwise and"},
+                       {PUNC_BIT_AND_OR_REFTO, "bitwise and or reference to"},
                        {PUNC_BIT_OR, "bitwise or"},
                        {PUNC_BIT_XOR, "bitwise xor"},
                        {PUNC_BIT_LSHIFT, "bitwise left shift"},
@@ -76,7 +76,6 @@ static const struct
                        {PUNC_CURPAR_LEFT, "open curly braket"},
                        {PUNC_CURPAR_RIGHT, "close curly braket"},
 
-                       {PUNC_REFTO, "reference"},
                        {PUNC_MEMBER_ACCESS, "member access"},
                        {PUNC_IND_MEMBER_ACCESS, "indirect member access"},
 
@@ -453,6 +452,98 @@ TEST(chcon_newline,
      "<tokens>"
      "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
      "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
+     "</tokens>")
+
+// -- Punctuators
+TEST(punctuators_aritmetics,
+     "+ - / * %",
+     "<tokens>"
+     "<token kind=\"add\" type=\"punctuator\" />"
+     "<token kind=\"subtract\" type=\"punctuator\" />"
+     "<token kind=\"divide\" type=\"punctuator\" />"
+     "<token kind=\"multiply or dereference\" type=\"punctuator\" />"
+     "<token kind=\"modulus\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_comparators,
+     "== != < <= > >=",
+     "<tokens>"
+     "<token kind=\"equal\" type=\"punctuator\" />"
+     "<token kind=\"not equal\" type=\"punctuator\" />"
+     "<token kind=\"less\" type=\"punctuator\" />"
+     "<token kind=\"less or equal\" type=\"punctuator\" />"
+     "<token kind=\"greather\" type=\"punctuator\" />"
+     "<token kind=\"greather or equal\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_logical,
+     "! && || ? :",
+     "<tokens>"
+     "<token kind=\"not\" type=\"punctuator\" />"
+     "<token kind=\"and\" type=\"punctuator\" />"
+     "<token kind=\"or\" type=\"punctuator\" />"
+     "<token kind=\"question mark\" type=\"punctuator\" />"
+     "<token kind=\"colon\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_bitwise,
+     "~ & | ^ << >>",
+     "<tokens>"
+     "<token kind=\"bitwise not\" type=\"punctuator\" />"
+     "<token kind=\"bitwise and or reference to\" type=\"punctuator\" />"
+     "<token kind=\"bitwise or\" type=\"punctuator\" />"
+     "<token kind=\"bitwise xor\" type=\"punctuator\" />"
+     "<token kind=\"bitwise left shift\" type=\"punctuator\" />"
+     "<token kind=\"bitwise right shift\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_assignements,
+     "= += -= *= /= %= &= |= ^= <<= >>=",
+     "<tokens>"
+     "<token kind=\"assign\" type=\"punctuator\" />"
+     "<token kind=\"add and assign\" type=\"punctuator\" />"
+     "<token kind=\"subtract and assign\" type=\"punctuator\" />"
+     "<token kind=\"multiply and assign\" type=\"punctuator\" />"
+     "<token kind=\"divide and assign\" type=\"punctuator\" />"
+     "<token kind=\"modulus and assign\" type=\"punctuator\" />"
+     "<token kind=\"bitwise and and assign\" type=\"punctuator\" />"
+     "<token kind=\"bitwise or and assign\" type=\"punctuator\" />"
+     "<token kind=\"bitwise xor and assign\" type=\"punctuator\" />"
+     "<token kind=\"bitwise left shift and assign\" type=\"punctuator\" />"
+     "<token kind=\"bitwise right shift and assign\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_augment,
+     "++ --",
+     "<tokens>"
+     "<token kind=\"augment\" type=\"punctuator\" />"
+     "<token kind=\"decrement\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_bracket,
+     "( ) [ ] { }",
+     "<tokens>"
+     "<token kind=\"open braket\" type=\"punctuator\" />"
+     "<token kind=\"close braket\" type=\"punctuator\" />"
+     "<token kind=\"open square braket\" type=\"punctuator\" />"
+     "<token kind=\"close square braket\" type=\"punctuator\" />"
+     "<token kind=\"open curly braket\" type=\"punctuator\" />"
+     "<token kind=\"close curly braket\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_pointers,
+     "* & . ->",
+     "<tokens>"
+     "<token kind=\"multiply or dereference\" type=\"punctuator\" />"
+     "<token kind=\"bitwise and or reference to\" type=\"punctuator\" />"
+     "<token kind=\"member access\" type=\"punctuator\" />"
+     "<token kind=\"indirect member access\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_separators,
+     ", ;",
+     "<tokens>"
+     "<token kind=\"comma\" type=\"punctuator\" />"
+     "<token kind=\"semicolon\" type=\"punctuator\" />"
+     "</tokens>")
+TEST(punctuators_preprocessor,
+     "nadirect # ##",
+     "<tokens>"
+     "<token name=\"nadirect\" type=\"identifier\" />" // stop the directive special rules
+     "<token kind=\"stringize\" type=\"punctuator\" />"
+     "<token kind=\"token pasting\" type=\"punctuator\" />"
      "</tokens>")
 
 // -- comments

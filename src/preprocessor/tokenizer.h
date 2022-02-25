@@ -108,7 +108,7 @@ struct pp_token_s
             // bitwise
 
             PUNC_BIT_NOT,    // bitwise not
-            PUNC_BIT_AND,    // bitwise and
+            PUNC_BIT_AND_OR_REFTO,    // bitwise and
             PUNC_BIT_OR,     // bitwise shift
             PUNC_BIT_XOR,    // bitwise xor
             PUNC_BIT_LSHIFT, // bit left shift
@@ -145,7 +145,7 @@ struct pp_token_s
             // -- POINTERS AND STRUCTS
 
             // PUNC_DEREF -> see under aritmetic
-            PUNC_REFTO,             // reference to
+            // PUNC_REFTO -> see under bitwise
             PUNC_MEMBER_ACCESS,     // member access
             PUNC_IND_MEMBER_ACCESS, // indirect member access
 
