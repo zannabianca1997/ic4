@@ -416,6 +416,16 @@ TEST(strlit_identifier,
      "<token content=\"this is a string\" type=\"string literal\" />"
      "<token name=\"this_is_a_id\" type=\"identifier\" />"
      "</tokens>")
+TEST(strlit_newline,
+     "\"this is a string\ncutted by a newline\"",
+     "<tokens>"
+     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
+     "<token name=\"cutted\" type=\"identifier\" />"
+     "<token name=\"by\" type=\"identifier\" />"
+     "<token name=\"a\" type=\"identifier\" />"
+     "<token name=\"newline\" type=\"identifier\" />"
+     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
+     "</tokens>")
 
 // -- char consts
 
@@ -425,6 +435,24 @@ TEST(chcon_letters,
      "<token type=\"char constant\" value=\"a\" />"
      "<token type=\"char constant\" value=\"b\" />"
      "<token type=\"char constant\" value=\"c\" />"
+     "</tokens>")
+TEST(chcon_escaped,
+     "'\\42' '\\xa3' '\\n'",
+     "<tokens>"
+     "<token type=\"char constant\" value=\"&quot;\" />"
+     "<token type=\"char constant\" value=\"&#xa3;\" />"
+     "<token type=\"char constant\" value=\"&#x0a;\" />"
+     "</tokens>")
+TEST(chcon_zero,
+     "'\\0'",
+     "<tokens>"
+     "<token type=\"char constant\" value=\"&#x00;\" />"
+     "</tokens>")
+TEST(chcon_newline,
+     "'\n'",
+     "<tokens>"
+     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
+     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
      "</tokens>")
 
 // -- comments
