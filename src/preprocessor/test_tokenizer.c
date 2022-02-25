@@ -546,6 +546,17 @@ TEST(punctuators_preprocessor,
      "<token kind=\"token pasting\" type=\"punctuator\" />"
      "</tokens>")
 
+// this is parsed as the invalid a ++ ++ + b, instead of the valid a ++ + ++ b
+TEST(punctuators_misleading,
+     "a+++++b",
+     "<tokens>"
+     "<token name=\"a\" type=\"identifier\" />"
+     "<token kind=\"augment\" type=\"punctuator\" />"
+     "<token kind=\"augment\" type=\"punctuator\" />"
+     "<token kind=\"add\" type=\"punctuator\" />"
+     "<token name=\"b\" type=\"identifier\" />"
+     "</tokens>")
+
 // -- comments
 
 TEST(inline_comment,
