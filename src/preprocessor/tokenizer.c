@@ -650,7 +650,7 @@ static struct pp_token_s *parse_char_literal(context_t *context, struct pp_tokst
     if (parsed != NULL && parsed->type == PP_TOK_STRING_LIT)
     {
         // parsing went OK
-        if (parsed->string.len != 1)
+        if (parsed->string.len != 2)
         {
             // multi char string literal
             parsed->type = PP_TOK_ERROR;
