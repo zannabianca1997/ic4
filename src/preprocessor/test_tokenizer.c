@@ -397,6 +397,14 @@ TEST(strlit_escape_hex,
      "<tokens>"
      "<token content=\"&#x0a; &#xba; &#xfa;m 0\" type=\"string literal\" />"
      "</tokens>")
+TEST(strlit_octal_end,
+"\"\\1\" \"\\01\" \"\\001\"",
+     "<tokens>"
+     "<token content=\"&#x01;\" type=\"string literal\" />"
+     "<token content=\"&#x01;\" type=\"string literal\" />"
+     "<token content=\"&#x01;\" type=\"string literal\" />"
+     "</tokens>"
+)
 TEST(strlit_nul,
      "\" \\0 \"",
      "<tokens>"
@@ -408,6 +416,10 @@ TEST(strlit_identifier,
      "<token content=\"this is a string\" type=\"string literal\" />"
      "<token name=\"this_is_a_id\" type=\"identifier\" />"
      "</tokens>")
+     
+// -- char consts
+
+
 
 // -- comments
 
