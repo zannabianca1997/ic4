@@ -150,7 +150,8 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
             break;
         case PP_TOK_CHAR_CONST:
             xml_tag_attribute_set(tok_tag, "type", "char constant");
-            xml_tag_attribute_set_with_len(tok_tag, "value", &tok->char_value, 1);
+            char const tag_value[2] = {tok->char_value, '\0'};
+            xml_tag_attribute_set_with_len(tok_tag, "value", &tag_value[0], 2);
             break;
         case PP_TOK_HEADER:
             xml_tag_attribute_set(tok_tag, "type", "header name");
@@ -398,13 +399,12 @@ TEST(strlit_escape_hex,
      "<token content=\"&#x0a; &#xba; &#xfa;m 0\" type=\"string literal\" />"
      "</tokens>")
 TEST(strlit_octal_end,
-"\"\\1\" \"\\01\" \"\\001\"",
+     "\"\\1\" \"\\01\" \"\\001\"",
      "<tokens>"
      "<token content=\"&#x01;\" type=\"string literal\" />"
      "<token content=\"&#x01;\" type=\"string literal\" />"
      "<token content=\"&#x01;\" type=\"string literal\" />"
-     "</tokens>"
-)
+     "</tokens>")
 TEST(strlit_nul,
      "\" \\0 \"",
      "<tokens>"
@@ -416,10 +416,16 @@ TEST(strlit_identifier,
      "<token content=\"this is a string\" type=\"string literal\" />"
      "<token name=\"this_is_a_id\" type=\"identifier\" />"
      "</tokens>")
-     
+
 // -- char consts
 
-
+TEST(chcon_letters,
+     "'a' 'b' 'c'",
+     "<tokens>"
+     "<token type=\"char constant\" value=\"a\" />"
+     "<token type=\"char constant\" value=\"b\" />"
+     "<token type=\"char constant\" value=\"c\" />"
+     "</tokens>")
 
 // -- comments
 
