@@ -557,6 +557,74 @@ TEST(punctuators_misleading,
      "<token name=\"b\" type=\"identifier\" />"
      "</tokens>")
 
+// -- directives
+
+TEST(directive,
+     "before\n#directive\nafter",
+     "<tokens>"
+     "<token name=\"before\" type=\"identifier\" />"
+     "<token type=\"directive start\" />"
+     "<token name=\"directive\" type=\"identifier\" />"
+     "<token type=\"directive end\" />"
+     "<token name=\"after\" type=\"identifier\" />"
+     "</tokens>")
+TEST(directive_params,
+     "before\n#directive a 42 b\nafter",
+     "<tokens>"
+     "<token name=\"before\" type=\"identifier\" />"
+     "<token type=\"directive start\" />"
+     "<token name=\"directive\" type=\"identifier\" />"
+     "<token name=\"a\" type=\"identifier\" />"
+     "<token name=\"42\" type=\"preprocessor number\" />"
+     "<token name=\"b\" type=\"identifier\" />"
+     "<token type=\"directive end\" />"
+     "<token name=\"after\" type=\"identifier\" />"
+     "</tokens>")
+TEST(line_control,
+     "#line 42 \"filename\"",
+     "<tokens>"
+     "<token type=\"directive start\" />"
+     "<token name=\"line\" type=\"identifier\" />"
+     "<token name=\"42\" type=\"preprocessor number\" />"
+     "<token content=\"filename\" type=\"string literal\" />"
+     "<token type=\"directive end\" />"
+     "</tokens>")
+TEST(define,
+     "#define MACRO(x) strcmp(\"String Const\",x)==0",
+     "<tokens>"
+     "<token type=\"directive start\" />"
+     "<token name=\"define\" type=\"identifier\" />"
+     "<token name=\"MACRO\" type=\"identifier\" />"
+     "<token kind=\"open braket\" type=\"punctuator\" />"
+     "<token name=\"x\" type=\"identifier\" />"
+     "<token kind=\"close braket\" type=\"punctuator\" />"
+     "<token name=\"strcmp\" type=\"identifier\" />"
+     "<token kind=\"open braket\" type=\"punctuator\" />"
+     "<token content=\"String Const\" type=\"string literal\" />"
+     "<token kind=\"comma\" type=\"punctuator\" />"
+     "<token name=\"x\" type=\"identifier\" />"
+     "<token kind=\"close braket\" type=\"punctuator\" />"
+     "<token kind=\"equal\" type=\"punctuator\" />"
+     "<token name=\"0\" type=\"preprocessor number\" />"
+     "<token type=\"directive end\" />"
+     "</tokens>")
+TEST(header_quoted,
+     "#include \"dirname\\filename\"",
+     "<tokens>"
+     "<token type=\"directive start\" />"
+     "<token name=\"include\" type=\"identifier\" />"
+     "<token angled=\"no\" name=\"dirname\\filename\" type=\"header name\" />"
+     "<token type=\"directive end\" />"
+     "</tokens>")
+TEST(header_angled,
+     "#include <dirname\\filename>",
+     "<tokens>"
+     "<token type=\"directive start\" />"
+     "<token name=\"include\" type=\"identifier\" />"
+     "<token angled=\"yes\" name=\"dirname\\filename\" type=\"header name\" />"
+     "<token type=\"directive end\" />"
+     "</tokens>")
+
 // -- comments
 
 TEST(inline_comment,
