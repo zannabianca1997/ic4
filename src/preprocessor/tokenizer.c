@@ -948,6 +948,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
         }
     } while (new_token == NULL); // break at the first non-null token found
 
+    // directives and include detecting
     if (stream->tokens_given == 0 // first token
         && new_token->type == PP_TOK_PUNCTUATOR && new_token->punc_kind == PUNC_STRINGIZE)
     {
