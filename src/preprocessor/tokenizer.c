@@ -15,7 +15,7 @@
 #include <ctype.h>   // isalpha, isalnum, isdigit, isspace, isprint
 #include <string.h>  // strlen
 
-#if 0
+#if 1
 #pragma GCC warning "<stdio.h> included for debug purposes"
 #include <stdio.h>
 #endif
@@ -74,12 +74,12 @@ static const struct
 
     // bitwise
 
-    {"~", PUNC_BIT_NOT},     // bitwise not
-    {"&", PUNC_BIT_AND_OR_REFTO},     // bitwise and or reference to
-    {"|", PUNC_BIT_OR},      // bitwise shift
-    {"^", PUNC_BIT_XOR},     // bitwise xor
-    {"<<", PUNC_BIT_LSHIFT}, // bit left shift
-    {">>", PUNC_BIT_RSHIFT}, // bit right shift
+    {"~", PUNC_BIT_NOT},          // bitwise not
+    {"&", PUNC_BIT_AND_OR_REFTO}, // bitwise and or reference to
+    {"|", PUNC_BIT_OR},           // bitwise shift
+    {"^", PUNC_BIT_XOR},          // bitwise xor
+    {"<<", PUNC_BIT_LSHIFT},      // bit left shift
+    {">>", PUNC_BIT_RSHIFT},      // bit right shift
 
     // assignements
 
@@ -137,9 +137,12 @@ struct pp_tokstream_s
 
     struct logical_line_s *current_line; // the line that's being tokenized
     size_t cursor;                       // pointing to the next char that need to be processed
-    size_t tokens_given;                 // number of tokens extracted (for include checking)
-    bool is_line_directive;              // mark if this line is a directive (first non-whitespace character is #)
-    bool is_line_include;                // mark if this line is an include (directive == true, first token after DIRECTIVE_START is an `include` identifier)
+
+    size_t tokens_given;    // number of tokens extracted (for include checking)
+    bool is_line_directive; // mark if this line is a directive (first token is #)
+    bool is_line_include;   // mark if this line is an include (directive == true, first token after DIRECTIVE_START is an `include` identifier)
+
+    struct pp_token_s *delayed_token; // if not NULL, will be returned before any other
 };
 
 // --- STREAM MANAGING ---
@@ -155,6 +158,8 @@ pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source)
     new_stream->source = source;
     new_stream->current_line = NULL;
 
+    new_stream->delayed_token = NULL;
+
     context_free(lcontext);
 
     return new_stream;
@@ -166,6 +171,8 @@ void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close)
         linestream_close(stream->source, recursive_close);
     if (stream->current_line != NULL)
         line_free(stream->current_line);
+    if (stream->delayed_token != NULL)
+        pp_tok_free(stream->delayed_token);
     free(stream);
 }
 
@@ -174,9 +181,10 @@ void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close)
 void pp_tok_free(struct pp_token_s *token)
 {
     if (token->type == PP_TOK_IDENTIFIER ||
-        token->type == PP_TOK_PP_NUMBER ||
-        token->type == PP_TOK_STRING_LIT)
+        token->type == PP_TOK_PP_NUMBER)
         free(token->name);
+    if (token->type == PP_TOK_STRING_LIT)
+        free(token->string.value);
     if (token->type == PP_TOK_HEADER)
         free(token->header.name);
     if (token->type == PP_TOK_ERROR)
@@ -779,6 +787,14 @@ static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
 
 struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 {
+    // return delayed token
+    if (stream->delayed_token != NULL)
+    {
+        struct pp_token_s *new_token = stream->delayed_token;
+        stream->delayed_token = NULL;
+        return new_token;
+    }
+
     context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_GETTING);
 
     // the token parsed
@@ -800,10 +816,10 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
             stream->is_line_directive = false;
             stream->is_line_include = false;
         }
-
         // multiline comments are the only token that can span multiple lines, so they get a special treatement
         if (stream->current_line->content[stream->cursor] == '/' &&
             stream->current_line->content[stream->cursor + 1] == '*')
+        {
             if (!parse_multiline_comment(lcontext, stream))
             {
                 // error in parsing multiline comment
@@ -822,59 +838,83 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
                 break;
             }
-
-        // Greedy parsing: try all the parsing functions and chose
-        // the one that take the most chars
-        size_t best_chars = 0;
-        for (size_t i = 0; PARSING_FUNCTIONS[i] != NULL; i++)
+        }
+        else
         {
-            // try parse a type of token
-            size_t try_chars;
-            struct pp_token_s *try_token = PARSING_FUNCTIONS[i](lcontext, stream, &try_chars);
-            if (try_chars > best_chars)
+
+            // Greedy parsing: try all the parsing functions and chose
+            // the one that take the most chars
+            size_t best_chars = 0;
+            for (size_t i = 0; PARSING_FUNCTIONS[i] != NULL; i++)
             {
-                // found a longer token, destroing the other
-                if (new_token != NULL)
-                    pp_tok_free(new_token);
-                new_token = try_token;
-                best_chars = try_chars;
+                // try parse a type of token
+                size_t try_chars;
+                struct pp_token_s *try_token = PARSING_FUNCTIONS[i](lcontext, stream, &try_chars);
+                if (try_chars > best_chars)
+                {
+                    // found a longer token, destroing the other
+                    if (new_token != NULL)
+                        pp_tok_free(new_token);
+                    new_token = try_token;
+                    best_chars = try_chars;
+                }
+            }
+            stream->cursor += best_chars; // update the cursor
+            // if the token is non-null the cycle will break
+
+            if (best_chars == 0)
+            {
+                // all tokenization failed, collecting stray char
+                char stray = stream->current_line->content[stream->cursor++];
+
+                // creating error token
+                new_token = malloc(sizeof(struct pp_token_s));
+                if (new_token == NULL)
+                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+
+                new_token->type = PP_TOK_ERROR;
+                new_token->error.severity = LOG_ERROR;
+
+                new_token->error.msg = malloc(strlen(TOKENIZER_STRAY_CHAR_OPEN) +
+                                              strlen(CHARESCAPE(stray)) +
+                                              strlen(TOKENIZER_STRAY_CHAR_CLOSE) + 1);
+                if (new_token->error.msg == NULL)
+                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
+                strcat(strcat(strcpy(new_token->error.msg, TOKENIZER_STRAY_CHAR_OPEN), CHARESCAPE(stray)), TOKENIZER_STRAY_CHAR_CLOSE);
             }
         }
-        stream->cursor += best_chars; // update the cursor
-        // if the token is non-null the cycle will break
 
         if (stream->cursor == strlen(stream->current_line->content))
         {
             // line is completed
             if (stream->is_line_directive)
-                new_token->type = PP_TOK_DIRECTIVE_STOP;
+            {
+                // deciding if we want to give it now or after this token
+                struct pp_token_s **dir_end_token = (new_token == NULL) ? (&new_token) : (&stream->delayed_token);
+
+                *dir_end_token = malloc(sizeof(struct pp_token_s));
+                if (*dir_end_token == NULL)
+                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+                (*dir_end_token)->type = PP_TOK_DIRECTIVE_STOP;
+            }
 
             line_free(stream->current_line);
             stream->current_line = NULL;
         }
-        else if (best_chars == 0)
-        {
-            // all tokenization failed, collecting stray char
-            char stray = stream->current_line->content[stream->cursor++];
-
-            // creating error token
-            new_token = malloc(sizeof(struct pp_token_s));
-            if (new_token == NULL)
-                log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
-
-            new_token->type = PP_TOK_ERROR;
-            new_token->error.severity = LOG_ERROR;
-
-            new_token->error.msg = malloc(strlen(TOKENIZER_STRAY_CHAR_OPEN) +
-                                          strlen(CHARESCAPE(stray)) +
-                                          strlen(TOKENIZER_STRAY_CHAR_CLOSE) + 1);
-            if (new_token->error.msg == NULL)
-                log_error(lcontext, TOKENIZER_MALLOC_FAIL_ERROR);
-            strcat(strcat(strcpy(new_token->error.msg, TOKENIZER_STRAY_CHAR_OPEN), CHARESCAPE(stray)), TOKENIZER_STRAY_CHAR_CLOSE);
-        }
     } while (new_token == NULL); // break at the first non-null token found
 
-    // TODO: check if newline is a directive and an include
+    if (stream->tokens_given == 0 // first token
+        && new_token->type == PP_TOK_PUNCTUATOR && new_token->punc_kind == PUNC_STRINGIZE)
+    {
+        stream->is_line_directive = true;
+        new_token->type = PP_TOK_DIRECTIVE_START; // changing token type
+    }
+    if (stream->is_line_directive && stream->tokens_given == 1 // first token of a directive
+        && new_token->type == PP_TOK_IDENTIFIER && strcmp(new_token->name, "include") == 0)
+    {
+        stream->is_line_include = true;
+    }
+
     // TODO: bookmark the token
 
     // count the token
