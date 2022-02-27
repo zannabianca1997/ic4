@@ -15,7 +15,7 @@
 #include <ctype.h>   // isalpha, isalnum, isdigit, isspace, isprint
 #include <string.h>  // strlen
 
-#if 1
+#if 0
 #pragma GCC warning "<stdio.h> included for debug purposes"
 #include <stdio.h>
 #endif
@@ -280,6 +280,25 @@ __attribute_const__
     return (ch == 'e') || (ch == 'E') ||
            (ch == 'p') || (ch == 'P');
 }
+
+/**
+ * @brief Check if a string constain a given substring at the given index
+ * 
+ * @param string the string to check
+ * @param start the start of the substring
+ * @param substr the substring
+ * @return true the substring is present at the given index
+ * @return false the substring is not present at the given index
+ */
+static bool contains_at(const char *restrict string, size_t start, const char *restrict substr)
+{
+    string += start;
+    while (*substr)
+        if (*substr++ != *string++)
+            return false;
+    return true;
+}
+
 // --- TOKEN PARSING FUNCTIONS ---
 
 /**
@@ -309,7 +328,7 @@ static struct pp_token_s *parse_whitespace(
     return NULL;
 }
 
-/* TODO: both parse_identifier, parse_pp_number and parse_string_literal use a dinamically allocated buffer 
+/* TODO: both parse_identifier, parse_pp_number, parse_quoted and parse_header_name use a dinamically allocated buffer 
          of the same lenght of the line. maybe use open_memstream or a ANSI growing buffer?
          Another solution would be to scan the line first to measure the content, then copy it into the rigth size buffer */
 
@@ -432,13 +451,15 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
 /**
  * @brief Parse a quoted string or char literal
  * 
- * @param quote the quote (" or ')
+ * @param quote the open quote (" or ' or <)
+ * @param quote the close quote (" or ' or >)
+ * @param escape if escaped sequence are parsed
  * @return struct pp_token_s* if non-null, the parsed quote
  */
-static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_s const *stream, size_t *n, char quote)
+static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_s const *stream, size_t *n, char open_quote, char close_quote, bool escape)
 {
     // short circuit
-    if (!(stream->current_line->content[stream->cursor] == quote))
+    if (!(stream->current_line->content[stream->cursor] == open_quote))
     {
         // string literals must begin with a "
         *n = 0;
@@ -460,7 +481,7 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
     // count written chars
     size_t writtenchars = 0; // are different from takenchars cause escape sequences
 
-    while (stream->current_line->content[stream->cursor + takenchars] != quote)
+    while (stream->current_line->content[stream->cursor + takenchars] != close_quote)
     {
         if (stream->current_line->content[stream->cursor + takenchars] == '\0')
         {
@@ -479,7 +500,7 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
             *n = takenchars;
             return new_token;
         }
-        else if (stream->current_line->content[stream->cursor + takenchars] == '\\')
+        else if (escape && stream->current_line->content[stream->cursor + takenchars] == '\\')
         {
             // start of escape char
             takenchars++;
@@ -496,6 +517,12 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
                 break;
             case 'r':
                 content[writtenchars++] = '\r';
+                break;
+            case 'v':
+                content[writtenchars++] = '\v';
+                break;
+            case 'f':
+                content[writtenchars++] = '\f';
                 break;
             case '\"':
                 content[writtenchars++] = '\"';
@@ -639,7 +666,7 @@ static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_
 static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
 {
     context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_STRING);
-    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, '\"');
+    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, '\"', '\"', true);
     context_free(lcontext);
     return parsed;
 }
@@ -648,7 +675,7 @@ static struct pp_token_s *parse_string_literal(context_t *context, struct pp_tok
 static struct pp_token_s *parse_char_literal(context_t *context, struct pp_tokstream_s const *stream, size_t *n)
 {
     context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_STRING);
-    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, '\'');
+    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, '\'', '\'', true);
 
     if (parsed != NULL && parsed->type == PP_TOK_STRING_LIT)
     {
@@ -679,29 +706,12 @@ static struct pp_token_s *parse_char_literal(context_t *context, struct pp_tokst
     return parsed;
 }
 
-/**
- * @brief Check if a string constain a given substring at the given index
- * 
- * @param string the string to check
- * @param start the start of the substring
- * @param substr the substring
- * @return true the substring is present at the given index
- * @return false the substring is not present at the given index
- */
-static bool contains_at(const char *restrict string, size_t start, const char *restrict substr)
-{
-    string += start;
-    while (*substr)
-        if (*substr++ != *string++)
-            return false;
-    return true;
-}
-
 // parse a punctuator
 static struct pp_token_s *parse_punctuator(context_t *context, struct pp_tokstream_s const *stream, size_t *restrict n)
 {
     // short circuit
-    if(isspace(stream->current_line->content[stream->cursor]) || isalnum(stream->current_line->content[stream->cursor])){
+    if (isspace(stream->current_line->content[stream->cursor]) || isalnum(stream->current_line->content[stream->cursor]))
+    {
         *n = 0;
         return NULL;
     }
@@ -751,20 +761,35 @@ static struct pp_token_s *parse_comment(
 }
 
 // parse a header name
-static struct pp_token_s *parse_header_name(context_t *context, struct pp_tokstream_s const *stream, size_t *restrict n){
+static struct pp_token_s *parse_header_name(context_t *context, struct pp_tokstream_s const *stream, size_t *restrict n)
+{
 
     // short circuit
-    if (!(stream->current_line->content[stream->cursor] == '<'))
+    if (
+        !stream->is_line_include ||
+        (stream->current_line->content[stream->cursor] != '<' &&
+        stream->current_line->content[stream->cursor] != '\"'))
     {
-        // string literals must begin with a "
         *n = 0;
         return NULL;
     }
 
-    // create token
-    struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
-    if (new_token == NULL)
-        log_error(context, TOKENIZER_MALLOC_FAIL_TOKEN);
+    bool const angled = stream->current_line->content[stream->cursor] == '<';
+
+    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_HEADER_NAME);
+
+    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, angled?'<':'\"', angled?'>':'\"', false);
+
+    if(parsed != NULL && parsed->type == PP_TOK_STRING_LIT){
+        char * filename = parsed->string.value; // no need to save the len, no NUL in file names (if there are NUL in file names, you are an horrible person)
+        
+        parsed->type = PP_TOK_HEADER;
+        parsed->header.name = filename;
+        parsed->header.is_angled = angled;
+    }
+
+    context_free(lcontext);
+    return parsed;
 }
 
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {

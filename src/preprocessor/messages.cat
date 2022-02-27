@@ -39,6 +39,7 @@ TOKENIZER:
     CONTEXT_CHAR "parsing char literal"
     CONTEXT_PUNCT "parsing a punctuator"
     CONTEXT_MULTILINE "parsing multiline comment"
+    CONTEXT_HEADER_NAME "parsing header name"
     CONTEXT_GETTING "getting a new token"
 
     CMP_UNKNOW "pp_tok_cmp called with value outside enum"

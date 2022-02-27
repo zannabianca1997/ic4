@@ -236,10 +236,10 @@ static const char *_test_tokenize(char const *testcase, char const *text, char c
     return out_msg;
 }
 
-#define TEST(TESTCASE, TEXT, EXP_XML)                                          \
-    const char *test_tokenize_##TESTCASE()                                     \
-    {                                                                          \
-        return _test_tokenize("Testing tokenizing " #TESTCASE, TEXT, EXP_XML); \
+#define TEST(TESTCASE, TEXT, EXP_XML)                                              \
+    const char *test_tokenize_##TESTCASE()                                         \
+    {                                                                              \
+        return _test_tokenize("Testing tokenizing " #TESTCASE, (TEXT), (EXP_XML)); \
     }
 
 // --- TESTS ---
