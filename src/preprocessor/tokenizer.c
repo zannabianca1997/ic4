@@ -437,7 +437,6 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
  */
 static struct pp_token_s *parse_quoted(context_t *lcontext, struct pp_tokstream_s const *stream, size_t *n, char quote)
 {
-
     // short circuit
     if (!(stream->current_line->content[stream->cursor] == quote))
     {
@@ -701,6 +700,12 @@ static bool contains_at(const char *restrict string, size_t start, const char *r
 // parse a punctuator
 static struct pp_token_s *parse_punctuator(context_t *context, struct pp_tokstream_s const *stream, size_t *restrict n)
 {
+    // short circuit
+    if(isspace(stream->current_line->content[stream->cursor]) || isalnum(stream->current_line->content[stream->cursor])){
+        *n = 0;
+        return NULL;
+    }
+
     context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_PUNCT);
 
     struct pp_token_s *new_token = NULL;
@@ -745,12 +750,28 @@ static struct pp_token_s *parse_comment(
     return NULL;
 }
 
-// TODO: parse header names
+// parse a header name
+static struct pp_token_s *parse_header_name(context_t *context, struct pp_tokstream_s const *stream, size_t *restrict n){
+
+    // short circuit
+    if (!(stream->current_line->content[stream->cursor] == '<'))
+    {
+        // string literals must begin with a "
+        *n = 0;
+        return NULL;
+    }
+
+    // create token
+    struct pp_token_s *new_token = malloc(sizeof(struct pp_token_s));
+    if (new_token == NULL)
+        log_error(context, TOKENIZER_MALLOC_FAIL_TOKEN);
+}
 
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_whitespace,
     &parse_identifier,
     &parse_pp_number,
+    &parse_header_name, // <- MUST be before string_literal, so it take precedence
     &parse_string_literal,
     &parse_char_literal,
     &parse_punctuator,
@@ -841,7 +862,6 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
         }
         else
         {
-
             // Greedy parsing: try all the parsing functions and chose
             // the one that take the most chars
             size_t best_chars = 0;
