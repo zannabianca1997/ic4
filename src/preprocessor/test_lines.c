@@ -195,3 +195,51 @@ const char *test_rawline_merge()
     }
     return NULL;
 }
+
+const char MARK_TEXT[] = "Lorem Ipsum \\\ndolor sit amet, consectetur\\\n adipisci elit";
+const struct
+{
+    char *word;
+    struct bookmark_s first_occurrence;
+} MARK_WORDS[] = {
+    {"Lorem", {NULL, 1, 1}},
+    {"consectetur", {NULL, 2, 17}},
+    {"adipisci", {NULL, 3, 2}},
+    {NULL, {0}}};
+const char *test_line_mark()
+{
+    context_t *testing_c = context_new(NULL, "testing line marking");
+
+#pragma GCC diagnostic push
+// MARK_TEXT is a const char *, but i don't want to copy it in a buffer, and "r" guarantee it will be only read
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+    FILE *input = fmemopen(MARK_TEXT, strlen(MARK_TEXT), "r");
+#pragma GCC diagnostic pop
+
+    // creating a line stream
+    linestream_t *lstream = linestream_open(testing_c, input);
+
+    // getting the first (and only) line
+    struct logical_line_s *line = linestream_get(testing_c, lstream);
+
+    // destroing the stream
+    linestream_close(lstream, true);
+
+    // searching for mark words inside the line
+    for (size_t i = 0; MARK_WORDS[i].word != NULL; i++)
+    {
+        size_t pos = (size_t)(strstr(line->content, MARK_WORDS[i].word) - line->content);
+        struct bookmark_s const mark =line_mark(line, pos);
+        if (!bookmark_cmp(mark, MARK_WORDS[i].first_occurrence, CMP_EXACT, CMP_EXACT)){
+            const char *msg_fmt = "Word %s was reported at %d:%d, instead of %d:%d";
+            char* msg = malloc(snprintf(NULL, 0, msg_fmt, MARK_WORDS[i].word, mark.row, mark.col, MARK_WORDS[i].first_occurrence.row, MARK_WORDS[i].first_occurrence.col));
+            if(msg==NULL)
+            return "Malloc failed in allocating message space";
+            sprintf(msg, msg_fmt, MARK_WORDS[i].word, mark.row, mark.col, MARK_WORDS[i].first_occurrence.row, MARK_WORDS[i].first_occurrence.col);
+            return msg;
+        }
+    }
+
+    context_free(testing_c);
+    return NULL;
+}
