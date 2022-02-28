@@ -31,7 +31,7 @@ static const char *const TEST_LINES[] = {
 static char linebuf[LINES_BUF_MAX_LEN + 1];
 static char report_msg[REPORT_MSG_MAX_LEN + 1];
 
-// TODO: refactor to use xml output
+// TODO: refactor to use xml output <IMPORTANT>
 // TODO: test new line splitting
 // TODO: check missed escaping warning
 
