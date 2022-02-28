@@ -768,7 +768,7 @@ static struct pp_token_s *parse_header_name(context_t *context, struct pp_tokstr
     if (
         !stream->is_line_include ||
         (stream->current_line->content[stream->cursor] != '<' &&
-        stream->current_line->content[stream->cursor] != '\"'))
+         stream->current_line->content[stream->cursor] != '\"'))
     {
         *n = 0;
         return NULL;
@@ -778,11 +778,12 @@ static struct pp_token_s *parse_header_name(context_t *context, struct pp_tokstr
 
     context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_HEADER_NAME);
 
-    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, angled?'<':'\"', angled?'>':'\"', false);
+    struct pp_token_s *parsed = parse_quoted(lcontext, stream, n, angled ? '<' : '\"', angled ? '>' : '\"', false);
 
-    if(parsed != NULL && parsed->type == PP_TOK_STRING_LIT){
-        char * filename = parsed->string.value; // no need to save the len, no NUL in file names (if there are NUL in file names, you are an horrible person)
-        
+    if (parsed != NULL && parsed->type == PP_TOK_STRING_LIT)
+    {
+        char *filename = parsed->string.value; // no need to save the len, no NUL in file names (if there are NUL in file names, you are an horrible person)
+
         parsed->type = PP_TOK_HEADER;
         parsed->header.name = filename;
         parsed->header.is_angled = angled;
@@ -845,6 +846,8 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
     // the token parsed
     struct pp_token_s *new_token = NULL;
+    // where the last token parsed started
+    struct bookmark_s parsed_start = bookmark_new(NULL, 0, 0);
 
     do
     {
@@ -887,6 +890,9 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
         }
         else
         {
+            // save the mark
+            parsed_start = line_mark(stream->current_line, stream->cursor);
+
             // Greedy parsing: try all the parsing functions and chose
             // the one that take the most chars
             size_t best_chars = 0;
@@ -935,18 +941,23 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
             if (stream->is_line_directive)
             {
                 // deciding if we want to give it now or after this token
-                struct pp_token_s **dir_end_token = (new_token == NULL) ? (&new_token) : (&stream->delayed_token);
+                struct pp_token_s ** const dir_end_token = (new_token == NULL) ? (&new_token) : (&stream->delayed_token);
 
                 *dir_end_token = malloc(sizeof(struct pp_token_s));
                 if (*dir_end_token == NULL)
                     log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
                 (*dir_end_token)->type = PP_TOK_DIRECTIVE_STOP;
+                (*dir_end_token)->mark = line_mark(stream->current_line, stream->cursor);
             }
 
             line_free(stream->current_line);
             stream->current_line = NULL;
         }
     } while (new_token == NULL); // break at the first non-null token found
+
+    // mark the token
+    if(new_token->type != PP_TOK_DIRECTIVE_STOP)
+        new_token->mark = parsed_start;
 
     // directives and include detecting
     if (stream->tokens_given == 0 // first token
@@ -960,8 +971,6 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
     {
         stream->is_line_include = true;
     }
-
-    // TODO: bookmark the token
 
     // count the token
     stream->tokens_given++;

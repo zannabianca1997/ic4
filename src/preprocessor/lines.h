@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 #include "../misc/context/context.h"
+#include "../misc/bookmark.h"
 
 // --- LOGICAL LINES ---
 
@@ -34,6 +35,15 @@ struct logical_line_s
 // free the memory used
 // calling with a logical_line not given by linestream_get is UB
 void line_free(struct logical_line_s *line);
+
+/**
+ * @brief Find the mark of a given character inside a line
+ * 
+ * @param line the line to check
+ * @param cursor the position of the char 
+ * @return struct bookmark_s the bookmark of the char
+ */
+struct bookmark_s line_mark(struct logical_line_s const *line, size_t cursor);
 
 // --- LOGICAL LINE STREAM ---
 

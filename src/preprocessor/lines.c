@@ -32,6 +32,20 @@ void line_free(struct logical_line_s *line)
     free(line);
 }
 
+struct bookmark_s line_mark(struct logical_line_s const *line, size_t cursor)
+{
+    size_t i = 0;
+    while (line->index[i].row != 0 && line->index[i].start <= cursor) // advance until start of line goes over the cursor
+        i++;                                                          //
+    i--;                                                              // back to the last containing line
+
+    return bookmark_new(
+        NULL,
+        line->index[i].row,
+        cursor - line->index[i].start + 1 // colums are 1-based
+    );
+}
+
 // --- LOGICAL LINE STREAM ---
 
 struct linestream_s
