@@ -31,7 +31,7 @@ struct pp_token_s
     /**
      * @brief The type of the token 
      */
-    enum
+    enum pp_tok_type_e
     {
         // Code tokens
 
