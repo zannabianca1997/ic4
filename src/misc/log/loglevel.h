@@ -21,4 +21,13 @@ enum loglevel_e {
 
 // TODO: Add and implement LOG_CRITICAL and LOG_INFO
 
+#define LOG_LEVEL_NAME_MAX_LEN 9
+static const char LOG_LEVEL_NAME[][LOG_LEVEL_NAME_MAX_LEN] = {
+    "trace",
+    "debug",
+    "pedantic",
+    "warning",
+    "error"
+}
+
 #endif // _LOGLEVEL_H
