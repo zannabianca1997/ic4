@@ -29,11 +29,10 @@ static const struct
                      {PP_TOK_DIRECTIVE_STOP, "directive stop"},
                      {PP_TOK_ERROR, "preprocessing error"}};
 
-static inline
 #ifdef __GNUC__
-    __attribute__((const))
+__attribute_const__
 #endif
-    const char *
+    static inline const char *
     pp_type_name(enum pp_tok_type_e type)
 {
     for (size_t i = 0; i < (sizeof(PP_TYPE_NAMES) / sizeof(PP_TYPE_NAMES[0])); i++)
@@ -105,11 +104,10 @@ static const struct
                           {PUNC_STRINGIZE, "stringize"},
                           {PUNC_TOKPASTE, "token pasting"}};
 
-static inline
 #ifdef __GNUC__
-    __attribute__((const))
+__attribute_const__
 #endif
-    const char *
+    static inline const char *
     pp_punc_kind_name(enum punctuator_e kind)
 {
     for (size_t i = 0; i < (sizeof(PP_PUNC_KIND_NAMES) / sizeof(PP_PUNC_KIND_NAMES[0])); i++)
