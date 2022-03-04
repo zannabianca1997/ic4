@@ -28,6 +28,6 @@ static const char LOG_LEVEL_NAME[][LOG_LEVEL_NAME_MAX_LEN] = {
     "pedantic",
     "warning",
     "error"
-}
+};
 
 #endif // _LOGLEVEL_H
