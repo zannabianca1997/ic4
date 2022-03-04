@@ -63,6 +63,8 @@ enum compare_method_e
     CMP_IGNORE      // info is ignored
 };
 
+// TODO: cmp should sort the bookmarks (?)
+
 /**
  * @brief Compare two bookmarks
  *
