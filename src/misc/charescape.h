@@ -53,14 +53,14 @@ for i, l in enumerate(len(s) for s in eval(f"[{escape_seqs}]")):
         escape_lens += "\n    "
 
 print(f"""
-/**
+/""" + """**
  * @brief Escape codes for all bytes
  *""" + """/
 static const char _CHARESCAPE[][CHARESCAPE_MAX_LEN + 1] = {{
     // @formatter:off
 {escape_seqs}// @formatter:on
 }};
-/**
+/""" + """**
  * @brief Lenght of the escape codes for all bytes
  *""" + """/
 static const unsigned char _CHARESCAPE_LEN[] = {{
@@ -141,10 +141,10 @@ static const unsigned char _CHARESCAPE_LEN[] = {
  */
 static inline size_t escaped_len(char const *string, size_t len)
 {
-    size_t len = 0;
+    size_t esc_len = 0;
     for (size_t i = 0; i < len; i++)
-        len += CHARESCAPE_LEN(string[i]);
-    return len;
+        esc_len += CHARESCAPE_LEN(string[i]);
+    return esc_len;
 }
 /**
  * @brief Escape a string
