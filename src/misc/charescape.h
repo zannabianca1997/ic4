@@ -162,6 +162,7 @@ static inline char *escaped_string(char *dest, char const *string, size_t len)
             dest[j] = CHARESCAPE(string[i])[j];
         dest += CHARESCAPE_LEN(string[i]);
     }
+    *(dest++)='\0';
     return dest;
 }
 
