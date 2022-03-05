@@ -259,4 +259,12 @@
 #define __alignas_is_defined 1
 #define __alignof_is_defined 1
 
+/* GNU extensions */
+
+#ifdef __GNUC__
+#define __attribute__(x)
+#define __attribute_const__
+#define __attribute_pure__
+#endif
+
 #endif
