@@ -327,7 +327,7 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
     for (
         struct pp_token_s *tok = pp_tokstream_get(lcontext, pp_tokstm);
         tok != NULL;
-        pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm), tokens++)
+        pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm), tokens++) // TODO: check we do not exceed number of tokens
         // check how we should compare
         switch (tokens->compare_type)
         {
@@ -388,71 +388,60 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
-#define TEST(TESTCASE, TEXT, ...)                                                 \
-    static struct expected_pp_token_s expected_tokens_##TESTCASE[] = __VA_ARGS__; \
-    const char *test_tokenize_##TESTCASE()                                        \
-    {                                                                             \
-        return _test_tokenize(#TESTCASE, TEXT, expected_tokens_##TESTCASE);    \
+#define TEST(TESTCASE, TEXT, ...)                                           \
+    static struct expected_pp_token_s expected_tokens_##TESTCASE[] = {      \
+        __VA_ARGS__ __VA_OPT__(, ){EXPECTED_END}};                          \
+    const char *test_tokenize_##TESTCASE()                                  \
+    {                                                                       \
+        return _test_tokenize(#TESTCASE, TEXT, expected_tokens_##TESTCASE); \
     }
-
 
 // --- TESTS ---
 
 // -- whitespaces
 
 TEST(space,
-     " ",
-     {{EXPECTED_END}})
+     " ", )
 TEST(tab,
-     "\t",
-     {{EXPECTED_END}})
+     "\t", )
 TEST(empty_line,
-     "\t   \t \t     \t",
-     {{EXPECTED_END}})
+     "\t   \t \t     \t", )
 TEST(newline,
-     "\n",
-     {{EXPECTED_END}})
+     "\n", )
 TEST(empty_lines,
-     "\t   \t \n\t     \t",
-     {{EXPECTED_END}})
+     "\t   \t \n\t     \t", )
 TEST(mixed_ws,
-     "\n\t   \n  \r   \r\n\t \t \v",
-     {{EXPECTED_END}})
+     "\n\t   \n  \r   \r\n\t \t \v", )
 // --- identifiers
 
 TEST(identifier,
      "hello",
-     {{EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "hello"}},
-      {EXPECTED_END}})
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "hello"}})
 TEST(num_id,
      "by42",
-     {{EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "by42"}},
-      {EXPECTED_END}})
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "by42"}})
 TEST(underscore_id,
      "_contain_under___scores",
-     {{EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "_contain_under___scores"}},
-      {EXPECTED_END}})
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "_contain_under___scores"}})
 TEST(identifiers_marking,
      "  foo\nbar32 \\\n baz_hlle ans \t _bara",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 3}, .name = "foo"}},
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 2, 1}, .name = "bar32"}},
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 2}, .name = "baz_hlle"}}, // even if the newline is escaped, it is still detected
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 11}, .name = "ans"}},
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 17}, .name = "_bara"}},
-      {EXPECTED_END}})
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 3}, .name = "foo"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 2, 1}, .name = "bar32"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 2}, .name = "baz_hlle"}}, // even if the newline is escaped, it is still detected
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 11}, .name = "ans"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 17}, .name = "_bara"}})
 
 // -- preprocessor numbers
 
 TEST(ints,
      "1 23 \n 42 456 22 \n789203\n 3",
-     {{EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 1}, .name = "1"}},
-      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 3}, .name = "23"}},
-      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 2}, .name = "42"}},
-      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 5}, .name = "456"}},
-      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 9}, .name = "22"}},
-      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 3, 1}, .name = "789203"}},
-      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 4, 2}, .name = "3"}},
-      {EXPECTED_END}})
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 1}, .name = "1"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 3}, .name = "23"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 2}, .name = "42"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 5}, .name = "456"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 9}, .name = "22"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 3, 1}, .name = "789203"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 4, 2}, .name = "3"}})
 #if 0
 TEST(floats,
      "1. 2.3 \n 42. 4.56 2.2 \n78.9203\n 3.",
@@ -838,29 +827,22 @@ TEST(strlit_in_comm,
      "<tokens>"
      "</tokens>")
 
+#endif
+
 // -- stray chars
 
 TEST(stray_at,
      "@",
-     "<tokens>"
-     "<token msg=\"Stray &quot;@&quot; in the input\" severity=\"error\" type=\"error\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"@\" in the input"}}})
 TEST(stray_dollar,
      "$",
-     "<tokens>"
-     "<token msg=\"Stray &quot;$&quot; in the input\" severity=\"error\" type=\"error\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"$\" in the input"}}})
 TEST(stray_backtick,
      "`",
-     "<tokens>"
-     "<token msg=\"Stray &quot;`&quot; in the input\" severity=\"error\" type=\"error\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"`\" in the input"}}})
 TEST(stray_backslash,
      "\\",
-     "<tokens>"
-     "<token msg=\"Stray &quot;\\\\&quot; in the input\" severity=\"error\" type=\"error\" />"
-     "</tokens>")
-#endif
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"\\\" in the input"}}})
 
 #pragma GCC diagnostic pop // -Wmissing-field-initializers
 
