@@ -833,16 +833,16 @@ TEST(strlit_in_comm,
 
 TEST(stray_at,
      "@",
-     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"@\" in the input"}}})
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \'@\' in the input"}}})
 TEST(stray_dollar,
      "$",
-     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"$\" in the input"}}})
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \'$\' in the input"}}})
 TEST(stray_backtick,
      "`",
-     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"`\" in the input"}}})
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \'`\' in the input"}}})
 TEST(stray_backslash,
      "\\",
-     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \"\\\" in the input"}}})
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray \'\\\\\' in the input"}}})
 
 #pragma GCC diagnostic pop // -Wmissing-field-initializers
 
