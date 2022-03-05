@@ -45,18 +45,17 @@ void queue_free(queue_t *queue, void (*data_free)(void *))
     free(queue);
 }
 
-static void *data_copy_default(void const *data) { return data; }
-
 queue_t *queue_copy(queue_t const *original, void *(*data_copy)(void const *))
 {
-    if (data_copy == NULL)
-        data_copy = &data_copy_default;
 
     struct queue_s *queue_ptr = queue_new();
     if (queue_ptr == NULL)
         return NULL;
     for (struct queue_node_s const *data_node = original->head; data_node != NULL; data_node = data_node->next)
-        queue_push(queue_ptr, (*data_copy)(data_node->data));
+        if (data_copy != NULL)
+            queue_push(queue_ptr, (*data_copy)(data_node->data));
+        else
+            queue_push(queue_ptr, data_node->data);
     return queue_ptr;
 }
 
