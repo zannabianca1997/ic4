@@ -495,65 +495,53 @@ TEST(id_seems_number,
 // -- string literals
 
 #define TEST_STR(TESTCASE, STR) \
-    TEST(TESTCASE,  #STR, {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {STR, sizeof(STR)}}})
+    TEST(TESTCASE, #STR, {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {STR, sizeof(STR)}}})
 
 TEST_STR(strlit_so_long, "So long, and thanks for all the fish")
 TEST_STR(strlit_escape_chars, "\t \n \r \" \' \\")
-TEST_STR(strlit_escape_octals,"\1 \3 \7m \23 \42 \145 \323 \0104")
+TEST_STR(strlit_escape_octals, "\1 \3 \7m \23 \42 \145 \323 \0104")
 TEST_STR(strlit_escape_hex, "\xa \xba \xfam \x30")
-TEST_STR(strlit_nul," \0 ")
-#if 0
+TEST_STR(strlit_nul, " \0 ")
 TEST(strlit_octal_end,
-     "\"\\1\" \"\\01\" \"\\001\"",
-     "<tokens>"
-     "<token content=\"&#x01;\" type=\"string literal\" />"
-     "<token content=\"&#x01;\" type=\"string literal\" />"
-     "<token content=\"&#x01;\" type=\"string literal\" />"
-     "</tokens>")
+     "\"\\1\" \"\\01\" \"\\001\" \"\\0012\"",
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"\1", 2}}},
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"\1", 2}}},
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"\1", 2}}},
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"\0012", 3}}})
 TEST(strlit_identifier,
      "\"this is a string\"this_is_a_id",
-     "<tokens>"
-     "<token content=\"this is a string\" type=\"string literal\" />"
-     "<token name=\"this_is_a_id\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"this is a string", 17}}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "this_is_a_id"}})
 TEST(strlit_newline,
      "\"this is a string\ncutted by a newline\"",
-     "<tokens>"
-     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
-     "<token name=\"cutted\" type=\"identifier\" />"
-     "<token name=\"by\" type=\"identifier\" />"
-     "<token name=\"a\" type=\"identifier\" />"
-     "<token name=\"newline\" type=\"identifier\" />"
-     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 1, 1}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}},
+     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="cutted"}},
+     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="by"}},
+     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="a"}},
+     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="newline"}},
+     {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 2, 20}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}})
+
 
 // -- char consts
 
 TEST(chcon_letters,
      "'a' 'b' 'c'",
-     "<tokens>"
-     "<token type=\"char constant\" value=\"a\" />"
-     "<token type=\"char constant\" value=\"b\" />"
-     "<token type=\"char constant\" value=\"c\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,1}, .char_value='a'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,5}, .char_value='b'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,9}, .char_value='c'}})
 TEST(chcon_escaped,
      "'\\42' '\\xa3' '\\n'",
-     "<tokens>"
-     "<token type=\"char constant\" value=\"&quot;\" />"
-     "<token type=\"char constant\" value=\"&#xa3;\" />"
-     "<token type=\"char constant\" value=\"&#x0a;\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,1}, .char_value='\42'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,7}, .char_value='\xa3'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,14}, .char_value='\n'}})
 TEST(chcon_zero,
      "'\\0'",
-     "<tokens>"
-     "<token type=\"char constant\" value=\"&#x00;\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,1}, .char_value='\0'}})
 TEST(chcon_newline,
      "'\n'",
-     "<tokens>"
-     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
-     "<token msg=\"Unexpected newline while scanning quoted literal\" severity=\"error\" type=\"error\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 1, 1}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}},
+     {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 2, 1}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}})
+#if 0
 
 // -- Punctuators
 TEST(punctuators_aritmetics,
