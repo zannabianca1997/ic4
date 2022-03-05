@@ -651,6 +651,16 @@ TEST(directive_params,
      {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}},
      {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}})
+TEST(directive_mark,
+     "before\n   # directive  with \\\n strange params \nafter",
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_MARK, {.mark = {NULL, 2, 4}}},
+     {EXPECTED_MARK, {.mark = {NULL, 2, 6}}},
+     {EXPECTED_MARK, {.mark = {NULL, 2, 17}}},
+     {EXPECTED_MARK, {.mark = {NULL, 3, 2}}},
+     {EXPECTED_MARK, {.mark = {NULL, 3, 10}}},
+     {EXPECTED_MARK, {.mark = {NULL, 3, 17}}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}})
 TEST(line_control,
      "#line 42 \"filename\"",
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
@@ -680,87 +690,71 @@ TEST(header_quoted,
      "#include \"dirname\\filename\"",
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "include"}},
-     {EXPECTED_CONTENT, {PP_TOK_HEADER, .header = {"dirname\\filename", .is_angled=false}}},
+     {EXPECTED_CONTENT, {PP_TOK_HEADER, .header = {"dirname\\filename", .is_angled = false}}},
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
 TEST(header_angled,
      "#include <dirname\\filename>",
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "include"}},
-     {EXPECTED_CONTENT, {PP_TOK_HEADER, .header = {"dirname\\filename", .is_angled=true}}},
+     {EXPECTED_CONTENT, {PP_TOK_HEADER, .header = {"dirname\\filename", .is_angled = true}}},
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
-#if 0
 
 // -- comments
 
 TEST(inline_comment,
-     "// this is a comment",
-     "<tokens>"
-     "</tokens>")
+     "// this is a comment", {EXPECTED_END})
 TEST(icomm_stop,
      "// this is a comment\nthis is not",
-     "<tokens>"
-     "<token name=\"this\" type=\"identifier\" />"
-     "<token name=\"is\" type=\"identifier\" />"
-     "<token name=\"not\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}})
 TEST(icomm_identifier,
-     "hello// this is a comment",
-     "<tokens>"
-     "<token name=\"hello\" type=\"identifier\" />"
-     "</tokens>")
+     "hello//comment",
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}})
 TEST(icomm_number,
-     "53// this is a comment",
-     "<tokens>"
-     "<token name=\"53\" type=\"preprocessor number\" />"
-     "</tokens>")
+     "42//comment",
+     {EXPECTED_TYPE, {PP_TOK_PP_NUMBER}})
 TEST(icomm_continue,
      "//this comment \\\n do not stop here \n but here",
-     "<tokens>"
-     "<token name=\"but\" type=\"identifier\" />"
-     "<token name=\"here\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 2}, .name = "but"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 6}, .name = "here"}})
 
 // -- multiline comments
 
 TEST(multiline_as_ws,
      "/* This is whitespace.... \n Even on multiple lines \r\n*/",
-     "<tokens>"
-     "</tokens>")
+     {EXPECTED_END})
 TEST(multiline_tok_divide,
      "foo/* This will divide the tokens */bar",
-     "<tokens>"
-     "<token name=\"foo\" type=\"identifier\" />"
-     "<token name=\"bar\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 1}, .name = "foo"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 37}, .name = "bar"}})
 TEST(multiline_unended,
      "foo /* bar ops this is not ended...",
-     "<tokens>"
-     "<token name=\"foo\" type=\"identifier\" />"
-     "<token msg=\"Unexpected EOF while scanning multiline comment\" severity=\"error\" type=\"error\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "foo"}},
+     {EXPECTED_CONTENT, {PP_TOK_ERROR, .error = {.severity = LOG_ERROR, .msg = "Unexpected EOF while scanning multiline comment"}}})
+TEST(multiline_as_linebreak,
+     "# this directive /* thanks to the comment \n span */ two lines",
+     {EXPECTED_EXACT, {PP_TOK_DIRECTIVE_START, {NULL, 1, 1}}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 3}, .name = "this"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 8}, .name = "directive"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 2, 10}, .name = "two"}},
+     {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 2, 14}, .name = "lines"}},
+     {EXPECTED_EXACT, {PP_TOK_DIRECTIVE_STOP, {NULL, 2, 19}}})
 
 // -- comments and string literals
 
 TEST(mlcomm_in_strlit,
      "\"this is /* not a comment */ \"",
-     "<tokens>"
-     "<token content=\"this is /* not a comment */ \" type=\"string literal\" />"
-     "</tokens>")
+     {EXPECTED_TYPE, {PP_TOK_STRING_LIT}})
 TEST(strlit_in_mlcomm,
      "/*this is \" not a string \" */",
-     "<tokens>"
-     "</tokens>")
+     {EXPECTED_END})
 TEST(comm_in_strlit,
      "\"this is // not a comment\"",
-     "<tokens>"
-     "<token content=\"this is // not a comment\" type=\"string literal\" />"
-     "</tokens>")
+     {EXPECTED_TYPE, {PP_TOK_STRING_LIT}})
 TEST(strlit_in_comm,
      "// this is \" not a string \"",
-     "<tokens>"
-     "</tokens>")
-
-#endif
+     {EXPECTED_END})
 
 // -- stray chars
 
