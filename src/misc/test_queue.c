@@ -135,7 +135,7 @@ const char *test_free(){
 
     for (size_t i = 0; i < sizeof(freeables)/sizeof(freeables[0]); i++)
         if(!freeables[i].freed)
-        return "Not all elements has been freed";
+        return "Not all elements have been freed";
     
     return NULL;
 }
