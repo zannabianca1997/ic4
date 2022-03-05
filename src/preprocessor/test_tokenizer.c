@@ -541,99 +541,79 @@ TEST(chcon_newline,
      "'\n'",
      {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 1, 1}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}},
      {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 2, 1}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}})
-#if 0
 
 // -- Punctuators
 TEST(punctuators_aritmetics,
      "+ - / * %",
-     "<tokens>"
-     "<token kind=\"add\" type=\"punctuator\" />"
-     "<token kind=\"subtract\" type=\"punctuator\" />"
-     "<token kind=\"divide\" type=\"punctuator\" />"
-     "<token kind=\"multiply or dereference\" type=\"punctuator\" />"
-     "<token kind=\"modulus\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_ADD}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SUB}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_DIV}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MUL_OR_DEREF}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MOD}})
 TEST(punctuators_comparators,
      "== != < <= > >=",
-     "<tokens>"
-     "<token kind=\"equal\" type=\"punctuator\" />"
-     "<token kind=\"not equal\" type=\"punctuator\" />"
-     "<token kind=\"less\" type=\"punctuator\" />"
-     "<token kind=\"less or equal\" type=\"punctuator\" />"
-     "<token kind=\"greather\" type=\"punctuator\" />"
-     "<token kind=\"greather or equal\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_EQ}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_NEQ}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_LESS}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_LESSEQ}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_GREAT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_GREATEQ}})
 TEST(punctuators_logical,
      "! && || ? :",
-     "<tokens>"
-     "<token kind=\"not\" type=\"punctuator\" />"
-     "<token kind=\"and\" type=\"punctuator\" />"
-     "<token kind=\"or\" type=\"punctuator\" />"
-     "<token kind=\"question mark\" type=\"punctuator\" />"
-     "<token kind=\"colon\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_NOT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_AND}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_OR}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_QUESTION}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_COLON}})
 TEST(punctuators_bitwise,
      "~ & | ^ << >>",
-     "<tokens>"
-     "<token kind=\"bitwise not\" type=\"punctuator\" />"
-     "<token kind=\"bitwise and or reference to\" type=\"punctuator\" />"
-     "<token kind=\"bitwise or\" type=\"punctuator\" />"
-     "<token kind=\"bitwise xor\" type=\"punctuator\" />"
-     "<token kind=\"bitwise left shift\" type=\"punctuator\" />"
-     "<token kind=\"bitwise right shift\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_NOT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_AND_OR_REFTO}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_OR}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_XOR}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_LSHIFT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_RSHIFT}})
 TEST(punctuators_assignements,
      "= += -= *= /= %= &= |= ^= <<= >>=",
-     "<tokens>"
-     "<token kind=\"assign\" type=\"punctuator\" />"
-     "<token kind=\"add and assign\" type=\"punctuator\" />"
-     "<token kind=\"subtract and assign\" type=\"punctuator\" />"
-     "<token kind=\"multiply and assign\" type=\"punctuator\" />"
-     "<token kind=\"divide and assign\" type=\"punctuator\" />"
-     "<token kind=\"modulus and assign\" type=\"punctuator\" />"
-     "<token kind=\"bitwise and and assign\" type=\"punctuator\" />"
-     "<token kind=\"bitwise or and assign\" type=\"punctuator\" />"
-     "<token kind=\"bitwise xor and assign\" type=\"punctuator\" />"
-     "<token kind=\"bitwise left shift and assign\" type=\"punctuator\" />"
-     "<token kind=\"bitwise right shift and assign\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_ADD_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SUB_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MUL_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_DIV_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MOD_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_AND_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_OR_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_XOR_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_LSHIFT_ASSIGN}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_RSHIFT_ASSIGN}})
 TEST(punctuators_augment,
      "++ --",
-     "<tokens>"
-     "<token kind=\"augment\" type=\"punctuator\" />"
-     "<token kind=\"decrement\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_AUGMENT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_DECR}})
 TEST(punctuators_bracket,
      "( ) [ ] { }",
-     "<tokens>"
-     "<token kind=\"open braket\" type=\"punctuator\" />"
-     "<token kind=\"close braket\" type=\"punctuator\" />"
-     "<token kind=\"open square braket\" type=\"punctuator\" />"
-     "<token kind=\"close square braket\" type=\"punctuator\" />"
-     "<token kind=\"open curly braket\" type=\"punctuator\" />"
-     "<token kind=\"close curly braket\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_PAR_LEFT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_PAR_RIGHT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SQRPAR_LEFT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SQRPAR_RIGHT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_CURPAR_LEFT}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_CURPAR_RIGHT}})
 TEST(punctuators_pointers,
      "* & . ->",
-     "<tokens>"
-     "<token kind=\"multiply or dereference\" type=\"punctuator\" />"
-     "<token kind=\"bitwise and or reference to\" type=\"punctuator\" />"
-     "<token kind=\"member access\" type=\"punctuator\" />"
-     "<token kind=\"indirect member access\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MUL_OR_DEREF}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_AND_OR_REFTO}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MEMBER_ACCESS}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_IND_MEMBER_ACCESS}})
 TEST(punctuators_separators,
      ", ;",
-     "<tokens>"
-     "<token kind=\"comma\" type=\"punctuator\" />"
-     "<token kind=\"semicolon\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_COMMA}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SEMICOL}})
 TEST(punctuators_preprocessor,
      "nadirect # ##",
-     "<tokens>"
-     "<token name=\"nadirect\" type=\"identifier\" />" // stop the directive special rules
-     "<token kind=\"stringize\" type=\"punctuator\" />"
-     "<token kind=\"token pasting\" type=\"punctuator\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="nadirect"}}, // stop the line to be parsed as a directive
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_STRINGIZE}},
+     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_TOKPASTE}})
+#if 0
 
 // this is parsed as the invalid a ++ ++ + b, instead of the valid a ++ + ++ b
 TEST(punctuators_misleading,
