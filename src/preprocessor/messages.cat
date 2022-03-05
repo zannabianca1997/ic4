@@ -29,8 +29,8 @@ TOKENIZER:
     ESCAPE_UNICODE "Unicode escape sequences are unimplemented"
     ESCAPE_UNKNOW "Unknow escape sequence"
 
-    STRAY_CHAR_OPEN "Stray \""
-    STRAY_CHAR_CLOSE "\" in the input"
+    STRAY_CHAR_OPEN "Stray \'"
+    STRAY_CHAR_CLOSE "\' in the input"
 
     CONTEXT_OPENING "opening tokenstream"
     CONTEXT_IDENTIFIER "parsing identifier"
