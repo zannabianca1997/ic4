@@ -491,41 +491,24 @@ TEST(number_seems_id,
 TEST(id_seems_number,
      "x123456",
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x123456"}})
-#if 0
 
 // -- string literals
 
-TEST(strlit_so_long,
-     "\"So long, and thanks for all the fish\"",
-     "<tokens>"
-     "<token content=\"So long, and thanks for all the fish\" type=\"string literal\" />"
-     "</tokens>")
-TEST(strlit_escape_chars,
-     "\"\\t \\n \\r \\\" \\\' \\\\\"",
-     "<tokens>"
-     "<token content=\"&#x09; &#x0a; &#x0d; &quot; &apos; \\\" type=\"string literal\" />"
-     "</tokens>")
-TEST(strlit_escape_octals,
-     "\"\\1 \\3 \\7m \\23 \\42 \\145 \\323 \\0104\"",
-     "<tokens>"
-     "<token content=\"&#x01; &#x03; &#x07;m &#x13; &quot; e &#xd3; &#x08;4\" type=\"string literal\" />"
-     "</tokens>")
-TEST(strlit_escape_hex,
-     "\"\\xa \\xba \\xfam \\x30\"",
-     "<tokens>"
-     "<token content=\"&#x0a; &#xba; &#xfa;m 0\" type=\"string literal\" />"
-     "</tokens>")
+#define TEST_STR(TESTCASE, STR) \
+    TEST(TESTCASE,  #STR, {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {STR, sizeof(STR)}}})
+
+TEST_STR(strlit_so_long, "So long, and thanks for all the fish")
+TEST_STR(strlit_escape_chars, "\t \n \r \" \' \\")
+TEST_STR(strlit_escape_octals,"\1 \3 \7m \23 \42 \145 \323 \0104")
+TEST_STR(strlit_escape_hex, "\xa \xba \xfam \x30")
+TEST_STR(strlit_nul," \0 ")
+#if 0
 TEST(strlit_octal_end,
      "\"\\1\" \"\\01\" \"\\001\"",
      "<tokens>"
      "<token content=\"&#x01;\" type=\"string literal\" />"
      "<token content=\"&#x01;\" type=\"string literal\" />"
      "<token content=\"&#x01;\" type=\"string literal\" />"
-     "</tokens>")
-TEST(strlit_nul,
-     "\" \\0 \"",
-     "<tokens>"
-     "<token content=\" &#x00; \" type=\"string literal\" />"
      "</tokens>")
 TEST(strlit_identifier,
      "\"this is a string\"this_is_a_id",
