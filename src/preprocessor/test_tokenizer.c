@@ -2,8 +2,8 @@
  * @file test_tokenizer_n.c
  * @author zannabianca1997 (zannabianca199712@gmail.com)
  * @brief Test the tokenizer.
- * @version 0.1
- * @date 2022-02-11
+ * @version 0.2
+ * @date 2022-03-05
  *
  * Given all the tokenizer test are basically a repeat of input a string -> tokenize -> check the result
  *  the test cases are macro generated
