@@ -487,10 +487,10 @@ TEST(misleading_parse,
 // -- number and id interaction
 TEST(number_seems_id,
      "0array",
-     {EXPECTED_CONTENT, {PP_TOK_PP_NUMBER, .name = "0array"}})
+     {EXPECTED_TYPE, {PP_TOK_PP_NUMBER}})
 TEST(id_seems_number,
      "x123456",
-     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x123456"}})
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}})
 
 // -- string literals
 
@@ -515,28 +515,27 @@ TEST(strlit_identifier,
 TEST(strlit_newline,
      "\"this is a string\ncutted by a newline\"",
      {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 1, 1}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}},
-     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="cutted"}},
-     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="by"}},
-     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="a"}},
-     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="newline"}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "cutted"}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "by"}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "a"}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "newline"}},
      {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 2, 20}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}})
-
 
 // -- char consts
 
 TEST(chcon_letters,
      "'a' 'b' 'c'",
-     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,1}, .char_value='a'}},
-     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,5}, .char_value='b'}},
-     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,9}, .char_value='c'}})
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1, 1}, .char_value = 'a'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1, 5}, .char_value = 'b'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1, 9}, .char_value = 'c'}})
 TEST(chcon_escaped,
      "'\\42' '\\xa3' '\\n'",
-     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,1}, .char_value='\42'}},
-     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,7}, .char_value='\xa3'}},
-     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,14}, .char_value='\n'}})
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1, 1}, .char_value = '\42'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1, 7}, .char_value = '\xa3'}},
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1, 14}, .char_value = '\n'}})
 TEST(chcon_zero,
      "'\\0'",
-     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1,1}, .char_value='\0'}})
+     {EXPECTED_EXACT, {PP_TOK_CHAR_CONST, {NULL, 1, 1}, .char_value = '\0'}})
 TEST(chcon_newline,
      "'\n'",
      {EXPECTED_EXACT, {PP_TOK_ERROR, {NULL, 1, 1}, .error = {.severity = LOG_ERROR, .msg = "Unexpected newline while scanning quoted literal"}}},
@@ -545,154 +544,151 @@ TEST(chcon_newline,
 // -- Punctuators
 TEST(punctuators_aritmetics,
      "+ - / * %",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_ADD}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SUB}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_DIV}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MUL_OR_DEREF}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MOD}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_SUB}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_DIV}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_MUL_OR_DEREF}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_MOD}})
 TEST(punctuators_comparators,
      "== != < <= > >=",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_EQ}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_NEQ}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_LESS}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_LESSEQ}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_GREAT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_GREATEQ}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_EQ}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_NEQ}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_LESS}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_LESSEQ}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_GREAT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_GREATEQ}})
 TEST(punctuators_logical,
      "! && || ? :",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_NOT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_AND}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_OR}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_QUESTION}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_COLON}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_NOT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_AND}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_OR}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_QUESTION}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COLON}})
 TEST(punctuators_bitwise,
      "~ & | ^ << >>",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_NOT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_AND_OR_REFTO}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_OR}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_XOR}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_LSHIFT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_RSHIFT}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_NOT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_AND_OR_REFTO}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_OR}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_XOR}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_LSHIFT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_RSHIFT}})
 TEST(punctuators_assignements,
      "= += -= *= /= %= &= |= ^= <<= >>=",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_ADD_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SUB_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MUL_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_DIV_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MOD_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_AND_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_OR_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_XOR_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_LSHIFT_ASSIGN}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_RSHIFT_ASSIGN}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_SUB_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_MUL_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_DIV_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_MOD_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_AND_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_OR_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_XOR_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_LSHIFT_ASSIGN}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_RSHIFT_ASSIGN}})
 TEST(punctuators_augment,
      "++ --",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_AUGMENT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_DECR}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_AUGMENT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_DECR}})
 TEST(punctuators_bracket,
      "( ) [ ] { }",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_PAR_LEFT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_PAR_RIGHT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SQRPAR_LEFT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SQRPAR_RIGHT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_CURPAR_LEFT}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_CURPAR_RIGHT}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_SQRPAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_SQRPAR_RIGHT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_CURPAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_CURPAR_RIGHT}})
 TEST(punctuators_pointers,
      "* & . ->",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MUL_OR_DEREF}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_BIT_AND_OR_REFTO}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_MEMBER_ACCESS}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_IND_MEMBER_ACCESS}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_MUL_OR_DEREF}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_BIT_AND_OR_REFTO}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_MEMBER_ACCESS}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_IND_MEMBER_ACCESS}})
 TEST(punctuators_separators,
      ", ;",
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_COMMA}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_SEMICOL}})
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COMMA}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_SEMICOL}})
 TEST(punctuators_preprocessor,
      "nadirect # ##",
-     {EXPECTED_CONTENT,{PP_TOK_IDENTIFIER, .name="nadirect"}}, // stop the line to be parsed as a directive
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_STRINGIZE}},
-     {EXPECTED_CONTENT,{PP_TOK_PUNCTUATOR, .punc_kind=PUNC_TOKPASTE}})
-#if 0
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "nadirect"}}, // stop the line to be parsed as a directive
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_STRINGIZE}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_TOKPASTE}})
 
 // this is parsed as the invalid a ++ ++ + b, instead of the valid a ++ + ++ b
 TEST(punctuators_misleading,
      "a+++++b",
-     "<tokens>"
-     "<token name=\"a\" type=\"identifier\" />"
-     "<token kind=\"augment\" type=\"punctuator\" />"
-     "<token kind=\"augment\" type=\"punctuator\" />"
-     "<token kind=\"add\" type=\"punctuator\" />"
-     "<token name=\"b\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "a"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_AUGMENT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_AUGMENT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "b"}})
+
+TEST(punctuators_marking,
+     "+  % \n >>= \t & \\\n %% !",
+     {EXPECTED_EXACT, {PP_TOK_PUNCTUATOR, {NULL, 1, 1}, .punc_kind = PUNC_ADD}},
+     {EXPECTED_EXACT, {PP_TOK_PUNCTUATOR, {NULL, 1, 4}, .punc_kind = PUNC_MOD}},
+     {EXPECTED_EXACT, {PP_TOK_PUNCTUATOR, {NULL, 2, 2}, .punc_kind = PUNC_BIT_RSHIFT_ASSIGN}},
+     {EXPECTED_EXACT, {PP_TOK_PUNCTUATOR, {NULL, 2, 8}, .punc_kind = PUNC_BIT_AND_OR_REFTO}},
+     {EXPECTED_EXACT, {PP_TOK_PUNCTUATOR, {NULL, 3, 2}, .punc_kind = PUNC_MOD}},
+     {EXPECTED_EXACT, {PP_TOK_PUNCTUATOR, {NULL, 3, 3}, .punc_kind = PUNC_MOD}},
+     {EXPECTED_EXACT, {PP_TOK_PUNCTUATOR, {NULL, 3, 5}, .punc_kind = PUNC_NOT}})
 
 // -- directives
 
 TEST(directive,
      "before\n#directive\nafter",
-     "<tokens>"
-     "<token name=\"before\" type=\"identifier\" />"
-     "<token type=\"directive start\" />"
-     "<token name=\"directive\" type=\"identifier\" />"
-     "<token type=\"directive end\" />"
-     "<token name=\"after\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}})
 TEST(directive_params,
      "before\n#directive a 42 b\nafter",
-     "<tokens>"
-     "<token name=\"before\" type=\"identifier\" />"
-     "<token type=\"directive start\" />"
-     "<token name=\"directive\" type=\"identifier\" />"
-     "<token name=\"a\" type=\"identifier\" />"
-     "<token name=\"42\" type=\"preprocessor number\" />"
-     "<token name=\"b\" type=\"identifier\" />"
-     "<token type=\"directive end\" />"
-     "<token name=\"after\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_TYPE, {PP_TOK_PP_NUMBER}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}},
+     {EXPECTED_TYPE, {PP_TOK_IDENTIFIER}})
 TEST(line_control,
      "#line 42 \"filename\"",
-     "<tokens>"
-     "<token type=\"directive start\" />"
-     "<token name=\"line\" type=\"identifier\" />"
-     "<token name=\"42\" type=\"preprocessor number\" />"
-     "<token content=\"filename\" type=\"string literal\" />"
-     "<token type=\"directive end\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "line"}},
+     {EXPECTED_CONTENT, {PP_TOK_PP_NUMBER, .name = "42"}},
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"filename", 9}}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
 TEST(define,
-     "#define MACRO(x) strcmp(\"String Const\",x)==0",
-     "<tokens>"
-     "<token type=\"directive start\" />"
-     "<token name=\"define\" type=\"identifier\" />"
-     "<token name=\"MACRO\" type=\"identifier\" />"
-     "<token kind=\"open braket\" type=\"punctuator\" />"
-     "<token name=\"x\" type=\"identifier\" />"
-     "<token kind=\"close braket\" type=\"punctuator\" />"
-     "<token name=\"strcmp\" type=\"identifier\" />"
-     "<token kind=\"open braket\" type=\"punctuator\" />"
-     "<token content=\"String Const\" type=\"string literal\" />"
-     "<token kind=\"comma\" type=\"punctuator\" />"
-     "<token name=\"x\" type=\"identifier\" />"
-     "<token kind=\"close braket\" type=\"punctuator\" />"
-     "<token kind=\"equal\" type=\"punctuator\" />"
-     "<token name=\"0\" type=\"preprocessor number\" />"
-     "<token type=\"directive end\" />"
-     "</tokens>")
+     "#define MACRO(x) \\\n strcmp(\"String Const\",x)==0",
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "define"}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "MACRO"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "strcmp"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"String Const", 13}}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COMMA}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_EQ}},
+     {EXPECTED_CONTENT, {PP_TOK_PP_NUMBER, .name = "0"}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
+
 TEST(header_quoted,
      "#include \"dirname\\filename\"",
-     "<tokens>"
-     "<token type=\"directive start\" />"
-     "<token name=\"include\" type=\"identifier\" />"
-     "<token angled=\"no\" name=\"dirname\\filename\" type=\"header name\" />"
-     "<token type=\"directive end\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "include"}},
+     {EXPECTED_CONTENT, {PP_TOK_HEADER, .header = {"dirname\\filename", .is_angled=false}}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
 TEST(header_angled,
      "#include <dirname\\filename>",
-     "<tokens>"
-     "<token type=\"directive start\" />"
-     "<token name=\"include\" type=\"identifier\" />"
-     "<token angled=\"yes\" name=\"dirname\\filename\" type=\"header name\" />"
-     "<token type=\"directive end\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "include"}},
+     {EXPECTED_CONTENT, {PP_TOK_HEADER, .header = {"dirname\\filename", .is_angled=true}}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
+#if 0
 
 // -- comments
 
