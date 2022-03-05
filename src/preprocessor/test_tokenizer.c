@@ -388,12 +388,12 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
-#define TEST(TESTCASE, TEXT, ...)                                           \
-    static struct expected_pp_token_s expected_tokens_##TESTCASE[] = {      \
-        __VA_ARGS__ __VA_OPT__(, ){EXPECTED_END}};                          \
-    const char *test_tokenize_##TESTCASE()                                  \
-    {                                                                       \
-        return _test_tokenize(#TESTCASE, TEXT, expected_tokens_##TESTCASE); \
+#define TEST(TESTCASE, TEXT, ...)                                \
+    const char *test_tokenize_##TESTCASE()                       \
+    {                                                            \
+        struct expected_pp_token_s expected_tokens[] = {         \
+            __VA_ARGS__, {EXPECTED_END}};                        \
+        return _test_tokenize(#TESTCASE, TEXT, expected_tokens); \
     }
 
 // --- TESTS ---
@@ -401,17 +401,17 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
 // -- whitespaces
 
 TEST(space,
-     " ", )
+     " ", {EXPECTED_END})
 TEST(tab,
-     "\t", )
+     "\t", {EXPECTED_END})
 TEST(empty_line,
-     "\t   \t \t     \t", )
+     "\t   \t \t     \t", {EXPECTED_END})
 TEST(newline,
-     "\n", )
+     "\n", {EXPECTED_END})
 TEST(empty_lines,
-     "\t   \t \n\t     \t", )
+     "\t   \t \n\t     \t", {EXPECTED_END})
 TEST(mixed_ws,
-     "\n\t   \n  \r   \r\n\t \t \v", )
+     "\n\t   \n  \r   \r\n\t \t \v", {EXPECTED_END})
 // --- identifiers
 
 TEST(identifier,
@@ -442,70 +442,56 @@ TEST(ints,
      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 9}, .name = "22"}},
      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 3, 1}, .name = "789203"}},
      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 4, 2}, .name = "3"}})
-#if 0
 TEST(floats,
      "1. 2.3 \n 42. 4.56 2.2 \n78.9203\n 3.",
-     "<tokens>"
-     "<token name=\"1.\" type=\"preprocessor number\" />"
-     "<token name=\"2.3\" type=\"preprocessor number\" />"
-     "<token name=\"42.\" type=\"preprocessor number\" />"
-     "<token name=\"4.56\" type=\"preprocessor number\" />"
-     "<token name=\"2.2\" type=\"preprocessor number\" />"
-     "<token name=\"78.9203\" type=\"preprocessor number\" />"
-     "<token name=\"3.\" type=\"preprocessor number\" />"
-     "</tokens>")
-TEST(leading_dots,
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 1}, .name = "1."}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 4}, .name = "2.3"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 2}, .name = "42."}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 6}, .name = "4.56"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 11}, .name = "2.2"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 3, 1}, .name = "78.9203"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 4, 2}, .name = "3."}})
+TEST(leading_dot,
      ".1 .23 \n .42 .456 .22 \n.789203\n .3",
-     "<tokens>"
-     "<token name=\".1\" type=\"preprocessor number\" />"
-     "<token name=\".23\" type=\"preprocessor number\" />"
-     "<token name=\".42\" type=\"preprocessor number\" />"
-     "<token name=\".456\" type=\"preprocessor number\" />"
-     "<token name=\".22\" type=\"preprocessor number\" />"
-     "<token name=\".789203\" type=\"preprocessor number\" />"
-     "<token name=\".3\" type=\"preprocessor number\" />"
-     "</tokens>")
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 1}, .name = ".1"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 4}, .name = ".23"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 2}, .name = ".42"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 6}, .name = ".456"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 11}, .name = ".22"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 3, 1}, .name = ".789203"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 4, 2}, .name = ".3"}})
 TEST(exponents,
      "1.e5 2.3e+5 \n 42e-23 .46E+34 2.2E-1 \n.789203p2\n 3.p+86",
-     "<tokens>"
-     "<token name=\"1.e5\" type=\"preprocessor number\" />"
-     "<token name=\"2.3e+5\" type=\"preprocessor number\" />"
-     "<token name=\"42e-23\" type=\"preprocessor number\" />"
-     "<token name=\".46E+34\" type=\"preprocessor number\" />"
-     "<token name=\"2.2E-1\" type=\"preprocessor number\" />"
-     "<token name=\".789203p2\" type=\"preprocessor number\" />"
-     "<token name=\"3.p+86\" type=\"preprocessor number\" />"
-     "</tokens>")
-TEST(strange_numbers,
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 1}, .name = "1.e5"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 6}, .name = "2.3e+5"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 2}, .name = "42e-23"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 9}, .name = ".46E+34"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 17}, .name = "2.2E-1"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 3, 1}, .name = ".789203p2"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 4, 2}, .name = "3.p+86"}})
+TEST(strange_pp_numbers,
      "1.e849dh34h7...34c.c34.c05 2.3...exb5 \n 0d.e.a.d.b.e.e.f .4..6E 1ex",
-     "<tokens>"
-     "<token name=\"1.e849dh34h7...34c.c34.c05\" type=\"preprocessor number\" />"
-     "<token name=\"2.3...exb5\" type=\"preprocessor number\" />"
-     "<token name=\"0d.e.a.d.b.e.e.f\" type=\"preprocessor number\" />"
-     "<token name=\".4..6E\" type=\"preprocessor number\" />"
-     "<token name=\"1ex\" type=\"preprocessor number\" />"
-     "</tokens>")
-/* 
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 1}, .name = "1.e849dh34h7...34c.c34.c05"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 28}, .name = "2.3...exb5"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 2}, .name = "0d.e.a.d.b.e.e.f"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 19}, .name = ".4..6E"}},
+     {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 26}, .name = "1ex"}})
+/*
     This exemplify how the preprocessor can mislead.
     Instead of the valid c code 0xE + 12, it is parsed as a single invalid number
 */
 TEST(misleading_parse,
      "0xE+12",
-     "<tokens>"
-     "<token name=\"0xE+12\" type=\"preprocessor number\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_PP_NUMBER, .name = "0xE+12"}})
 
 // -- number and id interaction
 TEST(number_seems_id,
-     "123abc_def",
-     "<tokens>"
-     "<token name=\"123abc_def\" type=\"preprocessor number\" />"
-     "</tokens>")
+     "0array",
+     {EXPECTED_CONTENT, {PP_TOK_PP_NUMBER, .name = "0array"}})
 TEST(id_seems_number,
      "x123456",
-     "<tokens>"
-     "<token name=\"x123456\" type=\"identifier\" />"
-     "</tokens>")
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x123456"}})
+#if 0
 
 // -- string literals
 
