@@ -1,17 +1,17 @@
 /**
- * @file test_tokenizer_n.c
+ * @file test_tokenizer.c
  * @author zannabianca1997 (zannabianca199712@gmail.com)
- * @brief Test the tokenizer.
+ * @brief Test the tokenizer. 
  * @version 0.1
  * @date 2022-02-11
- *
+ * 
  * Given all the tokenizer test are basically a repeat of input a string -> tokenize -> check the result
  *  the test cases are macro generated
- *
+ * 
  * @copyright Copyright (c) 2022
- *
+ * 
  */
-#define _POSIX_C_SOURCE 200809L
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,290 +22,71 @@
 #include "tokenizer.h"
 #include "tokenizerco.h"
 
-#include "enum_strings.h"
-#include "../misc/charescape.h"
+#include "../misc/xml.h"
 
-/**
- * @brief Elaborate a human readable token representation
- *
- * @param tok the token to represent
- * @return char* the representation
- */
-static char *pp_tok_tostring(struct pp_token_s *tok)
+static const struct
 {
-    char *result;
+    enum punctuator_e kind;
+    const char *name;
+} PUNC_KIND_NAMES[] = {{PUNC_ADD, "add"},
+                       {PUNC_SUB, "subtract"},
+                       {PUNC_MUL_OR_DEREF, "multiply or dereference"},
+                       {PUNC_DIV, "divide"},
+                       {PUNC_MOD, "modulus"},
 
-    switch (tok->type)
-    {
-    case PP_TOK_IDENTIFIER:
-    case PP_TOK_PP_NUMBER:
-        result = malloc(strlen(tok->name) + 1);
-        if (result == NULL)
-            return "Malloc failed during token string representation";
-        strcpy(result, tok->name);
-        return result;
+                       {PUNC_EQ, "equal"},
+                       {PUNC_NEQ, "not equal"},
+                       {PUNC_LESS, "less"},
+                       {PUNC_LESSEQ, "less or equal"},
+                       {PUNC_GREAT, "greather"},
+                       {PUNC_GREATEQ, "greather or equal"},
 
-    case PP_TOK_STRING_LIT:
-        result = malloc(escaped_len(tok->string.value, tok->string.len) + 3);
-        if (result == NULL)
-            return "Malloc failed during token string representation";
-        result[0] = '\"';
-        escaped_string(&result[1], tok->string.value, tok->string.len);
-        strcat(result, "\"");
-        return result;
+                       {PUNC_NOT, "not"},
+                       {PUNC_AND, "and"},
+                       {PUNC_OR, "or"},
+                       {PUNC_QUESTION, "question mark"},
+                       {PUNC_COLON, "colon"},
 
-    case PP_TOK_CHAR_CONST:
-        result = malloc(CHARESCAPE_LEN(tok->char_value) + 3);
-        if (result == NULL)
-            return "Malloc failed during token string representation";
-        strcpy(result, "\'");
-        strcat(result, CHARESCAPE(tok->char_value));
-        strcat(result, "\'");
-        return result;
+                       {PUNC_BIT_NOT, "bitwise not"},
+                       {PUNC_BIT_AND_OR_REFTO, "bitwise and or reference to"},
+                       {PUNC_BIT_OR, "bitwise or"},
+                       {PUNC_BIT_XOR, "bitwise xor"},
+                       {PUNC_BIT_LSHIFT, "bitwise left shift"},
+                       {PUNC_BIT_RSHIFT, "bitwise right shift"},
 
-    case PP_TOK_HEADER:
-        result = malloc(strlen(tok->header.name) + 3);
-        if (result == NULL)
-            return "Malloc failed during token string representation";
-        strcpy(result, tok->header.is_angled ? "<" : "\"");
-        strcat(result, tok->header.name);
-        strcat(result, tok->header.is_angled ? ">" : "\"");
-        return result;
+                       {PUNC_ASSIGN, "assign"},
+                       {PUNC_ADD_ASSIGN, "add and assign"},
+                       {PUNC_SUB_ASSIGN, "subtract and assign"},
+                       {PUNC_MUL_ASSIGN, "multiply and assign"},
+                       {PUNC_DIV_ASSIGN, "divide and assign"},
+                       {PUNC_MOD_ASSIGN, "modulus and assign"},
+                       {PUNC_BIT_AND_ASSIGN, "bitwise and and assign"},
+                       {PUNC_BIT_OR_ASSIGN, "bitwise or and assign"},
+                       {PUNC_BIT_XOR_ASSIGN, "bitwise xor and assign"},
+                       {PUNC_BIT_LSHIFT_ASSIGN, "bitwise left shift and assign"},
+                       {PUNC_BIT_RSHIFT_ASSIGN, "bitwise right shift and assign"},
 
-    case PP_TOK_PUNCTUATOR:;
-        char const *name_fmt = "punctuator \"%s\"";
-        char *punc_name = malloc(snprintf(NULL, 0, name_fmt, pp_punc_kind_name(tok->punc_kind)));
-        if (punc_name == NULL)
-            return "Malloc failed during token string representation";
-        sprintf(punc_name, name_fmt, pp_punc_kind_name(tok->punc_kind));
-        return punc_name;
+                       {PUNC_AUGMENT, "augment"},
+                       {PUNC_DECR, "decrement"},
 
-    case PP_TOK_DIRECTIVE_START:
-    case PP_TOK_DIRECTIVE_STOP:;
-        const char *msg = (tok->type == PP_TOK_DIRECTIVE_START) ? "directive start" : "directive stop";
-        result = malloc(strlen(msg) + 1);
-        strcpy(result, msg);
-        return result;
+                       {PUNC_PAR_LEFT, "open braket"},
+                       {PUNC_PAR_RIGHT, "close braket"},
+                       {PUNC_SQRPAR_LEFT, "open square braket"},
+                       {PUNC_SQRPAR_RIGHT, "close square braket"},
+                       {PUNC_CURPAR_LEFT, "open curly braket"},
+                       {PUNC_CURPAR_RIGHT, "close curly braket"},
 
-    case PP_TOK_ERROR:;
-        char const *err_fmt = "%s \"%s\"";
-        result = malloc(snprintf(NULL, 0, err_fmt, LOG_LEVEL_NAME[tok->error.severity], tok->error.msg));
-        if (result == NULL)
-            return "Malloc failed during token string representation";
-        sprintf(result, err_fmt, LOG_LEVEL_NAME[tok->error.severity], tok->error.msg);
-        return result;
+                       {PUNC_MEMBER_ACCESS, "member access"},
+                       {PUNC_IND_MEMBER_ACCESS, "indirect member access"},
 
-    default:
-        return "token of unknow type";
-    }
-}
+                       {PUNC_COMMA, "comma"},
+                       {PUNC_SEMICOL, "semicolon"},
 
-/**
- * @brief Describe a token we expect from the tokenizer
- *
- */
-struct expected_pp_token_s
-{
-    enum
-    {
-        EXPECTED_IGNORE,      // the token is ignored
-        EXPECTED_EXACT,       // the token must be identical
-        EXPECTED_TYPE,        // the token must have same type
-        EXPECTED_CONTENT,     // the token must have same type and content
-        EXPECTED_MARK,        // the token must be in the same place
-        EXPECTED_END,         // the sequence must have finished
-        EXPECTED_STOP_COMPARE // do not check further
-    } compare_type;
-    struct pp_token_s expected;
-};
+                       {PUNC_STRINGIZE, "stringize"},
+                       {PUNC_TOKPASTE, "token pasting"},
+                       {0, NULL}};
 
-/**
- * @brief Check if a token has the right type
- *
- * @param obtained the obtained token
- * @param expected the expected one
- * @return const char* NULL if the type is OK or a description of the problem
- */
-#ifdef __GNUC__
-__attribute_const__
-#endif
-    static inline const char *
-    check_type(struct pp_token_s *obtained, struct pp_token_s *expected)
-{
-    if (obtained->type == expected->type)
-        return NULL;
-    char const *MSG_FMT = "Expected token of type \"%s\", obtained instead \"%s\"";
-    char *msg = malloc(strlen(MSG_FMT) - 4 + 2 * PP_TYPE_NAME_MAX_LEN + 1);
-    if (msg == NULL)
-        return "Malloc failed in error message allocation";
-    sprintf(msg, MSG_FMT, pp_type_name(expected->type), pp_type_name(obtained->type));
-    return msg;
-}
-
-/**
- * @brief Check if a token has the right content
- *
- * @param obtained the obtained token
- * @param expected the expected one
- * @return const char* NULL if the content is OK or a description of the problem
- */
-#ifdef __GNUC__
-__attribute_const__
-#endif
-    static inline const char *
-    check_content(struct pp_token_s *obtained, struct pp_token_s *expected)
-{
-    if (check_type(obtained, expected) != NULL)
-        return check_type(obtained, expected);
-    switch (obtained->type)
-    {
-    case PP_TOK_IDENTIFIER:
-    case PP_TOK_PP_NUMBER:
-        if (strcmp(obtained->name, expected->name) != 0)
-        {
-            char const *MSG_FMT = "Expected %s \"%s\", obtained instead \"%s\"";
-            char *msg = malloc(strlen(MSG_FMT) - 6 + PP_TYPE_NAME_MAX_LEN + strlen(obtained->name) + strlen(expected->name) + 1);
-            if (msg == NULL)
-                return "Malloc failed in error message allocation";
-            sprintf(msg, MSG_FMT, pp_type_name(obtained->type), expected->name, obtained->name);
-            return msg;
-        }
-        break;
-    case PP_TOK_STRING_LIT:
-        if (obtained->string.len != expected->string.len || memcmp(obtained->string.value, expected->string.value, obtained->string.len) != 0)
-        {
-            char const *MSG_1 = "Expected string literal \"";
-            char const *MSG_2 = "\", obtained instead \"";
-            char const *MSG_3 = "\"";
-            char *msg = malloc(strlen(MSG_1) + strlen(MSG_2) + strlen(MSG_3) +
-                               escaped_len(obtained->string.value, obtained->string.len) +
-                               escaped_len(expected->string.value, expected->string.len) + 1);
-            if (msg == NULL)
-                return "Malloc failed in error message allocation";
-            // creating message
-            char *msg_cur = msg;
-            strcpy(msg_cur, MSG_1);
-            msg_cur += strlen(msg_cur);
-            msg_cur = escaped_string(msg_cur, expected->string.value, expected->string.len);
-            strcat(msg, MSG_2);
-            msg_cur += strlen(msg_cur);
-            msg_cur = escaped_string(msg_cur, obtained->string.value, obtained->string.len);
-            strcat(msg, MSG_3);
-
-            return msg;
-        }
-        break;
-
-    case PP_TOK_CHAR_CONST:
-        if (obtained->char_value != expected->char_value)
-        {
-            char const *MSG_FMT = "Expected '%s', obtained instead '%s'";
-            char *msg = malloc(strlen(MSG_FMT) - 4 + CHARESCAPE_LEN(obtained->char_value) + CHARESCAPE_LEN(expected->char_value) + 1);
-            if (msg == NULL)
-                return "Malloc failed in error message allocation";
-            sprintf(msg, MSG_FMT, CHARESCAPE(expected->char_value), CHARESCAPE(obtained->char_value));
-            return msg;
-        }
-        break;
-    case PP_TOK_HEADER:
-        if (expected->header.is_angled && !obtained->header.is_angled)
-            return "An angled header was expected, a quoted one was obtained";
-        if (!expected->header.is_angled && obtained->header.is_angled)
-            return "A quoted header was expected, an angled one was obtained";
-
-        if (strcmp(obtained->header.name, expected->header.name) != 0)
-        {
-            char const *MSG_FMT = "Expected file name \"%s\", obtained instead \"%s\"";
-            char *msg = malloc(strlen(MSG_FMT) - 4 +
-                               strlen(obtained->header.name) +
-                               strlen(expected->header.name) + 1);
-            if (msg == NULL)
-                return "Malloc failed in error message allocation";
-            sprintf(msg, MSG_FMT, expected->header.name, obtained->header.name);
-            return msg;
-        }
-        break;
-    case PP_TOK_PUNCTUATOR:
-        if (expected->punc_kind != obtained->punc_kind)
-        {
-            char const *MSG_FMT = "Expected punctuator of kind \"%s\", obtained instead \"%s\"";
-            char *msg = malloc(strlen(MSG_FMT) - 4 + 2 * PP_PUNC_KIND_NAME_MAX_LEN + 1);
-            if (msg == NULL)
-                return "Malloc failed in error message allocation";
-            sprintf(msg, MSG_FMT, pp_punc_kind_name(expected->punc_kind), pp_punc_kind_name(obtained->punc_kind));
-            return msg;
-        }
-        break;
-
-    case PP_TOK_DIRECTIVE_START:
-    case PP_TOK_DIRECTIVE_STOP:
-        break;
-
-    case PP_TOK_ERROR:
-        if (expected->error.severity != obtained->error.severity)
-        {
-            char const *MSG_FMT = "Expected error of severity \"%s\", obtained instead \"%s\"";
-            char *msg = malloc(strlen(MSG_FMT) - 4 + 2 * LOG_LEVEL_NAME_MAX_LEN + 1);
-            if (msg == NULL)
-                return "Malloc failed in error message allocation";
-            sprintf(msg, MSG_FMT, LOG_LEVEL_NAME[expected->error.severity], LOG_LEVEL_NAME[obtained->error.severity]);
-            return msg;
-        }
-        if (strcmp(obtained->error.msg, expected->error.msg) != 0)
-        {
-            char const *MSG_FMT = "Expected error message \"%s\", obtained instead \"%s\"";
-            char *msg = malloc(strlen(MSG_FMT) - 4 +
-                               strlen(obtained->error.msg) +
-                               strlen(expected->error.msg) + 1);
-            if (msg == NULL)
-                return "Malloc failed in error message allocation";
-            sprintf(msg, MSG_FMT, expected->error.msg, obtained->error.msg);
-            return msg;
-        }
-        break;
-    default:
-        return "Obtained token of unknow type";
-    }
-
-    return NULL;
-}
-
-/**
- * @brief Check if a token has the right mark
- *
- * @param obtained the obtained token
- * @param expected the expected one
- * @return const char* NULL if the mark is OK or a description of the problem
- */
-#ifdef __GNUC__
-__attribute_const__
-#endif
-    static inline const char *
-    check_mark(struct pp_token_s *obtained, struct pp_token_s *expected)
-{
-    if (!bookmark_cmp(obtained->mark, expected->mark, CMP_EXACT, CMP_EXACT))
-    {
-        char const *MSG_FMT = "Token %s was expected at %lu:%lu, obtained instead at %lu:%lu";
-        char const *tok_str = pp_tok_tostring(obtained);
-        char *msg = malloc(snprintf(NULL, 0, MSG_FMT, tok_str, expected->mark.row, expected->mark.col, obtained->mark.row, obtained->mark.col));
-        if (msg == NULL)
-            return "Malloc failed in error message allocation";
-        sprintf(msg, MSG_FMT, tok_str, expected->mark.row, expected->mark.col, obtained->mark.row, obtained->mark.col);
-        return msg;
-    }
-    return NULL;
-}
-
-/**
- * @brief Run a test case
- *
- * @param testcase the name of the tes
- * @param text the text to parse
- * @param tokens the expected tokens
- * @param num_tokens the num of tokens to check
- * @return const char*
- */
-static const char *_test_tokenize(char const *testcase, char const *text, struct expected_pp_token_s *tokens)
+static const char *_test_tokenize(char const *testcase, char const *text, char const *exp_xml)
 {
     context_t *lcontext = context_new(NULL, testcase);
 
@@ -324,77 +105,142 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
     if (pp_tokstm == NULL)
         return "Cannot open tokenstream";
 
+    // creating end buffer
+    size_t out_size;
+    char *out_buf;
+    FILE *output = open_memstream(&out_buf, &out_size);
+    if (output == NULL)
+        return "open_memstream failed to open output buffer";
+
+    // creating xml stream
+    xml_tag_t *root_tag = xml_tag_new("tokens");
+    if (root_tag == NULL)
+        return "Cannot create root tag";
+    xml_stream_t *xml_stm = xml_stream_open(output, root_tag);
+    if (xml_stm == NULL)
+        return "Cannot open xml stream";
+    xml_tag_free(root_tag);
+
+    // travasing streams
     for (
         struct pp_token_s *tok = pp_tokstream_get(lcontext, pp_tokstm);
         tok != NULL;
-        pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm), tokens++)
-        // check how we should compare
-        switch (tokens->compare_type)
+        pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm))
+    {
+        // tag for tokens
+        xml_tag_t *tok_tag = xml_tag_new("token");
+        if (root_tag == NULL)
+            return "Cannot create token tag";
+
+        // fill with attributes
+        switch (tok->type)
         {
-        case EXPECTED_IGNORE:
-            break; // always continue
-
-        case EXPECTED_EXACT:
-            if (check_content(tok, &tokens->expected) != NULL)
-                return check_content(tok, &tokens->expected);
-            if (check_mark(tok, &tokens->expected) != NULL)
-                return check_mark(tok, &tokens->expected);
+        case PP_TOK_IDENTIFIER:
+            xml_tag_attribute_set(tok_tag, "type", "identifier");
+            xml_tag_attribute_set(tok_tag, "name", tok->name);
+            break;
+        case PP_TOK_PP_NUMBER:
+            xml_tag_attribute_set(tok_tag, "type", "preprocessor number");
+            xml_tag_attribute_set(tok_tag, "name", tok->name);
+            break;
+        case PP_TOK_STRING_LIT:
+            xml_tag_attribute_set(tok_tag, "type", "string literal");
+            xml_tag_attribute_set_with_len(tok_tag, "content", tok->string.value, tok->string.len);
+            break;
+        case PP_TOK_CHAR_CONST:
+            xml_tag_attribute_set(tok_tag, "type", "char constant");
+            char const tag_value[2] = {tok->char_value, '\0'};
+            xml_tag_attribute_set_with_len(tok_tag, "value", &tag_value[0], 2);
+            break;
+        case PP_TOK_HEADER:
+            xml_tag_attribute_set(tok_tag, "type", "header name");
+            xml_tag_attribute_set(tok_tag, "name", tok->header.name);
+            xml_tag_attribute_set(tok_tag, "angled", tok->header.is_angled ? "yes" : "no");
+            break;
+        case PP_TOK_PUNCTUATOR:
+            xml_tag_attribute_set(tok_tag, "type", "punctuator");
+            xml_tag_attribute_set(tok_tag, "kind", "unknown");
+            // finding human readable description
+            for (size_t i = 0; PUNC_KIND_NAMES[i].name != NULL; i++)
+                if (PUNC_KIND_NAMES[i].kind == tok->punc_kind)
+                {
+                    xml_tag_attribute_set(tok_tag, "kind", PUNC_KIND_NAMES[i].name);
+                    break;
+                }
             break;
 
-        case EXPECTED_TYPE:
-            if (check_type(tok, &tokens->expected) != NULL)
-                return check_type(tok, &tokens->expected);
+        case PP_TOK_DIRECTIVE_START:
+            xml_tag_attribute_set(tok_tag, "type", "directive start");
+            break;
+        case PP_TOK_DIRECTIVE_STOP:
+            xml_tag_attribute_set(tok_tag, "type", "directive end");
             break;
 
-        case EXPECTED_CONTENT:
-            if (check_content(tok, &tokens->expected) != NULL)
-                return check_content(tok, &tokens->expected);
+        case PP_TOK_ERROR:
+            xml_tag_attribute_set(tok_tag, "type", "error");
+            xml_tag_attribute_set(tok_tag, "msg", tok->error.msg);
+            switch (tok->error.severity)
+            {
+            case LOG_TRACE:
+                xml_tag_attribute_set(tok_tag, "severity", "trace");
+                break;
+            case LOG_DEBUG:
+                xml_tag_attribute_set(tok_tag, "severity", "debug");
+                break;
+            case LOG_PEDANTIC:
+                xml_tag_attribute_set(tok_tag, "severity", "pedantic");
+                break;
+            case LOG_WARNING:
+                xml_tag_attribute_set(tok_tag, "severity", "warning");
+                break;
+            case LOG_ERROR:
+                xml_tag_attribute_set(tok_tag, "severity", "error");
+                break;
+            }
             break;
-
-        case EXPECTED_MARK:
-            if (check_mark(tok, &tokens->expected) != NULL)
-                return check_mark(tok, &tokens->expected);
-            break;
-
-        case EXPECTED_END:;
-            // token in excess
-            const char *msg_fmt = "Expected end of tokens, found instead %s";
-            const char *tok_str = pp_tok_tostring(tok);
-            char *msg = malloc(snprintf(NULL, 0, msg_fmt, tok_str));
-            if (msg == NULL)
-                return "Malloc failed in allocating error message";
-            sprintf(msg, msg_fmt, tok_str);
-            return msg;
-
-        case EXPECTED_STOP_COMPARE:
-            return NULL;
         }
 
-    if (tokens->compare_type != EXPECTED_END && tokens->compare_type != EXPECTED_STOP_COMPARE)
-    {
-        // tokens in defect
-        const char *msg_fmt = "Expected %s, found instead end of tokens";
-        const char *tok_str = pp_tok_tostring(&(tokens->expected));
-        char *msg = malloc(snprintf(NULL, 0, msg_fmt, tok_str));
-        if (msg == NULL)
-            return "Malloc failed in allocating error message";
-        sprintf(msg, msg_fmt, tok_str);
-        return msg;
+        // write on stream
+        if (!xml_stream_tag_empty(xml_stm, tok_tag))
+            return "Cannot write token tag on xml stream";
+        xml_tag_free(tok_tag);
     }
 
-    return NULL;
+    //terminate streams, and close underliyng resources
+    xml_stream_close(xml_stm, true);
+    pp_tokstream_close(pp_tokstm, true);
+
+    // don't need context anymore
+    context_free(lcontext);
+
+    // now the memstream was closed by xml_stream_close, so we can check the content
+
+    // check result
+    if (strcmp(exp_xml, out_buf) == 0)
+    {
+        // xml_out corrispond
+        free(out_buf);
+        return NULL;
+    }
+
+    char *out_msg;
+    size_t out_msg_len;
+    FILE *out_msg_f = open_memstream(&out_msg, &out_msg_len);
+    if (out_msg_f == NULL)
+        return "Cannot open buffer for output message";
+    fprintf(out_msg_f,
+            "\nTest text was:\n\t%s\nExpected result was:\n\t%s\nObtained instead\n\t%s",
+            text, exp_xml, out_buf);
+    fclose(out_msg_f);
+
+    return out_msg;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-
-#define TEST(TESTCASE, TEXT, ...)                                                 \
-    static struct expected_pp_token_s expected_tokens_##TESTCASE[] = __VA_ARGS__; \
-    const char *test_tokenize_##TESTCASE()                                        \
-    {                                                                             \
-        return _test_tokenize(#TESTCASE, TEXT, expected_tokens_##TESTCASE);    \
+#define TEST(TESTCASE, TEXT, EXP_XML)                                              \
+    const char *test_tokenize_##TESTCASE()                                         \
+    {                                                                              \
+        return _test_tokenize("Testing tokenizing " #TESTCASE, (TEXT), (EXP_XML)); \
     }
-
 
 // --- TESTS ---
 
@@ -402,45 +248,55 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
 
 TEST(space,
      " ",
-     {{EXPECTED_END}})
+     "<tokens>"
+     "</tokens>")
 TEST(tab,
      "\t",
-     {{EXPECTED_END}})
+     "<tokens>"
+     "</tokens>")
 TEST(empty_line,
      "\t   \t \t     \t",
-     {{EXPECTED_END}})
+     "<tokens>"
+     "</tokens>")
 TEST(newline,
      "\n",
-     {{EXPECTED_END}})
+     "<tokens>"
+     "</tokens>")
 TEST(empty_lines,
      "\t   \t \n\t     \t",
-     {{EXPECTED_END}})
+     "<tokens>"
+     "</tokens>")
 TEST(mixed_ws,
      "\n\t   \n  \r   \r\n\t \t \v",
-     {{EXPECTED_END}})
+     "<tokens>"
+     "</tokens>")
+
 // --- identifiers
 
 TEST(identifier,
      "hello",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 1}, .name = "hello"}},
-      {EXPECTED_END}})
+     "<tokens>"
+     "<token name=\"hello\" type=\"identifier\" />"
+     "</tokens>")
 TEST(num_id,
      "by42",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 1}, .name = "by42"}},
-      {EXPECTED_END}})
+     "<tokens>"
+     "<token name=\"by42\" type=\"identifier\" />"
+     "</tokens>")
 TEST(underscore_id,
      "_contain_under___scores",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 1}, .name = "_contain_under___scores"}},
-      {EXPECTED_END}})
+     "<tokens>"
+     "<token name=\"_contain_under___scores\" type=\"identifier\" />"
+     "</tokens>")
 TEST(identifiers,
      "  foo\nbar32 \\\n baz_hlle ans \t _bara",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 3}, .name = "foo"}},
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 2, 1}, .name = "bar32"}},
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 2}, .name = "baz_hlle"}}, // even if the newline is escaped, it is still detected
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 11}, .name = "ans"}},
-      {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 17}, .name = "_bara"}},
-      {EXPECTED_END}})
-#if 0
+     "<tokens>"
+     "<token name=\"foo\" type=\"identifier\" />"
+     "<token name=\"bar32\" type=\"identifier\" />"
+     "<token name=\"baz_hlle\" type=\"identifier\" />"
+     "<token name=\"ans\" type=\"identifier\" />"
+     "<token name=\"_bara\" type=\"identifier\" />"
+     "</tokens>")
 
 // -- preprocessor numbers
 
@@ -861,8 +717,3 @@ TEST(stray_backslash,
      "<tokens>"
      "<token msg=\"Stray &quot;\\\\&quot; in the input\" severity=\"error\" type=\"error\" />"
      "</tokens>")
-#endif
-
-#pragma GCC diagnostic pop // -Wmissing-field-initializers
-
-#undef TEST
