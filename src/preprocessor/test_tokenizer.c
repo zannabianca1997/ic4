@@ -422,17 +422,17 @@ TEST(mixed_ws,
 
 TEST(identifier,
      "hello",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 1}, .name = "hello"}},
+     {{EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "hello"}},
       {EXPECTED_END}})
 TEST(num_id,
      "by42",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 1}, .name = "by42"}},
+     {{EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "by42"}},
       {EXPECTED_END}})
 TEST(underscore_id,
      "_contain_under___scores",
-     {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 1}, .name = "_contain_under___scores"}},
+     {{EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "_contain_under___scores"}},
       {EXPECTED_END}})
-TEST(identifiers,
+TEST(identifiers_marking,
      "  foo\nbar32 \\\n baz_hlle ans \t _bara",
      {{EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 1, 3}, .name = "foo"}},
       {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 2, 1}, .name = "bar32"}},
@@ -440,21 +440,20 @@ TEST(identifiers,
       {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 11}, .name = "ans"}},
       {EXPECTED_EXACT, {PP_TOK_IDENTIFIER, {NULL, 3, 17}, .name = "_bara"}},
       {EXPECTED_END}})
-#if 0
 
 // -- preprocessor numbers
 
 TEST(ints,
      "1 23 \n 42 456 22 \n789203\n 3",
-     "<tokens>"
-     "<token name=\"1\" type=\"preprocessor number\" />"
-     "<token name=\"23\" type=\"preprocessor number\" />"
-     "<token name=\"42\" type=\"preprocessor number\" />"
-     "<token name=\"456\" type=\"preprocessor number\" />"
-     "<token name=\"22\" type=\"preprocessor number\" />"
-     "<token name=\"789203\" type=\"preprocessor number\" />"
-     "<token name=\"3\" type=\"preprocessor number\" />"
-     "</tokens>")
+     {{EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 1}, .name = "1"}},
+      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 1, 3}, .name = "23"}},
+      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 2}, .name = "42"}},
+      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 5}, .name = "456"}},
+      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 2, 9}, .name = "22"}},
+      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 3, 1}, .name = "789203"}},
+      {EXPECTED_EXACT, {PP_TOK_PP_NUMBER, {NULL, 4, 2}, .name = "3"}},
+      {EXPECTED_END}})
+#if 0
 TEST(floats,
      "1. 2.3 \n 42. 4.56 2.2 \n78.9203\n 3.",
      "<tokens>"
