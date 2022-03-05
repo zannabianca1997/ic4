@@ -957,7 +957,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
     // mark the token
     if(new_token->type != PP_TOK_DIRECTIVE_STOP)
-        new_token->mark = parsed_start;
+        new_token->mark = parsed_start; // TODO: what if some tokens are in different position? like string errors?
 
     // directives and include detecting
     if (stream->tokens_given == 0 // first token
