@@ -804,6 +804,8 @@ static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_comment,
     NULL};
 
+    // TODO: parse function-like macro names
+
 // --- MULTILINE COMMENTS SPECIAL RULE ---
 
 static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
