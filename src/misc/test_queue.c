@@ -123,7 +123,7 @@ struct freeable{ bool freed;};
 static void free_freeable(void *data){(*(struct freeable*)data).freed = true;}
 
 const char *test_free(){
-    struct freeable freeables[] = {{true}, {true}, {true}, {true}, {true}, {true}, {true}, {true}};
+    struct freeable freeables[] = {{false}, {false}, {false}, {false}, {false}, {false}, {false}, {false}};
     queue_t *queue = queue_new();
     if (queue == NULL)
         return "Cannot create queue";
