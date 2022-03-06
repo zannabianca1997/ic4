@@ -72,6 +72,15 @@ static char *pp_tok_tostring(struct pp_token_s *tok)
         strcat(result, tok->header.is_angled ? ">" : "\"");
         return result;
 
+    case PP_TOK_MACRO_NAME:
+        result = malloc(strlen(tok->macro_name.name) + (tok->macro_name.is_function)?2:1);
+        if (result == NULL)
+            return "Malloc failed during token string representation";
+        strcpy(result, tok->macro_name.name);
+        if(tok->macro_name.is_function)
+            strcat(result, "(");
+        return result;
+
     case PP_TOK_PUNCTUATOR:;
         char const *name_fmt = "punctuator \"%s\"";
         char *punc_name = malloc(snprintf(NULL, 0, name_fmt, pp_punc_kind_name(tok->punc_kind)));
@@ -82,7 +91,7 @@ static char *pp_tok_tostring(struct pp_token_s *tok)
 
     case PP_TOK_DIRECTIVE_START:
     case PP_TOK_DIRECTIVE_STOP:;
-        const char *msg = (tok->type == PP_TOK_DIRECTIVE_START) ? "directive start" : "directive stop";
+        const char *msg = (tok->type == PP_TOK_DIRECTIVE_START) ? "<directive start>" : "<directive stop>";
         result = malloc(strlen(msg) + 1);
         strcpy(result, msg);
         return result;
@@ -94,10 +103,9 @@ static char *pp_tok_tostring(struct pp_token_s *tok)
             return "Malloc failed during token string representation";
         sprintf(result, err_fmt, LOG_LEVEL_NAME[tok->error.severity], tok->error.msg);
         return result;
-
-    default:
-        return "token of unknow type";
     }
+
+    return "INTERNAL ERROR: Unknow type";
 }
 
 /**
@@ -225,6 +233,24 @@ __attribute_const__
             return msg;
         }
         break;
+    case PP_TOK_MACRO_NAME:
+        if (expected->macro_name.is_function && !obtained->macro_name.is_function)
+            return "A function-like macro was expected, a object-like one was obtained";
+        if (!expected->macro_name.is_function && obtained->macro_name.is_function)
+            return "A object-like macro was expected, a function-like one was obtained";
+
+        if (strcmp(obtained->macro_name.name, expected->macro_name.name) != 0)
+        {
+            char const *MSG_FMT = "Expected macro name \"%s\", obtained instead \"%s\"";
+            char *msg = malloc(strlen(MSG_FMT) - 4 +
+                               strlen(obtained->macro_name.name) +
+                               strlen(expected->macro_name.name) + 1);
+            if (msg == NULL)
+                return "Malloc failed in error message allocation";
+            sprintf(msg, MSG_FMT, expected->macro_name.name, obtained->macro_name.name);
+            return msg;
+        }
+        break;
     case PP_TOK_PUNCTUATOR:
         if (expected->punc_kind != obtained->punc_kind)
         {
@@ -263,8 +289,6 @@ __attribute_const__
             return msg;
         }
         break;
-    default:
-        return "Obtained token of unknow type";
     }
 
     return NULL;
@@ -668,12 +692,28 @@ TEST(line_control,
      {EXPECTED_CONTENT, {PP_TOK_PP_NUMBER, .name = "42"}},
      {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"filename", 9}}},
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
-TEST(define,
+TEST(define_obj_like,
+     "#define MACRO (x) \\\n strcmp(\"String Const\",x)==0",
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "define"}},
+     {EXPECTED_CONTENT, {PP_TOK_MACRO_NAME, .macro_name = {"MACRO", .is_function=false}}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "strcmp"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"String Const", 13}}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COMMA}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x"}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
+     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_EQ}},
+     {EXPECTED_CONTENT, {PP_TOK_PP_NUMBER, .name = "0"}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
+TEST(define_fun_like,
      "#define MACRO(x) \\\n strcmp(\"String Const\",x)==0",
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "define"}},
-     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "MACRO"}},
-     {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT}},
+     {EXPECTED_CONTENT, {PP_TOK_MACRO_NAME, .macro_name = {"MACRO", .is_function=true}}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x"}},
      {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "strcmp"}},

@@ -4,9 +4,9 @@
  * @brief Generate a stream of preprocessing tokens
  * @version 0.1
  * @date 2022-02-10
- * 
+ *
  * Read a linestream and break it into preprocessing tokens
- * 
+ *
  * @copyright Copyright (c) 2022
  */
 
@@ -35,8 +35,8 @@
 #define PUNCTUATOR_LENGTH 3
 
 /**
- * @brief Table of punctuators. 
- * 
+ * @brief Table of punctuators.
+ *
  * Connect the text of a punctuator to its enum value
  * Terminated by a empty text
  */
@@ -126,7 +126,7 @@ static const struct
     {"#", PUNC_STRINGIZE}, // stringize
     {"##", PUNC_TOKPASTE}, // token pasting
 
-    {"", 0}}; //Terminator
+    {"", 0}}; // Terminator
 
 /**
  * @brief Contain the data for a token stream
@@ -141,6 +141,7 @@ struct pp_tokstream_s
     size_t tokens_given;    // number of tokens extracted (for include checking)
     bool is_line_directive; // mark if this line is a directive (first token is #)
     bool is_line_include;   // mark if this line is an include (directive == true, first token after DIRECTIVE_START is an `include` identifier)
+    bool is_line_define;    // mark if this line is a define (directive == true, first token after DIRECTIVE_START is a `define` identifier)
 
     struct pp_token_s *delayed_token; // if not NULL, will be returned before any other
 };
@@ -212,12 +213,15 @@ bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b)
     case PP_TOK_HEADER:
         return a->header.is_angled == b->header.is_angled && strcmp(a->header.name, b->header.name) == 0;
 
+    case PP_TOK_MACRO_NAME:
+        return a->macro_name.is_function == b->macro_name.is_function && strcmp(a->macro_name.name, b->macro_name.name) == 0;
+
     case PP_TOK_PUNCTUATOR:
         return a->punc_kind == b->punc_kind;
 
     case PP_TOK_DIRECTIVE_START:
     case PP_TOK_DIRECTIVE_STOP:
-        return true; //contentless
+        return true; // contentless
 
     case PP_TOK_ERROR:
         return a->error.severity == b->error.severity && strcmp(a->error.msg, b->error.msg) == 0;
@@ -232,9 +236,9 @@ bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b)
 __attribute_const__
 #endif
     /**
- * @brief Check if a char can be part of an identifier
- * @param ch the char to check
- */
+     * @brief Check if a char can be part of an identifier
+     * @param ch the char to check
+     */
     static bool
     is_identifier_char(char ch)
 {
@@ -245,9 +249,9 @@ __attribute_const__
 __attribute_const__
 #endif
     /**
- * @brief Check if a char can be the start of an identifier
- * @param ch the char to check
- */
+     * @brief Check if a char can be the start of an identifier
+     * @param ch the char to check
+     */
     static bool
     is_identifier_start_char(char ch)
 {
@@ -258,9 +262,9 @@ __attribute_const__
 __attribute_const__
 #endif
     /**
- * @brief Check if a char is a sign
- * @param ch the char to check
- */
+     * @brief Check if a char is a sign
+     * @param ch the char to check
+     */
     static bool
     is_sign(char ch)
 {
@@ -271,9 +275,9 @@ __attribute_const__
 __attribute_const__
 #endif
     /**
- * @brief Check if a char can be start of an exponent
- * @param ch the char to check
- */
+     * @brief Check if a char can be start of an exponent
+     * @param ch the char to check
+     */
     static bool
     is_exp_start(char ch)
 {
@@ -283,7 +287,7 @@ __attribute_const__
 
 /**
  * @brief Check if a string constain a given substring at the given index
- * 
+ *
  * @param string the string to check
  * @param start the start of the substring
  * @param substr the substring
@@ -303,7 +307,7 @@ static bool contains_at(const char *restrict string, size_t start, const char *r
 
 /**
  * @brief The type of a funtion that parse a type of token.
- * 
+ *
  * @param context the context in which the token is parsed
  * @param stream the stream from which the token is parsed
  * @param n the number of chars the token occupy
@@ -328,7 +332,7 @@ static struct pp_token_s *parse_whitespace(
     return NULL;
 }
 
-/* TODO: both parse_identifier, parse_pp_number, parse_quoted and parse_header_name use a dinamically allocated buffer 
+/* TODO: both parse_identifier, parse_pp_number, parse_quoted and parse_header_name use a dinamically allocated buffer
          of the same lenght of the line. maybe use open_memstream or a ANSI growing buffer?
          Another solution would be to scan the line first to measure the content, then copy it into the rigth size buffer */
 
@@ -450,7 +454,7 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
 
 /**
  * @brief Parse a quoted string or char literal
- * 
+ *
  * @param quote the open quote (" or ' or <)
  * @param quote the close quote (" or ' or >)
  * @param escape if escaped sequence are parsed
@@ -793,8 +797,40 @@ static struct pp_token_s *parse_header_name(context_t *context, struct pp_tokstr
     return parsed;
 }
 
+// parse a macro name
+static struct pp_token_s *parse_macro_name(context_t *context, struct pp_tokstream_s const *stream, size_t *restrict n)
+{
+    // short circuit
+    if (!stream->is_line_define || stream->tokens_given != 2)
+    {
+        *n = 0;
+        return NULL;
+    }
+
+    // parse an identifier
+    struct pp_token_s *parsed = parse_identifier(context, stream, n);
+    if (parsed != NULL)
+    {
+        // converting token
+        char *name = parsed->name;
+        parsed->type = PP_TOK_MACRO_NAME;
+        parsed->macro_name.name = name;
+        parsed->macro_name.is_function = false;
+
+        // checking if function-like
+        if (stream->current_line->content[stream->cursor + *n] == '(')
+        {
+            parsed->macro_name.is_function = true;
+            (*n)++;
+        }
+    }
+
+    return parsed;
+}
+
 static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_whitespace,
+    &parse_macro_name, // <- MUST be before identifier, so it take precedence
     &parse_identifier,
     &parse_pp_number,
     &parse_header_name, // <- MUST be before string_literal, so it take precedence
@@ -804,7 +840,7 @@ static const parsing_fun_ptr_t PARSING_FUNCTIONS[] = {
     &parse_comment,
     NULL};
 
-    // TODO: parse function-like macro names
+// TODO: parse function-like macro names
 
 // --- MULTILINE COMMENTS SPECIAL RULE ---
 
@@ -866,6 +902,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
             stream->is_line_directive = false;
             stream->is_line_include = false;
+            stream->is_line_define = false;
         }
         // multiline comments are the only token that can span multiple lines, so they get a special treatement
         if (stream->current_line->content[stream->cursor] == '/' &&
@@ -943,7 +980,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
             if (stream->is_line_directive)
             {
                 // deciding if we want to give it now or after this token
-                struct pp_token_s ** const dir_end_token = (new_token == NULL) ? (&new_token) : (&stream->delayed_token);
+                struct pp_token_s **const dir_end_token = (new_token == NULL) ? (&new_token) : (&stream->delayed_token);
 
                 *dir_end_token = malloc(sizeof(struct pp_token_s));
                 if (*dir_end_token == NULL)
@@ -958,7 +995,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
     } while (new_token == NULL); // break at the first non-null token found
 
     // mark the token
-    if(new_token->type != PP_TOK_DIRECTIVE_STOP)
+    if (new_token->type != PP_TOK_DIRECTIVE_STOP)
         new_token->mark = parsed_start; // TODO: what if some tokens are in different position? like string errors?
 
     // directives and include detecting
@@ -969,9 +1006,12 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
         new_token->type = PP_TOK_DIRECTIVE_START; // changing token type
     }
     if (stream->is_line_directive && stream->tokens_given == 1 // first token of a directive
-        && new_token->type == PP_TOK_IDENTIFIER && strcmp(new_token->name, "include") == 0)
+        && new_token->type == PP_TOK_IDENTIFIER)
     {
-        stream->is_line_include = true;
+        if (strcmp(new_token->name, "include") == 0)
+            stream->is_line_include = true;
+        else if (strcmp(new_token->name, "define") == 0)
+            stream->is_line_define = true;
     }
 
     // count the token

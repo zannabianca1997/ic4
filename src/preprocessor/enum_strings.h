@@ -25,6 +25,7 @@ static const struct
                      {PP_TOK_CHAR_CONST, "char constant"},
                      {PP_TOK_PUNCTUATOR, "punctuator"},
                      {PP_TOK_HEADER, "header name"},
+                     {PP_TOK_MACRO_NAME, "macro name"},
                      {PP_TOK_DIRECTIVE_START, "directive start"},
                      {PP_TOK_DIRECTIVE_STOP, "directive stop"},
                      {PP_TOK_ERROR, "preprocessing error"}};

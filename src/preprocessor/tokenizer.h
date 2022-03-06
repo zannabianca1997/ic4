@@ -40,6 +40,7 @@ struct pp_token_s
         PP_TOK_STRING_LIT, // string literals
         PP_TOK_CHAR_CONST, // char constants
         PP_TOK_HEADER,     // Header names
+        PP_TOK_MACRO_NAME,     // macro names
         PP_TOK_PUNCTUATOR, // punctuators
 
         // In-Band structure info
@@ -71,6 +72,13 @@ struct pp_token_s
             char *name;     // the name of the header
             bool is_angled; // if the header is angled or not
         } header;
+
+        // macro names
+        struct
+        {
+            char *name;     // the name of the macro
+            bool is_function; // if the macro is function-like
+        } macro_name;
 
         // char consts
         char char_value;
