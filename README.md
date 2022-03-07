@@ -90,6 +90,7 @@ These flags are used to compile different capacity in the program
     - RAWLINE_BUFFER_INITIAL_LEN: lenght of the starting buffer for a rawline (defaults to 256)
     - RAWLINE_BUFFER_GROWRATE: growth rate of the buffer for a rawline (defaults to 2)
     - LOGICALLINE_SHRINK: shrink the logical lines struct to fit the data. *May* reduce memory usage, *will* slow down the program.
+    - CHECK_UNGETTOKEN: check if unget_token is called twice. Should never be triggered
 
 ## Developers
 
