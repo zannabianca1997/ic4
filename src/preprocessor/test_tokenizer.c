@@ -25,6 +25,8 @@
 #include "enum_strings.h"
 #include "../misc/charescape.h"
 
+//TODO:check the unget facility
+
 /**
  * @brief Elaborate a human readable token representation
  *

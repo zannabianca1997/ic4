@@ -143,7 +143,8 @@ struct pp_tokstream_s
     bool is_line_include;   // mark if this line is an include (directive == true, first token after DIRECTIVE_START is an `include` identifier)
     bool is_line_define;    // mark if this line is a define (directive == true, first token after DIRECTIVE_START is a `define` identifier)
 
-    struct pp_token_s *delayed_token; // if not NULL, will be returned before any other
+    struct pp_token_s *ungetten_token;        // if not NULL, will be returned before any other
+    struct pp_token_s *delayed_directive_end; // if not NULL, will be returned after the ungetten token and before any other
 };
 
 // --- STREAM MANAGING ---
@@ -159,7 +160,7 @@ pp_tokstream_t *pp_tokstream_open(context_t *context, linestream_t *source)
     new_stream->source = source;
     new_stream->current_line = NULL;
 
-    new_stream->delayed_token = NULL;
+    new_stream->delayed_directive_end = NULL;
 
     context_free(lcontext);
 
@@ -172,8 +173,8 @@ void pp_tokstream_close(pp_tokstream_t *stream, bool recursive_close)
         linestream_close(stream->source, recursive_close);
     if (stream->current_line != NULL)
         line_free(stream->current_line);
-    if (stream->delayed_token != NULL)
-        pp_tok_free(stream->delayed_token);
+    if (stream->delayed_directive_end != NULL)
+        pp_tok_free(stream->delayed_directive_end);
     free(stream);
 }
 
@@ -872,11 +873,19 @@ static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
 
 struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 {
-    // return delayed token
-    if (stream->delayed_token != NULL)
+    // return ungetted token
+    if (stream->ungetten_token != NULL)
     {
-        struct pp_token_s *new_token = stream->delayed_token;
-        stream->delayed_token = NULL;
+        struct pp_token_s *new_token = stream->ungetten_token;
+        stream->ungetten_token = NULL;
+        return new_token;
+    }
+
+    // return delayed token
+    if (stream->delayed_directive_end != NULL)
+    {
+        struct pp_token_s *new_token = stream->delayed_directive_end;
+        stream->delayed_directive_end = NULL;
         return new_token;
     }
 
@@ -980,7 +989,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
             if (stream->is_line_directive)
             {
                 // deciding if we want to give it now or after this token
-                struct pp_token_s **const dir_end_token = (new_token == NULL) ? (&new_token) : (&stream->delayed_token);
+                struct pp_token_s **const dir_end_token = (new_token == NULL) ? (&new_token) : (&stream->delayed_directive_end);
 
                 *dir_end_token = malloc(sizeof(struct pp_token_s));
                 if (*dir_end_token == NULL)
@@ -1019,4 +1028,13 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
 
     context_free(lcontext);
     return new_token;
+}
+
+void pp_tokstream_unget(pp_tokstream_t *stream, struct pp_token_s *token)
+{
+#ifdef CHECK_UNGETTOKEN
+    if (stream->ungetten_token != NULL)
+        log_error(NULL, TOKENIZER_UNGET_FULL);
+#endif
+    stream->ungetten_token = token;
 }

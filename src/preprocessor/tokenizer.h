@@ -214,6 +214,16 @@ typedef struct pp_tokstream_s pp_tokstream_t;
 struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream);
 
 /**
+ * @brief Put a token back on the stream to be collected after.
+ * 
+ * A maximum of a single token can be ungetted
+ * 
+ * @param stream the stream on which the token is put
+ * @param token the token to unget
+ */
+void pp_tokstream_unget(pp_tokstream_t *stream, struct pp_token_s *token);
+
+/**
  * @brief Close a token stream
  * 
  * Close a token stream, freeing the resources allocates with it.

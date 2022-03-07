@@ -44,7 +44,10 @@ TOKENIZER:
 
     CMP_UNKNOW "pp_tok_cmp called with value outside enum"
 
+    UNGET_FULL "ungetted a token before the last one was consumed"
+
 DIRECTIVES:
     MALLOC_FAIL_OPEN "malloc failed in creating directive stream struct"
 
     CONTEXT_OPENING "opening directive stream"
+    CONTEXT_GETTING "getting a new directive"
