@@ -14,7 +14,7 @@ This is a sintetic roadmap:
 - [ ] Preprocessor
     - [V] Raw line detection
     - [V] Logical line merging
-    - [ ] Tokenization of lines
+    - [V] Tokenization of lines
     - [ ] Preprocessor language
         - [ ] Conditionals
         - [ ] Line control
