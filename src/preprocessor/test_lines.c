@@ -1,5 +1,6 @@
 #define _GNU_SOURCE // needed for fmemopen
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
