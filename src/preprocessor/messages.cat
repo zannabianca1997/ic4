@@ -48,6 +48,21 @@ TOKENIZER:
 
 DIRECTIVES:
     MALLOC_FAIL_OPEN "malloc failed in creating directive stream struct"
+    MALLOC_FAIL_DIRECTIVE "malloc failed in creating directive struct"
+    MALLOC_FAIL_STRDUP "malloc failed in duplicating string"
+    MALLOC_FAIL_DEFINE_TOKENS "malloc failed in creating define token space"
+    MALLOC_FAIL_DEFINE_ARGS "malloc failed in creating define arguments space"
 
     CONTEXT_OPENING "opening directive stream"
     CONTEXT_GETTING "getting a new directive"
+
+    QUEUE_FAIL_CREATING "Failed to create queue"
+    QUEUE_ADD_FREE_TOKEN "Failed adding free token to free text queue"
+    QUEUE_ADD_ARG "Failed adding argument name to argument queue"
+
+    ERROR_NAME "Directive should start with a identifier"
+    ERROR_MACRO_NAME "\"define\" directives should be followed with \"identifier\" or \"identifier(\""
+    ERROR_UNKNOW "Unknow directive"
+
+    ERROR_COMMA_OR_LPAR_EXPECTED "Expected , or )"
+    ERROR_IDENTIFIER_EXPECTED "Expected identifier"

@@ -18,16 +18,12 @@
 
 #include "tokenizer.h"
 
-#include "../misc/queue.h"
 #include "../misc/bookmark.h"
 #include "../misc/context/context.h"
 
-typedef queue_t token_list_t;
-typedef queue_t directive_list_t;
-
 /**
  * @brief Contain a preprocessor directive
- * 
+ *
  */
 struct pp_directive_s
 {
@@ -41,16 +37,14 @@ struct pp_directive_s
         PP_DIRECTIVE_ELIF,
         PP_DIRECTIVE_ELSE,
         PP_DIRECTIVE_ENDIF,
-        
+
         PP_DIRECTIVE_ERROR,
         PP_DIRECTIVE_PRAGMA,
 
         PP_DIRECTIVE_EMIT // special directive, emit the tokens in args
     } type;
 
-    struct {
-        struct bookmark_s directive_start, directive_stop, directive_name;
-    } marks;
+    struct bookmark_s mark;
 
     union
     {
@@ -64,7 +58,11 @@ struct pp_directive_s
                     size_t line_num;
                     char *file_name;
                 };
-                token_list_t *args;
+                struct
+                {
+                    struct pp_token_s **args;
+                    size_t nargs;
+                };
             };
         } line_ctrl;
 
@@ -78,62 +76,78 @@ struct pp_directive_s
                     char *file_name;
                     bool is_angled;
                 };
-                token_list_t *args;
+                struct
+                {
+                    struct pp_token_s **args;
+                    size_t nargs;
+                };
             };
         } include;
 
         struct
         {
-            struct pp_token_s *macro_name;
-            char ** args;
-            size_t nargs;
-            token_list_t *definition;
-        } define;
-        
-        token_list_t *condition; // for #if and #elif
+            char *macro_name;
+            bool is_function;
 
-        token_list_t *args; // for #error, #pragma, #emit
+            char **args;
+            size_t nargs;
+
+            struct pp_token_s **tokens;
+            size_t ntokens;
+        } define;
+
+        struct
+        {
+            enum loglevel_e severity;
+            char *msg;
+        } error;
+
+        struct
+        {
+            struct pp_token_s **args;
+            size_t nargs;
+        };
     };
 };
 
 /**
  * @brief Delete a directive, freeing the space used
- * 
+ *
  * @param directive the directive to delete
  */
-void directive_free(struct pp_directive_s*directive);
+void directive_free(struct pp_directive_s *directive);
 
 // -- streams --
 
 /**
  * @brief Contain a stream of directives
- * 
+ *
  */
 typedef struct directive_stream_s directive_stream_t;
 
 /**
  * @brief Open a stream of directives
- * 
+ *
  * @param context the context in which the streams are opened
  * @param source the source of the stream
  * @return directive_stream_t* the opened stream
  */
-directive_stream_t*directive_stream_open(context_t*context, pp_tokstream_t* source);
+directive_stream_t *directive_stream_open(context_t *context, pp_tokstream_t *source);
 /**
  * @brief Close the stream
- * 
+ *
  * @param stream the stream to close
  * @param recursive_close if true, the source stream (and it's sources) are closed too
  */
-void directive_stream_close(directive_stream_t*stream, bool recursive_close);
+void directive_stream_close(directive_stream_t *stream, bool recursive_close);
 
 /**
  * @brief get a directive from the stream
- * 
+ *
  * @param context the context in which the directive is needed
  * @param stream the source stream
  * @return struct pp_directive_s* the recovered directive, or NULL if the stream is exausted
  */
-struct pp_directive_s *directive_stream_get(context_t*context, directive_stream_t* stream);
+struct pp_directive_s *directive_stream_get(context_t *context, directive_stream_t *stream);
 
 #endif // _DIRECTIVES_H
