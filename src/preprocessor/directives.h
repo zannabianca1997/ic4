@@ -1,7 +1,7 @@
 /**
  * @file directives.h
  * @author zannabianca1997 (zannabianca199712@gmail.com)
- * @brief Interface to the directive matcher
+ * @brief Interface to the directive parser
  * @version 0.1
  * @date 2022-03-06
  *
@@ -85,7 +85,8 @@ struct pp_directive_s
         struct
         {
             struct pp_token_s *macro_name;
-            token_list_t *args;
+            char ** args;
+            size_t nargs;
             token_list_t *definition;
         } define;
         

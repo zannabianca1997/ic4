@@ -43,3 +43,8 @@ TOKENIZER:
     CONTEXT_GETTING "getting a new token"
 
     CMP_UNKNOW "pp_tok_cmp called with value outside enum"
+
+DIRECTIVES:
+    MALLOC_FAIL_OPEN "malloc failed in creating directive stream struct"
+
+    CONTEXT_OPENING "opening directive stream"
