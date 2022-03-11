@@ -1,5 +1,7 @@
 # IC4: IntCode C CrossCompiler
 
+> :hammer: **WARNING:** This repository is a work in progress. Software is still not functional. See [Objectives](##Objectives) for a roadmap. :wrench:
+
 ## Overview
 
 This is a cross compiler from a dialect of C to [Intcode](https://esolangs.org/wiki/Intcode). 
