@@ -14,7 +14,9 @@ This is a sintetic roadmap:
 - [ ] Preprocessor
     - [X] Raw line detection
     - [X] Logical line merging
-    - [X] Tokenization of lines
+    - [X] Tokenization of line
+    - [ ] Parsing directives
+    - [ ] File managing
     - [ ] Preprocessor language
         - [ ] Conditionals
         - [ ] Line control
@@ -22,6 +24,7 @@ This is a sintetic roadmap:
         - [ ] Macro substitution
 - [ ] Compiler
 - [ ] Linker
+- [ ] Assembler
 - [X] Miscellanea
     - [X] Context tracking
     - [X] Error reporting
