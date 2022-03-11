@@ -102,7 +102,7 @@ struct pp_directive_s
             char *msg;
         } error;
 
-        struct
+        struct // generic containers for simple directives -> if, elif, pragma
         {
             struct pp_token_s **args;
             size_t nargs;
