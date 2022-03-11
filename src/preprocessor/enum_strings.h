@@ -13,6 +13,7 @@
 #define _ENUM_STRINGS_H
 
 #include "tokenizer.h"
+#include "directives.h"
 
 #define PP_TYPE_NAME_MAX_LEN 25
 static const struct
@@ -114,6 +115,35 @@ __attribute_const__
     for (size_t i = 0; i < (sizeof(PP_PUNC_KIND_NAMES) / sizeof(PP_PUNC_KIND_NAMES[0])); i++)
         if (PP_PUNC_KIND_NAMES[i].kind == kind)
             return PP_PUNC_KIND_NAMES[i].name;
+
+    return "<error-kind>";
+}
+
+#define DIRECTIVE_NAME_MAX_LEN 15
+static const struct
+{
+    enum pp_directive_type_e type;
+    const char name[DIRECTIVE_NAME_MAX_LEN + 1];
+} DIRECTIVE_TYPE_NAMES[] = {{PP_DIRECTIVE_LINE_CTRL, "#line"},
+                            {PP_DIRECTIVE_INCLUDE, "#include"},
+                            {PP_DIRECTIVE_DEFINE, "#define"},
+                            {PP_DIRECTIVE_IF, "#if"},
+                            {PP_DIRECTIVE_ELIF, "#elif"},
+                            {PP_DIRECTIVE_ELSE, "#else"},
+                            {PP_DIRECTIVE_ENDIF, "#endif"},
+                            {PP_DIRECTIVE_ERROR, "#error"},
+                            {PP_DIRECTIVE_PRAGMA, "#pragma"},
+                            {PP_DIRECTIVE_EMIT, "(internal) emit"}};
+
+#ifdef __GNUC__
+__attribute_const__
+#endif
+    static inline const char *
+    directive_name(enum pp_directive_type_e type)
+{
+    for (size_t i = 0; i < (sizeof(DIRECTIVE_TYPE_NAMES) / sizeof(DIRECTIVE_TYPE_NAMES[0])); i++)
+        if (DIRECTIVE_TYPE_NAMES[i].type == type)
+            return DIRECTIVE_TYPE_NAMES[i].name;
 
     return "<error-type>";
 }
