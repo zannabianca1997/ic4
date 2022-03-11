@@ -35,7 +35,7 @@ This is a sintetic roadmap:
 
 To adapt to the end instruction limitations, the original language will deviate from standard C.
 
-The most noticeable difference from standard C is that scalar type will be a wreak: only `signed int` is implemented, and is the natural size of the machine (`sizeof(int) == 1`). Other `signed` integers may, or may not be translated as `int`. `unsigned` variation should be inplemented with adapt code for the wrap around (requested fot them).
+The most noticeable difference from standard C is that scalar type will be a wreak: only `signed int` is implemented, and is the natural size of the machine (`sizeof(int) == 1`). Other `signed` integers may, or may not be translated as `int`. `unsigned` variation should be inplemented with adapt code for the wrap around (C stantdard require `unsigned` wraparound, while `signed` owerflow is UB).
 
 `float`s are for now not implemented, nor planning to be.
 
