@@ -12,9 +12,9 @@ Objective is to translate the biggest subset of C I can manage.
 This is a sintetic roadmap:
 
 - [ ] Preprocessor
-    - [V] Raw line detection
-    - [V] Logical line merging
-    - [V] Tokenization of lines
+    - [X] Raw line detection
+    - [X] Logical line merging
+    - [X] Tokenization of lines
     - [ ] Preprocessor language
         - [ ] Conditionals
         - [ ] Line control
@@ -22,11 +22,11 @@ This is a sintetic roadmap:
         - [ ] Macro substitution
 - [ ] Compiler
 - [ ] Linker
-- [V] Miscellanea
-    - [V] Context tracking
-    - [V] Error reporting
-    - [V] Bookmark struct
-    - [V] Test discovery and running
+- [X] Miscellanea
+    - [X] Context tracking
+    - [X] Error reporting
+    - [X] Bookmark struct
+    - [X] Test discovery and running
 
 ## Used C dialect
 
