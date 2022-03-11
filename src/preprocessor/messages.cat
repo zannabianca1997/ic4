@@ -52,12 +52,14 @@ DIRECTIVES:
     MALLOC_FAIL_STRDUP "malloc failed in duplicating string"
     MALLOC_FAIL_DEFINE_TOKENS "malloc failed in creating define token space"
     MALLOC_FAIL_DEFINE_ARGS "malloc failed in creating define arguments space"
+    MALLOC_FAIL_EMIT_TOKENS "malloc failed in creating emit token space"
 
     CONTEXT_OPENING "opening directive stream"
     CONTEXT_GETTING "getting a new directive"
 
     QUEUE_FAIL_CREATING "Failed to create queue"
     QUEUE_ADD_FREE_TOKEN "Failed adding free token to free text queue"
+    QUEUE_ADD_ERROR "Failed adding error token to error tokens queue"
     QUEUE_ADD_ARG "Failed adding argument name to argument queue"
 
     ERROR_NAME "Directive should start with a identifier"
