@@ -353,7 +353,7 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
     for (
         struct pp_token_s *tok = pp_tokstream_get(lcontext, pp_tokstm);
         tok != NULL;
-        pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm), tokens++) // TODO: check we do not exceed number of tokens
+        pp_tok_free(tok), tok = pp_tokstream_get(lcontext, pp_tokstm), tokens++)
         // check how we should compare
         switch (tokens->compare_type)
         {
