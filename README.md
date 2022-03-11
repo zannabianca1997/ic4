@@ -100,3 +100,5 @@ These flags are used to compile different capacity in the program
 ## Developers
 
 For now, everything is by me, zannabianca1997 <zannabianca199712@gmail.com>.
+
+The files under `utils\fake_libc_include` are from eliben's [pycparser](https://github.com/eliben/pycparser). See the approppriate license `utils\fake_libc_include\LICENSE`.
