@@ -44,6 +44,15 @@ The most noticeable difference from standard C is that scalar type will be a wre
 For the aritmetic `+`, `-` and `*` will translate directly to code. `/` and `%` are planned to be translated to calls to builtin functions.  
 There is no plan to implement bitshift or bitwise operators, as they would be more slow than useful.
 
+## Running
+
+For now (and the foreseeable future) only GCC is tested for compilation.
+To  create the makefile make sure `python3` and [pycparser](https://github.com/eliben/pycparser) are installed. Then from the root directory run `utils\discover`.
+
+To run the tests run `make test`. To test the release `make BUILD=release test`.
+
+The main is still absent, planned to be added when the preprocessor is complete.
+
 ## Design
 
 Every step is made by a different translation unit, offering a stream-like interface, like the one below:
