@@ -57,33 +57,35 @@ The main is still absent, planned to be added when the preprocessor is complete.
 
 Every step is made by a different translation unit, offering a stream-like interface, like the one below:
 
-    /* Unit example */
+```C
+/* Unit example */
 
-    // contain an element of the stream
-    struct result_s {
-        ...
-    };
+// contain an element of the stream
+struct result_s {
+    ...
+};
 
-    // delete an element of the stream when it's not used anymore
-    void result_free(struct result_s *);
+// delete an element of the stream when it's not used anymore
+void result_free(struct result_s *);
 
-    // keep every value needed for stream working
-    typedef ... resultstream_t;
+// keep every value needed for stream working
+typedef ... resultstream_t;
 
-    // open a new stream
-    // return NULL on errors
-    result_stream_t *resultstream_open(some_stream_identifier);
+// open a new stream
+// return NULL on errors
+result_stream_t *resultstream_open(some_stream_identifier);
 
-    // obtain the next stream object
-    // return NULL if stream is ended
-    struct result_s * resultstream_get(result_stream_t*);
+// obtain the next stream object
+// return NULL if stream is ended
+struct result_s * resultstream_get(result_stream_t*);
 
-    // return the object to the stream, will be returned by next get
-    // guarantee maximum of 1 return, after beaviour is undefinite
-    void resultstream_unget(result_stream_t*, struct result_s *);
-    
-    // close the stream
-    void resultstream_close(result_stream_t*);
+// return the object to the stream, will be returned by next get
+// guarantee maximum of 1 return, after beaviour is undefinite
+void resultstream_unget(result_stream_t*, struct result_s *);
+
+// close the stream
+void resultstream_close(result_stream_t*);
+```
 
 First translation unit will take a filename, while last will emit integers.
 
