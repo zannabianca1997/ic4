@@ -114,7 +114,15 @@ struct pp_expected_directive_s
     };
 };
 
-static bool check_directive(context_t *context, struct pp_directive_s *obtained, struct pp_expected_directive_s *expected)
+/**
+ * @brief check a directive against an expected directive
+ * 
+ * @param obtained the directive to check
+ * @param expected the expected directive
+ * @return true the directive match
+ * @return false the directive did not match
+ */
+static bool check_directive(struct pp_directive_s const *obtained, struct pp_expected_directive_s const *expected)
 {
     if (expected->compare_type == EXPECTED_IGNORE)
         return true;
@@ -219,3 +227,4 @@ static bool check_directive(context_t *context, struct pp_directive_s *obtained,
 
     return true;
 }
+
