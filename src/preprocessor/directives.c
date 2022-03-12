@@ -11,6 +11,11 @@
  *
  */
 
+#if 0
+#pragma GCC warning "<stdio.h> included for debug purposes"
+#include <stdio.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -97,6 +102,9 @@ directive_stream_t *directive_stream_open(context_t *context, pp_tokstream_t *so
         log_error(context_new(context, DIRECTIVES_CONTEXT_OPENING), DIRECTIVES_MALLOC_FAIL_OPEN);
 
     res->source = source;
+    res->errors = queue_new();
+    if(res->errors == NULL)
+        log_error(context_new(context, DIRECTIVES_CONTEXT_OPENING), DIRECTIVES_QUEUE_FAIL_CREATING);
 
     return res;
 }
@@ -173,7 +181,7 @@ static void parse_running_text(context_t *context, directive_stream_t *stream, s
         log_error(context, DIRECTIVES_QUEUE_FAIL_CREATING);
 
     struct pp_token_s *token;
-    while ((token = next_token(context, stream))->type != PP_TOK_DIRECTIVE_START)
+    while ((token = next_token(context, stream)) != NULL && token->type != PP_TOK_DIRECTIVE_START)
     {
         if (!queue_push(collected_tokens, token))
             log_error(context, DIRECTIVES_QUEUE_ADD_FREE_TOKEN);
