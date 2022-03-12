@@ -9,10 +9,12 @@
  *
  */
 
+#define _POSIX_C_SOURCE 200809L // needed to use fmemopen
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "../misc/bookmark.h"
 #include "../misc/log/log.h"
@@ -29,6 +31,8 @@
 #include "enum_strings.h"
 #include "../misc/charescape.h"
 
+#define TESTS_MAX_MACRO_ARGS 10
+#define TESTS_MAX_MACRO_TOKENS 10
 #define TESTS_MAX_DIRECTIVE_ARGS 10
 
 static inline char *format(const char *fmt, ...)
@@ -44,6 +48,8 @@ static inline char *format(const char *fmt, ...)
 
     va_end(args);
     va_end(args_c);
+
+    return buffer;
 }
 
 /**
@@ -82,7 +88,7 @@ struct pp_expected_directive_s
                 struct
                 {
                     size_t nargs;
-                    struct pp_token_s args[];
+                    struct pp_token_s args[TESTS_MAX_DIRECTIVE_ARGS];
                 };
             };
         } line_ctrl;
@@ -100,7 +106,7 @@ struct pp_expected_directive_s
                 struct
                 {
                     size_t nargs;
-                    struct pp_token_s args[];
+                    struct pp_token_s args[TESTS_MAX_DIRECTIVE_ARGS];
                 };
             };
         } include;
@@ -110,11 +116,11 @@ struct pp_expected_directive_s
             char *macro_name;
             bool is_function;
 
-            char *args[TESTS_MAX_DIRECTIVE_ARGS];
+            char *args[TESTS_MAX_MACRO_ARGS];
             size_t nargs;
 
             size_t ntokens;
-            struct pp_token_s tokens[];
+            struct pp_token_s tokens[TESTS_MAX_MACRO_TOKENS];
         } define;
 
         struct
@@ -126,7 +132,7 @@ struct pp_expected_directive_s
         struct
         {
             size_t nargs;
-            struct pp_token_s args[];
+            struct pp_token_s args[TESTS_MAX_DIRECTIVE_ARGS];
         };
     };
 };
@@ -164,10 +170,12 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
     {
     case PP_DIRECTIVE_LINE_CTRL:
         if (obtained->line_ctrl.need_macros != expected->line_ctrl.need_macros)
+        {
             if (expected->line_ctrl.need_macros)
                 return "Expected a macro-expanded line control, found a normal one";
             else
                 return "Expected a normal line control, found a macro expanded one";
+        }
         if (obtained->line_ctrl.need_macros)
         {
             if (obtained->line_ctrl.nargs != expected->line_ctrl.nargs)
@@ -184,10 +192,10 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
 
     case PP_DIRECTIVE_INCLUDE:
         if (obtained->include.need_macros != expected->include.need_macros)
-            if (expected->include.need_macros)
+            {if (expected->include.need_macros)
                 return "Expected a macro-expanded include, found a normal one";
             else
-                return "Expected a normal include, found a macro expanded one";
+                return "Expected a normal include, found a macro expanded one";}
         if (obtained->include.need_macros)
         {
             if (obtained->include.nargs != expected->include.nargs)
@@ -196,8 +204,8 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
                 if (!pp_tok_cmp(obtained->include.args[i], &(expected->include.args[i])))
                     return format("include arg number %lu is different", i);
         }
-        else if (obtained->include.is_angled != obtained->include.is_angled ||
-                 strcmp(obtained->include.file_name, obtained->include.file_name) != 0)
+        else if (obtained->include.is_angled != expected->include.is_angled ||
+                 strcmp(obtained->include.file_name, expected->include.file_name) != 0)
             return "Different arguments to include";
         break;
 
@@ -217,8 +225,8 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
         {
             if (obtained->define.nargs != expected->define.nargs)
                 return "Different number of macro arguments";
-            for (size_t i = 0; i < obtained->define.args; i++)
-                if (strcmp(obtained->define.args[i], &(expected->define.args[i])) != 0)
+            for (size_t i = 0; i < obtained->define.nargs; i++)
+                if (strcmp(obtained->define.args[i], expected->define.args[i]) != 0)
                     return format("macro arg number %lu is different", i);
         }
         break;
@@ -234,10 +242,11 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
     case PP_DIRECTIVE_IF:
     case PP_DIRECTIVE_ELIF:
     case PP_DIRECTIVE_PRAGMA:
+    case PP_DIRECTIVE_EMIT:
         if (obtained->nargs != expected->nargs)
             return "Wrong number of arguments";
-        for (size_t i = 0; i < obtained->args; i++)
-            if (strcmp(obtained->args[i], &(expected->args[i])) != 0)
+        for (size_t i = 0; i < obtained->nargs; i++)
+            if (pp_tok_cmp(obtained->args[i], &(expected->args[i])))
                 return format("Argument number %lu is different", i);
         break;
 
@@ -280,21 +289,12 @@ static char *_test_directives(char const *testcase, char const *text, struct pp_
     if (dirstm == NULL)
         return "Cannot open directive stream";
 
-    for (struct directive_s *directive = directive_stream_get(lcontext, dirstm);
+    for (struct pp_directive_s *directive = directive_stream_get(lcontext, dirstm);
          dirstm != NULL;
-         directive_free(dirstm), directive = directive_stream_get(lcontext, dirstm), exp_directives++)
+         directive_free(directive), directive = directive_stream_get(lcontext, dirstm), exp_directives++)
     {
         if (exp_directives->compare_type == EXPECTED_END)
-        {
-            // directive in excess
-            const char *msg_fmt = "Expected end of directives, found instead %s";
-            const char *dir_str = directive_tostring(directive);
-            char *msg = malloc(snprintf(NULL, 0, msg_fmt, dir_str));
-            if (msg == NULL)
-                return "Malloc failed in allocating error message";
-            sprintf(msg, msg_fmt, dir_str);
-            return msg;
-        }
+            return "Expected end of directives";
         if (exp_directives->compare_type == EXPECTED_STOP_COMPARE)
             return NULL; // they all matched
 
@@ -310,3 +310,23 @@ static char *_test_directives(char const *testcase, char const *text, struct pp_
     return NULL;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
+#define TEST(TESTCASE, TEXT, ...)                                             \
+    const char *test_directives_##TESTCASE()                                  \
+    {                                                                         \
+        static const struct pp_expected_directive_s expected_directives[] = { \
+            __VA_ARGS__, {EXPECTED_END}};                                     \
+        return _test_directives(#TESTCASE, TEXT, expected_directives);        \
+    }
+
+// --- TESTS ---
+
+TEST(running_text,
+     "hello nice \n to meet you",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_EMIT, .nargs = 5, .args = {{PP_TOK_IDENTIFIER, .name = "hello"}, {PP_TOK_IDENTIFIER, .name = "nice"}, {PP_TOK_IDENTIFIER, .name = "to"}, {PP_TOK_IDENTIFIER, .name = "meet"}, {PP_TOK_IDENTIFIER, .name = "you"}}})
+
+#pragma GCC diagnostic pop // "-Wmissing-field-initializers"
+
+#undef TEST
