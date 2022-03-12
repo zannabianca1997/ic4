@@ -721,7 +721,6 @@ static struct pp_token_s *parse_punctuator(context_t *context, struct pp_tokstre
         return NULL;
     }
 
-    context_t *lcontext = context_new(context, TOKENIZER_CONTEXT_PUNCT);
 
     struct pp_token_s *new_token = NULL;
     *n = 0;
@@ -735,13 +734,12 @@ static struct pp_token_s *parse_punctuator(context_t *context, struct pp_tokstre
             {
                 new_token = malloc(sizeof(struct pp_token_s));
                 if (new_token == NULL)
-                    log_error(lcontext, TOKENIZER_MALLOC_FAIL_TOKEN);
+                    log_error(context_new(context, TOKENIZER_CONTEXT_PUNCT), TOKENIZER_MALLOC_FAIL_TOKEN);
                 new_token->type = PP_TOK_PUNCTUATOR;
             }
             new_token->punc_kind = PUNCTUATORS_STRINGS[i].punc;
         }
-
-    context_free(lcontext);
+        
     return new_token;
 }
 
