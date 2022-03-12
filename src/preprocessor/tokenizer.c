@@ -416,6 +416,7 @@ static struct pp_token_s *parse_pp_number(context_t *context, struct pp_tokstrea
     if (!isdigit(stream->current_line->content[stream->cursor + numlen]))
     {
         *n = 0;
+        context_free(lcontext);
         return NULL;
     }
 
@@ -721,7 +722,6 @@ static struct pp_token_s *parse_punctuator(context_t *context, struct pp_tokstre
         return NULL;
     }
 
-
     struct pp_token_s *new_token = NULL;
     *n = 0;
 
@@ -739,7 +739,7 @@ static struct pp_token_s *parse_punctuator(context_t *context, struct pp_tokstre
             }
             new_token->punc_kind = PUNCTUATORS_STRINGS[i].punc;
         }
-        
+
     return new_token;
 }
 
