@@ -196,7 +196,7 @@ void pp_tok_free(struct pp_token_s *token)
 
 // --- TOKEN COMPARATION ---
 
-bool pp_tok_cmp(struct pp_token_s *a, struct pp_token_s *b)
+bool pp_tok_cmp(struct pp_token_s const *a, struct pp_token_s const *b)
 {
     if (a->type != b->type)
         return false;
