@@ -25,7 +25,7 @@
 #include "enum_strings.h"
 #include "../misc/charescape.h"
 
-//TODO:check the unget facility
+// TODO:check the unget facility
 
 /**
  * @brief Elaborate a human readable token representation
@@ -33,7 +33,7 @@
  * @param tok the token to represent
  * @return char* the representation
  */
-static char *pp_tok_tostring(struct pp_token_s *tok)
+static char *pp_tok_tostring(struct pp_token_s const *tok)
 {
     char *result;
 
@@ -75,11 +75,11 @@ static char *pp_tok_tostring(struct pp_token_s *tok)
         return result;
 
     case PP_TOK_MACRO_NAME:
-        result = malloc(strlen(tok->macro_name.name) + (tok->macro_name.is_function)?2:1);
+        result = malloc(strlen(tok->macro_name.name) + (tok->macro_name.is_function) ? 2 : 1);
         if (result == NULL)
             return "Malloc failed during token string representation";
         strcpy(result, tok->macro_name.name);
-        if(tok->macro_name.is_function)
+        if (tok->macro_name.is_function)
             strcat(result, "(");
         return result;
 
@@ -140,7 +140,7 @@ struct expected_pp_token_s
 __attribute_const__
 #endif
     static inline const char *
-    check_type(struct pp_token_s *obtained, struct pp_token_s *expected)
+    check_type(struct pp_token_s const *obtained, struct pp_token_s const *expected)
 {
     if (obtained->type == expected->type)
         return NULL;
@@ -163,7 +163,7 @@ __attribute_const__
 __attribute_const__
 #endif
     static inline const char *
-    check_content(struct pp_token_s *obtained, struct pp_token_s *expected)
+    check_content(struct pp_token_s const *obtained, struct pp_token_s const *expected)
 {
     if (check_type(obtained, expected) != NULL)
         return check_type(obtained, expected);
@@ -307,7 +307,7 @@ __attribute_const__
 __attribute_const__
 #endif
     static inline const char *
-    check_mark(struct pp_token_s *obtained, struct pp_token_s *expected)
+    check_mark(struct pp_token_s const *obtained, struct pp_token_s const *expected)
 {
     if (!bookmark_cmp(obtained->mark, expected->mark, CMP_EXACT, CMP_EXACT))
     {
@@ -331,7 +331,7 @@ __attribute_const__
  * @param num_tokens the num of tokens to check
  * @return const char*
  */
-static const char *_test_tokenize(char const *testcase, char const *text, struct expected_pp_token_s *tokens)
+static const char *_test_tokenize(char const *testcase, char const *text, struct expected_pp_token_s const *tokens)
 {
     context_t *lcontext = context_new(NULL, testcase);
 
@@ -414,12 +414,12 @@ static const char *_test_tokenize(char const *testcase, char const *text, struct
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
-#define TEST(TESTCASE, TEXT, ...)                                \
-    const char *test_tokenize_##TESTCASE()                       \
-    {                                                            \
-        struct expected_pp_token_s expected_tokens[] = {         \
-            __VA_ARGS__, {EXPECTED_END}};                        \
-        return _test_tokenize(#TESTCASE, TEXT, expected_tokens); \
+#define TEST(TESTCASE, TEXT, ...)                                     \
+    const char *test_tokenize_##TESTCASE()                            \
+    {                                                                 \
+        static const struct expected_pp_token_s expected_tokens[] = { \
+            __VA_ARGS__, {EXPECTED_END}};                             \
+        return _test_tokenize(#TESTCASE, TEXT, expected_tokens);      \
     }
 
 // --- TESTS ---
@@ -698,7 +698,7 @@ TEST(define_obj_like,
      "#define MACRO (x) \\\n strcmp(\"String Const\",x)==0",
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "define"}},
-     {EXPECTED_CONTENT, {PP_TOK_MACRO_NAME, .macro_name = {"MACRO", .is_function=false}}},
+     {EXPECTED_CONTENT, {PP_TOK_MACRO_NAME, .macro_name = {"MACRO", .is_function = false}}},
      {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x"}},
      {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
@@ -715,7 +715,7 @@ TEST(define_fun_like,
      "#define MACRO(x) \\\n strcmp(\"String Const\",x)==0",
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "define"}},
-     {EXPECTED_CONTENT, {PP_TOK_MACRO_NAME, .macro_name = {"MACRO", .is_function=true}}},
+     {EXPECTED_CONTENT, {PP_TOK_MACRO_NAME, .macro_name = {"MACRO", .is_function = true}}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "x"}},
      {EXPECTED_CONTENT, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "strcmp"}},
