@@ -854,6 +854,7 @@ static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
                 stream->current_line->content[stream->cursor + 1] == '/')
             {
                 stream->cursor += 2; // jump the "*/"
+                context_free(lcontext);
                 return true;
             }
 
@@ -864,6 +865,7 @@ static bool parse_multiline_comment(context_t *context, pp_tokstream_t *stream)
     } while (stream->current_line != NULL);
 
     // file ended inside multiline!
+    context_free(lcontext);
     return false;
 }
 
@@ -900,7 +902,7 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
         if (stream->current_line == NULL)
         {
             // get a new line from the source
-            stream->current_line = linestream_get(context, stream->source);
+            stream->current_line = linestream_get(lcontext, stream->source);
             if (stream->current_line == NULL)
                 return NULL; // source exausted
 
