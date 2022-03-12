@@ -29,6 +29,7 @@
 #include "directives.h"
 
 #include "enum_strings.h"
+#include "pp_tok_tostring.h"
 #include "../misc/charescape.h"
 
 #define TESTS_MAX_MACRO_ARGS 10
@@ -192,10 +193,12 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
 
     case PP_DIRECTIVE_INCLUDE:
         if (obtained->include.need_macros != expected->include.need_macros)
-            {if (expected->include.need_macros)
+        {
+            if (expected->include.need_macros)
                 return "Expected a macro-expanded include, found a normal one";
             else
-                return "Expected a normal include, found a macro expanded one";}
+                return "Expected a normal include, found a macro expanded one";
+        }
         if (obtained->include.need_macros)
         {
             if (obtained->include.nargs != expected->include.nargs)
@@ -244,10 +247,10 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
     case PP_DIRECTIVE_PRAGMA:
     case PP_DIRECTIVE_EMIT:
         if (obtained->nargs != expected->nargs)
-            return "Wrong number of arguments";
+            return format("Wrong number of arguments: %lu expected, got %lu", obtained->nargs, expected->nargs);
         for (size_t i = 0; i < obtained->nargs; i++)
-            if (pp_tok_cmp(obtained->args[i], &(expected->args[i])))
-                return format("Argument number %lu is different", i);
+            if (!pp_tok_cmp(obtained->args[i], &(expected->args[i])))
+                return format("Argument number %lu is different: expected %s, found %s", i, pp_tok_tostring(obtained->args[i]), pp_tok_tostring(&(expected->args[i])));
         break;
 
     // these directive are contentless, no check is required
@@ -290,11 +293,11 @@ static char *_test_directives(char const *testcase, char const *text, struct pp_
         return "Cannot open directive stream";
 
     for (struct pp_directive_s *directive = directive_stream_get(lcontext, dirstm);
-         dirstm != NULL;
+         directive != NULL;
          directive_free(directive), directive = directive_stream_get(lcontext, dirstm), exp_directives++)
     {
         if (exp_directives->compare_type == EXPECTED_END)
-            return "Expected end of directives";
+            return format("Expected end of directives, obtained %s", directive_name(directive->type));
         if (exp_directives->compare_type == EXPECTED_STOP_COMPARE)
             return NULL; // they all matched
 
@@ -324,8 +327,33 @@ static char *_test_directives(char const *testcase, char const *text, struct pp_
 // --- TESTS ---
 
 TEST(running_text,
-     "hello nice \n to meet you",
-     {EXPECTED_CONTENT, PP_DIRECTIVE_EMIT, .nargs = 5, .args = {{PP_TOK_IDENTIFIER, .name = "hello"}, {PP_TOK_IDENTIFIER, .name = "nice"}, {PP_TOK_IDENTIFIER, .name = "to"}, {PP_TOK_IDENTIFIER, .name = "meet"}, {PP_TOK_IDENTIFIER, .name = "you"}}})
+     "hello, nice \n to meet you!",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_EMIT, .nargs = 7, .args = {
+                                                           // @formatter:off
+                                                           {PP_TOK_IDENTIFIER, .name = "hello"},
+                                                           {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COMMA},
+                                                           {PP_TOK_IDENTIFIER, .name = "nice"},
+                                                           {PP_TOK_IDENTIFIER, .name = "to"},
+                                                           {PP_TOK_IDENTIFIER, .name = "meet"},
+                                                           {PP_TOK_IDENTIFIER, .name = "you"},
+                                                           {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_NOT}
+                                                           // @formatter:on
+                                                       }})
+TEST(error_delaying,
+     "Those @ errors ` will be reported after",
+    // @formatter:off
+     {EXPECTED_CONTENT, PP_DIRECTIVE_EMIT, .nargs = 6, .args = {
+                                                           {PP_TOK_IDENTIFIER, .name = "Those"},
+                                                           {PP_TOK_IDENTIFIER, .name = "errors"},
+                                                           {PP_TOK_IDENTIFIER, .name = "will"},
+                                                           {PP_TOK_IDENTIFIER, .name = "be"},
+                                                           {PP_TOK_IDENTIFIER, .name = "reported"},
+                                                           {PP_TOK_IDENTIFIER, .name = "after"},
+                                                       }},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '@' in input"}}, 
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '`' in input"}}
+    // @formatter:on
+)
 
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 
