@@ -902,7 +902,10 @@ struct pp_token_s *pp_tokstream_get(context_t *context, pp_tokstream_t *stream)
             // get a new line from the source
             stream->current_line = linestream_get(lcontext, stream->source);
             if (stream->current_line == NULL)
+            {
+                context_free(lcontext);
                 return NULL; // source exausted
+            }
 
             stream->cursor = 0;
             stream->tokens_given = 0;
