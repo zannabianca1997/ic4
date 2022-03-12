@@ -11,7 +11,7 @@
  * @copyright Copyright (c) 2022
  *
  */
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L // needed to use fmemopen
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
