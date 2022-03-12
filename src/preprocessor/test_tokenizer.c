@@ -16,6 +16,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "../misc/log/log.h"
+#include "../misc/log/logtarget.h"
+
 #include "lines.h"
 #include "linesco.h"
 
