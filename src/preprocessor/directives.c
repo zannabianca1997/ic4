@@ -103,7 +103,7 @@ directive_stream_t *directive_stream_open(context_t *context, pp_tokstream_t *so
 
     res->source = source;
     res->errors = queue_new();
-    if(res->errors == NULL)
+    if (res->errors == NULL)
         log_error(context_new(context, DIRECTIVES_CONTEXT_OPENING), DIRECTIVES_QUEUE_FAIL_CREATING);
 
     return res;
@@ -204,19 +204,16 @@ static void parse_running_text(context_t *context, directive_stream_t *stream, s
 
 struct pp_directive_s *directive_stream_get(context_t *context, directive_stream_t *stream)
 {
+    // emptying the error queue first
+    if (!queue_is_empty(stream->errors))
+        return queue_pop(stream->errors);
+
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_GETTING);
     struct pp_token_s *token = next_token(lcontext, stream);
     if (token == NULL)
     {
         context_free(lcontext);
         return NULL;
-    }
-
-    // emptying the error queue first
-    if (!queue_is_empty(stream->errors))
-    {
-        context_free(lcontext);
-        return queue_pop(stream->errors);
     }
 
     struct pp_directive_s *new_directive = malloc(sizeof(struct pp_directive_s));
