@@ -11,11 +11,6 @@
  *
  */
 
-#if 0
-#pragma GCC warning "<stdio.h> included for debug purposes"
-#include <stdio.h>
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -64,10 +59,12 @@ void directive_free(struct pp_directive_s *directive)
             pp_tok_free(directive->define.tokens[i]);
         free(directive->define.tokens);
         break;
+    case PP_DIRECTIVE_ERROR:
+    free(directive->error.msg);
+    break;
 
     case PP_DIRECTIVE_IF:
     case PP_DIRECTIVE_ELIF:
-    case PP_DIRECTIVE_ERROR:
     case PP_DIRECTIVE_PRAGMA:
     case PP_DIRECTIVE_EMIT:
         for (size_t i = 0; i < directive->nargs; i++)
@@ -176,15 +173,17 @@ static void parse_directive(context_t *context, directive_stream_t *stream, stru
 
 static void parse_running_text(context_t *context, directive_stream_t *stream, struct pp_directive_s *new_directive)
 {
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_FREE_TEXT);
+
     queue_t *collected_tokens = queue_new();
     if (collected_tokens == NULL)
         log_error(context, DIRECTIVES_QUEUE_FAIL_CREATING);
 
     struct pp_token_s *token;
-    while ((token = next_token(context, stream)) != NULL && token->type != PP_TOK_DIRECTIVE_START)
+    while ((token = next_token(lcontext, stream)) != NULL && token->type != PP_TOK_DIRECTIVE_START)
     {
         if (!queue_push(collected_tokens, token))
-            log_error(context, DIRECTIVES_QUEUE_ADD_FREE_TOKEN);
+            log_error(lcontext, DIRECTIVES_QUEUE_ADD_FREE_TOKEN);
     }
     pp_tokstream_unget(stream->source, token); // unget the PP_TOK_DIRECTIVE_START
 
@@ -194,12 +193,14 @@ static void parse_running_text(context_t *context, directive_stream_t *stream, s
     new_directive->nargs = queue_len(collected_tokens);
     new_directive->args = malloc(new_directive->nargs * sizeof(struct pp_token_s *));
     if (new_directive->args == NULL)
-        log_error(context, DIRECTIVES_MALLOC_FAIL_EMIT_TOKENS);
+        log_error(lcontext, DIRECTIVES_MALLOC_FAIL_EMIT_TOKENS);
 
     for (size_t idx; !queue_is_empty(collected_tokens); idx++)
         new_directive->args[idx] = queue_pop(collected_tokens);
 
     new_directive->mark = new_directive->args[0]->mark;
+
+    context_free(lcontext);
 }
 
 struct pp_directive_s *directive_stream_get(context_t *context, directive_stream_t *stream)
