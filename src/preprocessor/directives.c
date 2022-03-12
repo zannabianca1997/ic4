@@ -192,8 +192,6 @@ static void parse_running_text(context_t *context, directive_stream_t *stream, s
         new_directive->args[idx] = queue_pop(collected_tokens);
 
     new_directive->mark = new_directive->args[0]->mark;
-
-    return new_directive;
 }
 
 struct pp_directive_s *directive_stream_get(context_t *context, directive_stream_t *stream)
