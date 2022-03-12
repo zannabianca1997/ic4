@@ -240,6 +240,11 @@ __attribute_const__
     return NULL;
 }
 
+
+static void init_log(context_t *context){
+    logtarget_new(context, stderr, (struct logtarget_errorlevels_s){LOG_TRACE, LOG_WARNING, LOG_ERROR});
+}
+
 /**
  * @brief Run a test case
  *
@@ -252,6 +257,8 @@ __attribute_const__
 static const char *_test_tokenize(char const *testcase, char const *text, struct expected_pp_token_s const *tokens)
 {
     context_t *lcontext = context_new(NULL, testcase);
+
+    init_log(lcontext);
 
     // opening the various streams
 #pragma GCC diagnostic push

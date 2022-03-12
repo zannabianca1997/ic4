@@ -18,6 +18,7 @@
 
 #include "../misc/bookmark.h"
 #include "../misc/log/log.h"
+#include "../misc/log/logtarget.h"
 #include "../misc/context/context.h"
 
 #include "lines.h"
@@ -238,7 +239,7 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
         if (obtained->error.severity != expected->error.severity)
             return "Different error severity";
         if (strcmp(obtained->error.msg, expected->error.msg) != 0)
-            return "Different error message";
+            return format("Different error message: expected \"%s\", obtained \"%s\"", expected->error.msg, obtained->error.msg);
         break;
 
     // these directive use only generic arguments. No difference in checking...
@@ -262,6 +263,10 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
     return NULL;
 }
 
+static void init_log(context_t *context){
+    logtarget_new(context, stderr, (struct logtarget_errorlevels_s){LOG_TRACE, LOG_WARNING, LOG_ERROR});
+}
+
 /**
  * @brief Test if a text matches the given expected directives
  *
@@ -273,6 +278,8 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
 static char *_test_directives(char const *testcase, char const *text, struct pp_expected_directive_s const *exp_directives)
 {
     context_t *lcontext = context_new(NULL, testcase);
+
+    init_log(lcontext);
 
     // opening the various streams
 #pragma GCC diagnostic push
@@ -309,6 +316,7 @@ static char *_test_directives(char const *testcase, char const *text, struct pp_
 
     if (exp_directives->compare_type != EXPECTED_END && exp_directives->compare_type != EXPECTED_STOP_COMPARE)
         return "Unexpected end of input";
+    
 
     return NULL;
 }
@@ -350,8 +358,8 @@ TEST(error_delaying,
                                                            {PP_TOK_IDENTIFIER, .name = "reported"},
                                                            {PP_TOK_IDENTIFIER, .name = "after"},
                                                        }},
-     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '@' in input"}}, 
-     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '`' in input"}}
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '@' in the input"}}, 
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '`' in the input"}}
     // @formatter:on
 )
 
