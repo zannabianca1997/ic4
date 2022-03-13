@@ -59,9 +59,10 @@ void directive_free(struct pp_directive_s *directive)
             pp_tok_free(directive->define.tokens[i]);
         free(directive->define.tokens);
         break;
+        
     case PP_DIRECTIVE_ERROR:
-    free(directive->error.msg);
-    break;
+        free(directive->error.msg);
+        break;
 
     case PP_DIRECTIVE_IF:
     case PP_DIRECTIVE_ELIF:
