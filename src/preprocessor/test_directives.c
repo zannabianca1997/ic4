@@ -263,7 +263,8 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
     return NULL;
 }
 
-static void init_log(context_t *context){
+static void init_log(context_t *context)
+{
     logtarget_new(context, stderr, (struct logtarget_errorlevels_s){LOG_TRACE, LOG_WARNING, LOG_ERROR});
 }
 
@@ -316,7 +317,6 @@ static char *_test_directives(char const *testcase, char const *text, struct pp_
 
     if (exp_directives->compare_type != EXPECTED_END && exp_directives->compare_type != EXPECTED_STOP_COMPARE)
         return "Unexpected end of input";
-    
 
     return NULL;
 }
@@ -336,20 +336,20 @@ static char *_test_directives(char const *testcase, char const *text, struct pp_
 
 TEST(running_text,
      "hello, nice \n to meet you!",
-     {EXPECTED_CONTENT, PP_DIRECTIVE_EMIT, .nargs = 7, .args = {
-                                                           // @formatter:off
-                                                           {PP_TOK_IDENTIFIER, .name = "hello"},
-                                                           {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COMMA},
-                                                           {PP_TOK_IDENTIFIER, .name = "nice"},
-                                                           {PP_TOK_IDENTIFIER, .name = "to"},
-                                                           {PP_TOK_IDENTIFIER, .name = "meet"},
-                                                           {PP_TOK_IDENTIFIER, .name = "you"},
-                                                           {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_NOT}
-                                                           // @formatter:on
-                                                       }})
+     {EXPECTED_EXACT, PP_DIRECTIVE_EMIT, .mark = {NULL, 1, 1}, .nargs = 7, .args = {
+                                                                               // @formatter:off
+                                                                               {PP_TOK_IDENTIFIER, .name = "hello"},
+                                                                               {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COMMA},
+                                                                               {PP_TOK_IDENTIFIER, .name = "nice"},
+                                                                               {PP_TOK_IDENTIFIER, .name = "to"},
+                                                                               {PP_TOK_IDENTIFIER, .name = "meet"},
+                                                                               {PP_TOK_IDENTIFIER, .name = "you"},
+                                                                               {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_NOT}
+                                                                               // @formatter:on
+                                                                           }})
 TEST(error_delaying,
      "Those @ errors ` will be reported after",
-    // @formatter:off
+     // @formatter:off
      {EXPECTED_CONTENT, PP_DIRECTIVE_EMIT, .nargs = 6, .args = {
                                                            {PP_TOK_IDENTIFIER, .name = "Those"},
                                                            {PP_TOK_IDENTIFIER, .name = "errors"},
@@ -358,10 +358,14 @@ TEST(error_delaying,
                                                            {PP_TOK_IDENTIFIER, .name = "reported"},
                                                            {PP_TOK_IDENTIFIER, .name = "after"},
                                                        }},
-     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '@' in the input"}}, 
-     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "Stray '`' in the input"}}
-    // @formatter:on
+     {EXPECTED_EXACT, PP_DIRECTIVE_ERROR, .mark = {NULL, 1, 7}, .error = {.severity = LOG_ERROR, .msg = "Stray '@' in the input"}}, {EXPECTED_EXACT, PP_DIRECTIVE_ERROR, .mark = {NULL, 1, 16}, .error = {.severity = LOG_ERROR, .msg = "Stray '`' in the input"}} // @formatter:on
 )
+
+// -- Line control
+
+TEST(line_only,
+     "#line 42",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_LINE_CTRL, .line_ctrl = {.need_macros = false, .line_num = 42, .file_name = NULL}})
 
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 
