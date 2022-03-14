@@ -33,9 +33,16 @@ struct pp_filemanager_s
          */
         fileid_t *id;
         /**
-         * @brief The directive collected up to here
+         * @brief The directive collected up to here. NULL terminated if file is ended
          */
         struct pp_directive_s **collected_directives;
+        /**
+         * @brief The last collected directive.
+         *
+         * The array pointed from collected_directives is at least num_collected long.
+         * if collected_directives[num_collected-1] == NULL the file is ended.
+         */
+        size_t num_collected;
         /**
          * @brief the directive stream
          */
