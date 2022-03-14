@@ -44,6 +44,10 @@ struct pp_filemanager_s
          */
         size_t num_collected;
         /**
+         * @brief The number of directive for which space is prepared
+         */
+        size_t collected_size;
+        /**
          * @brief the directive stream
          */
         directive_stream_t *source;
@@ -59,14 +63,29 @@ struct pp_filemanager_s
 struct pp_file_s
 {
     /**
+     * @brief the filemanager for this file
+     */
+    struct pp_filemanager_s *filemanager;
+    /**
      * @brief the entry this file is referencing to
      */
     struct filetable_entry_s *filetable_entry;
     /**
      * @brief The directive that was returned last
      * Last directive returned is filetable_entry->collected_directives[directives_returned-1].
-     * If directives_returned == filetable_entry->num_collected and a new directive is required,
-     * a new directive must be collected.
+     * If directives_returned == filetable_entry->num_collected and a new directive is required a new directive must be collected.
      */
     size_t directives_returned;
 };
+
+/**
+ * @brief Get another directive from a file
+ *
+ * @param context the context requiring the directive
+ * @param filemanager the filemanager managing that file
+ * @param filetable_entry the entry for that file
+ */
+static void collect_new_directive(context_t *context, struct pp_filemanager_s *filemanager, struct filetable_entry_s *filetable_entry)
+{
+    // TODO
+}
