@@ -19,6 +19,7 @@
 
 #include "../misc/queue.h"
 #include "../misc/log/log.h"
+#include "../misc/charescape.h"
 
 #include "messages.cat.h"
 
@@ -601,7 +602,120 @@ static void make_pragma_directive(context_t *context, struct bookmark_s mark, qu
 static void make_error_directive_from_args(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ERROR);
-    log_error(lcontext, "Unimplemented");
+
+    size_t msg_len = 0;
+    queue_t *args_counted = queue_new();
+    if (args_counted == NULL)
+        log_error(lcontext, DIRECTIVES_QUEUE_FAIL_CREATING);
+
+    size_t punc_idx;
+
+    // count the message len
+    while (!queue_is_empty(args))
+    {
+        struct pp_token_s *tok = queue_pop(args);
+
+        switch (tok->type)
+        {
+        case PP_TOK_IDENTIFIER:
+        case PP_TOK_PP_NUMBER:
+            msg_len += strlen(tok->name);
+            break;
+        case PP_TOK_STRING_LIT:
+            msg_len += 2 + escaped_len(tok->string.value, tok->string.len);
+            break;
+        case PP_TOK_CHAR_CONST:
+            msg_len += 2 + CHARESCAPE_LEN(tok->char_value);
+            break;
+        case PP_TOK_HEADER:
+            msg_len += 2 + strlen(tok->header.name);
+            break;
+        case PP_TOK_MACRO_NAME:
+            msg_len += strlen(tok->macro_name.name);
+            if (tok->macro_name.is_function)
+                msg_len++;
+            break;
+        case PP_TOK_PUNCTUATOR:
+            punc_idx = 0;
+            while (PUNCTUATORS_STRINGS[punc_idx].punc != tok->punc_kind)
+                punc_idx++;
+            msg_len += strlen(PUNCTUATORS_STRINGS[punc_idx].str);
+        case PP_TOK_DIRECTIVE_START:
+        case PP_TOK_DIRECTIVE_STOP:
+        case PP_TOK_ERROR:
+#ifdef __has_builtin
+#if __has_builtin(__builtin_unreachable)
+            __builtin_unreachable();
+#endif
+#endif
+            break;
+        }
+
+        msg_len++; // space or \0
+
+        if (!queue_push(args_counted, tok))
+            log_error(lcontext, DIRECTIVES_QUEUE_ADD_DIRECTIVE_TOKEN);
+    }
+
+    // write the message
+    char *msg = malloc(msg_len);
+    if (msg == NULL)
+        log_error(lcontext, DIRECTIVES_MALLOC_FAIL_STRDUP);
+    msg[0] = '\0';
+
+    // build the message
+    while (!queue_is_empty(args_counted))
+    {
+        struct pp_token_s *tok = queue_pop(args_counted);
+
+        switch (tok->type)
+        {
+        case PP_TOK_IDENTIFIER:
+        case PP_TOK_PP_NUMBER:
+            strcat(msg, tok->name);
+            break;
+        case PP_TOK_STRING_LIT:
+            strcat(msg, "\"");
+            escaped_string(msg + strlen(msg), tok->string.value, tok->string.len);
+            strcat(msg, "\"");
+            break;
+        case PP_TOK_CHAR_CONST:
+            strcat(msg, "\'");
+            strcat(msg, CHARESCAPE(tok->char_value));
+            strcat(msg, "\'");
+            break;
+        case PP_TOK_HEADER:
+            strcat(msg, tok->header.is_angled ? "<" : "\"");
+            strcat(msg, tok->header.name);
+            strcat(msg, tok->header.is_angled ? ">" : "\"");
+            break;
+        case PP_TOK_MACRO_NAME:
+            strcat(msg, tok->macro_name.name);
+            if (tok->macro_name.is_function)
+                strcat(msg, "(");
+            break;
+        case PP_TOK_PUNCTUATOR:
+            strcat(msg, PUNCTUATORS_STRINGS[punc_idx].str);
+        case PP_TOK_DIRECTIVE_START:
+        case PP_TOK_DIRECTIVE_STOP:
+        case PP_TOK_ERROR:
+#ifdef __has_builtin
+#if __has_builtin(__builtin_unreachable)
+            __builtin_unreachable();
+#endif
+#endif
+            break;
+        }
+
+        pp_tok_free(tok);
+    }
+
+    // creating directive
+    new_directive->type = PP_DIRECTIVE_ERROR;
+    new_directive->mark = mark;
+    new_directive->error.severity = LOG_ERROR;
+    new_directive->error.msg = msg;
+
     context_free(lcontext);
 }
 
