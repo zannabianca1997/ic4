@@ -502,6 +502,12 @@ TEST(simple_if_elif_2,
      {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "x"}}},
      {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
 
+// -- pragma
+
+TEST(pragma,
+     "#pragma ic4 restart",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_PRAGMA, .nargs = 2, .args = {{PP_TOK_IDENTIFIER, .name = "ic4"}, {PP_TOK_IDENTIFIER, .name = "restart"}}})
+
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 
 #undef TEST
