@@ -79,7 +79,6 @@ DIRECTIVES:
     ERROR_IDENTIFIER_EXPECTED "Expected identifier"
     ERROR_EOL_EXPECTED "Expected end of line"
 
-
     QUEUE_FAIL_CREATING "Failed to create queue"
     QUEUE_ADD_FREE_TOKEN "Failed adding free token to free text queue"
     QUEUE_ADD_ERROR "Failed adding error token to error tokens queue"

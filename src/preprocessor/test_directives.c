@@ -476,8 +476,8 @@ TEST(include_expand,
      "#include MACRO",
      {EXPECTED_CONTENT, PP_DIRECTIVE_INCLUDE, .include = {.need_macros = true, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "MACRO"}}}})
 TEST(include_expand_2,
-     "#include MACRO1 MACRO",
-     {EXPECTED_CONTENT, PP_DIRECTIVE_INCLUDE, .include = {.need_macros = true, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "MACRO1"}, {PP_TOK_IDENTIFIER, .name = "MACRO2"}}}})
+     "#include MACRO1 MACRO2",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_INCLUDE, .include = {.need_macros = true, .nargs = 2, .args = {{PP_TOK_IDENTIFIER, .name = "MACRO1"}, {PP_TOK_IDENTIFIER, .name = "MACRO2"}}}})
 
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 

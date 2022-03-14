@@ -422,7 +422,39 @@ static void make_undef_directive(context_t *context, struct bookmark_s mark, que
 static void make_include_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_DEFINE);
-    log_error(lcontext, "Unimplemented");
+
+    new_directive->type = PP_DIRECTIVE_INCLUDE;
+
+    if (queue_len(args) == 1)
+    {
+        struct pp_token_s *filename = queue_pop(args);
+        if (filename->type == PP_TOK_HEADER)
+        {
+            new_directive->include.need_macros = false;
+            new_directive->include.is_angled = filename->header.is_angled;
+
+            new_directive->include.file_name = malloc(strlen(filename->header.name) + 1);
+            if (new_directive->include.file_name == NULL)
+                log_error(lcontext, DIRECTIVES_MALLOC_FAIL_STRDUP);
+            strcpy(new_directive->include.file_name, filename->header.name);
+
+            pp_tok_free(filename);
+            context_free(lcontext);
+            return;
+        }
+
+        queue_push(args, filename); // put back the only token
+    }
+
+    new_directive->include.need_macros = true;
+    new_directive->include.nargs = queue_len(args);
+    new_directive->include.args = malloc(new_directive->include.nargs * sizeof(struct pp_token_s *));
+    if (new_directive->include.args == NULL)
+        log_error(lcontext, DIRECTIVES_MALLOC_FAIL_INCLUDE_TOKENS);
+    size_t idx = 0;
+    while (!queue_is_empty(args))
+        new_directive->include.args[idx++] = queue_pop(args);
+
     context_free(lcontext);
 }
 
