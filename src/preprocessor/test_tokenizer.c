@@ -243,8 +243,8 @@ __attribute_const__
     return NULL;
 }
 
-
-static void init_log(context_t *context){
+static void init_log(context_t *context)
+{
     logtarget_new(context, stderr, (struct logtarget_errorlevels_s){LOG_TRACE, LOG_WARNING, LOG_ERROR});
 }
 
@@ -667,6 +667,13 @@ TEST(header_angled,
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
      {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "include"}},
      {EXPECTED_CONTENT, {PP_TOK_HEADER, .header = {"dirname\\filename", .is_angled = true}}},
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
+TEST(header_not_string,
+     "#include MACRO \"dirname\\filename\"",
+     {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_START}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "include"}},
+     {EXPECTED_CONTENT, {PP_TOK_IDENTIFIER, .name = "MACRO"}},
+     {EXPECTED_CONTENT, {PP_TOK_STRING_LIT, .string = {"dirname\filename", 16}}},
      {EXPECTED_CONTENT, {PP_TOK_DIRECTIVE_STOP}})
 
 // -- comments
