@@ -383,7 +383,39 @@ static void make_define_directive(context_t *context, struct bookmark_s mark, qu
 static void make_undef_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_UNDEF);
-    log_error(lcontext, "Unimplemented");
+
+    if (queue_is_empty(args))
+    {
+        make_error_directive(lcontext, directive_end, LOG_ERROR, DIRECTIVES_ERROR_IDENTIFIER_EXPECTED, new_directive);
+        context_free(lcontext);
+        return;
+    }
+
+    struct pp_token_s *identifier = queue_pop(args);
+    if (identifier->type != PP_TOK_IDENTIFIER)
+    {
+        make_error_directive(lcontext, identifier->mark, LOG_ERROR, DIRECTIVES_ERROR_IDENTIFIER_EXPECTED, new_directive);
+        context_free(lcontext);
+        return;
+    }
+
+    if (!queue_is_empty(args))
+    {
+        struct pp_token_s *first_unwanted = queue_pop(args);
+        make_error_directive(lcontext, first_unwanted->mark, LOG_ERROR, DIRECTIVES_ERROR_EOL_EXPECTED, new_directive);
+        pp_tok_free(first_unwanted);
+        pp_tok_free(identifier);
+        context_free(lcontext);
+        return;
+    }
+
+    new_directive->type = PP_DIRECTIVE_UNDEF;
+    new_directive->undefined_name = malloc(strlen(identifier->name) + 1);
+    if (new_directive->undefined_name == NULL)
+        log_error(lcontext, DIRECTIVES_MALLOC_FAIL_STRDUP);
+    strcpy(new_directive->undefined_name, identifier->name);
+
+    pp_tok_free(identifier);
     context_free(lcontext);
 }
 

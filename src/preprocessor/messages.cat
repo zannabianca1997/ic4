@@ -74,6 +74,11 @@ DIRECTIVES:
     LINECTRL_LINENUM_TOO_HIGH "line number is too high for the system"
 
     DEFINE_ERROR_NAME "\"define\" directives should be followed with \"identifier\" or \"identifier(\""
+    ERROR_COMMA_OR_LPAR_EXPECTED "Expected , or )"
+    ERROR_IDENT_OR_LPAR_EXPECTED "Expected identifier or )"
+    ERROR_IDENTIFIER_EXPECTED "Expected identifier"
+    ERROR_EOL_EXPECTED "Expected end of line"
+
 
     QUEUE_FAIL_CREATING "Failed to create queue"
     QUEUE_ADD_FREE_TOKEN "Failed adding free token to free text queue"
@@ -83,7 +88,3 @@ DIRECTIVES:
 
     ERROR_NAME "Directive should start with a identifier"
     ERROR_UNKNOW "Unknow directive"
-
-    ERROR_COMMA_OR_LPAR_EXPECTED "Expected , or )"
-    ERROR_IDENT_OR_LPAR_EXPECTED "Expected identifier or )"
-    ERROR_IDENTIFIER_EXPECTED "Expected identifier"
