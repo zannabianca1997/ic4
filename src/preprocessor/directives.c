@@ -13,6 +13,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "directives.h"
 
@@ -59,7 +60,7 @@ void directive_free(struct pp_directive_s *directive)
             pp_tok_free(directive->define.tokens[i]);
         free(directive->define.tokens);
         break;
-        
+
     case PP_DIRECTIVE_ERROR:
         free(directive->error.msg);
         break;
@@ -80,6 +81,7 @@ void directive_free(struct pp_directive_s *directive)
 
     free(directive);
 }
+static void _directive_free_wrapped(void *dir) { directive_free((struct pp_directive_s *)dir); }
 
 // -- directive stream
 
@@ -112,7 +114,7 @@ void directive_stream_close(directive_stream_t *stream, bool recursive_close)
     if (recursive_close)
         pp_tokstream_close(stream->source, true);
 
-    queue_free(stream->errors, &_pp_tok_free_wrapped);
+    queue_free(stream->errors, &_directive_free_wrapped);
     free(stream);
 }
 
@@ -127,12 +129,8 @@ void directive_stream_close(directive_stream_t *stream, bool recursive_close)
  * @param msg the message of the error
  * @return struct pp_directive_s * the created directive
  */
-static inline struct pp_directive_s *make_error_directive(context_t *lcontext, struct bookmark_s mark, enum loglevel_e level, const char *msg)
+static inline struct pp_directive_s *make_error_directive(context_t *lcontext, struct bookmark_s mark, enum loglevel_e level, const char *msg, struct pp_directive_s *directive)
 {
-    struct pp_directive_s *directive = malloc(sizeof(struct pp_directive_s));
-    if (directive == NULL)
-        log_error(lcontext, DIRECTIVES_MALLOC_FAIL_DIRECTIVE);
-
     directive->type = PP_DIRECTIVE_ERROR;
     directive->mark = mark;
     directive->error.severity = level;
@@ -159,7 +157,12 @@ static inline struct pp_token_s *next_token(context_t *context, struct directive
     struct pp_token_s *token = pp_tokstream_get(context, stream->source);
     while (token != NULL && token->type == PP_TOK_ERROR)
     {
-        if (!queue_push(stream->errors, make_error_directive(context, token->mark, token->error.severity, token->error.msg)))
+        struct pp_directive_s *directive = malloc(sizeof(struct pp_directive_s));
+        if (directive == NULL)
+            log_error(context, DIRECTIVES_MALLOC_FAIL_DIRECTIVE);
+        make_error_directive(context, token->mark, token->error.severity, token->error.msg, directive);
+
+        if (!queue_push(stream->errors, directive))
             log_error(context, DIRECTIVES_QUEUE_ADD_ERROR);
 
         pp_tok_free(token), token = pp_tokstream_get(context, stream->source);
@@ -167,9 +170,248 @@ static inline struct pp_token_s *next_token(context_t *context, struct directive
     return token;
 }
 
+static void make_linectrl_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_LINECTRL);
+
+    // no arguments
+    if (queue_is_empty(args))
+    {
+        make_error_directive(lcontext, mark, LOG_ERROR, DIRECTIVES_LINECTRL_NOARG, new_directive);
+        context_free(lcontext);
+        return;
+    }
+
+    struct pp_token_s *linenum_tok = queue_pop(args);
+    struct pp_token_s *filename_tok = queue_pop(args);
+
+    bool need_macro = !queue_is_empty(args);
+    size_t linenum;
+    char *filename = NULL;
+
+    if (!need_macro && linenum_tok->type == PP_TOK_PP_NUMBER)
+    {
+        char *parsed_end;
+        unsigned long long parsed_linenum = strtoull(linenum_tok->name, &parsed_end, 10);
+        if ((size_t)(parsed_end - linenum_tok->name) == strlen(linenum_tok->name))
+        {
+            if (parsed_linenum < SIZE_MAX)
+                linenum = (size_t)parsed_linenum;
+            else
+            {
+                make_error_directive(lcontext, mark, LOG_ERROR, DIRECTIVES_LINECTRL_LINENUM_TOO_HIGH, new_directive);
+                context_free(lcontext);
+                pp_tok_free(linenum_tok);
+                if (filename_tok != NULL)
+                    pp_tok_free(filename_tok);
+                return;
+            }
+        }
+        else
+            need_macro = true;
+    }
+    else
+        need_macro = true;
+
+    if (!need_macro && filename_tok != NULL)
+    {
+        if (filename_tok->type == PP_TOK_STRING_LIT)
+        {
+            // this will cut the string to the first NUL, if present.
+            // I choose to ignore the problem. No sane filesystem have NUL in file paths
+            filename = malloc(strlen(filename_tok->string.value) + 1);
+            if (filename == NULL)
+                log_error(lcontext, DIRECTIVES_MALLOC_FAIL_STRDUP);
+            strcpy(filename, filename_tok->string.value);
+        }
+        else
+            need_macro = true;
+    }
+
+    new_directive->type = PP_DIRECTIVE_LINE_CTRL;
+    new_directive->line_ctrl.need_macros = need_macro;
+    if (need_macro)
+    {
+        if (filename_tok != NULL)
+            new_directive->line_ctrl.nargs = 2 + queue_len(args);
+        else
+            new_directive->line_ctrl.nargs = 1;
+
+        new_directive->line_ctrl.args = malloc(new_directive->line_ctrl.nargs * sizeof(struct pp_token_s *));
+        if (new_directive->line_ctrl.args == NULL)
+            log_error(lcontext, DIRECTIVES_MALLOC_FAIL_LINECTRL_TOKENS);
+
+        // collecting first token
+        new_directive->line_ctrl.args[0] = linenum_tok;
+        // collecting second token
+        if (filename_tok != NULL)
+            new_directive->line_ctrl.args[1] = filename_tok;
+        // collecting rest of tokens
+        size_t idx = 2;
+        while (!queue_is_empty(args))
+            new_directive->line_ctrl.args[idx++] = queue_pop(args);
+
+        // DO NOT FREE linenum_tok and filename_tok => they are now into the directive!
+    }
+    else
+    {
+        pp_tok_free(linenum_tok);
+        if (filename_tok != NULL)
+            pp_tok_free(filename_tok);
+
+        new_directive->line_ctrl.line_num = linenum;
+        new_directive->line_ctrl.file_name = filename;
+    }
+
+    context_free(lcontext);
+}
+
+static void make_define_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_DEFINE);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
+static void make_include_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_DEFINE);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
+static void make_if_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_IF);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
+static void make_elif_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ELIF);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
+static void make_else_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ELSE);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
+static void make_endif_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ENDIF);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
+static void make_pragma_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_PRAGMA);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
+static void make_error_directive_from_args(context_t *context, struct bookmark_s mark, queue_t *args, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_PRAGMA);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
 static void parse_directive(context_t *context, directive_stream_t *stream, struct pp_directive_s *new_directive)
 {
-    log_error(context, "Parsing directives is unimplemented"); // TODO
+    // collect name
+    struct pp_token_s *name_token = next_token(context, stream);
+
+    // name token cannot be null cause every directive must be closed
+    if (name_token->type == PP_TOK_DIRECTIVE_STOP)
+    {
+        // empty directive... GCC accept it, we emit a warning
+        make_error_directive(context, name_token->mark, LOG_WARNING, DIRECTIVES_ERROR_NAME, new_directive);
+        pp_tok_free(name_token);
+        return;
+    }
+    else if (name_token->type != PP_TOK_IDENTIFIER)
+    {
+        // directive without a name...
+        make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_NAME, new_directive);
+        pp_tok_free(name_token);
+        return;
+    }
+
+    // collecting args
+    queue_t *args = queue_new();
+    if (args == NULL)
+        log_error(context, DIRECTIVES_QUEUE_FAIL_CREATING);
+    {
+        struct pp_token_s *token = next_token(context, stream);
+        while (token->type != PP_TOK_DIRECTIVE_STOP)
+        {
+            if (!queue_push(args, token))
+                log_error(context, DIRECTIVES_QUEUE_ADD_DIRECTIVE_TOKEN);
+            token = next_token(context, stream);
+        }
+        pp_tok_free(token);
+    }
+
+    switch (name_token->name[0])
+    {
+    case 'l':
+        if (strcmp(name_token->name, "line") == 0)
+            make_linectrl_directive(context, name_token->mark, args, new_directive);
+        else
+            make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
+        break;
+
+    case 'd':
+        if (strcmp(name_token->name, "define") == 0)
+            make_define_directive(context, name_token->mark, args, new_directive);
+        else
+            make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
+        break;
+
+    case 'i':
+        if (strcmp(name_token->name, "include") == 0)
+            make_include_directive(context, name_token->mark, args, new_directive);
+        else if (strcmp(name_token->name, "if") == 0)
+            make_if_directive(context, name_token->mark, args, new_directive);
+        else
+            make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
+        break;
+
+    case 'e':
+        if (strcmp(name_token->name, "else") == 0)
+            make_else_directive(context, name_token->mark, args, new_directive);
+        else if (strcmp(name_token->name, "endif") == 0)
+            make_endif_directive(context, name_token->mark, args, new_directive);
+        else if (strcmp(name_token->name, "elif") == 0)
+            make_elif_directive(context, name_token->mark, args, new_directive);
+        else if (strcmp(name_token->name, "error") == 0)
+            make_error_directive_from_args(context, name_token->mark, args, new_directive);
+        else
+            make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
+        break;
+
+    case 'p':
+        if (strcmp(name_token->name, "pragma") == 0)
+            make_pragma_directive(context, name_token->mark, args, new_directive);
+        else
+            make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
+        break;
+
+    default:
+        make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
+        break;
+    }
+
+    // freeing used tokens
+    pp_tok_free(name_token);
+    queue_free(args, &_pp_tok_free_wrapped); // if not already consumed
+    return;
 }
 
 static void parse_running_text(context_t *context, directive_stream_t *stream, struct pp_directive_s *new_directive)
@@ -198,6 +440,7 @@ static void parse_running_text(context_t *context, directive_stream_t *stream, s
 
     for (size_t idx; !queue_is_empty(collected_tokens); idx++)
         new_directive->args[idx] = queue_pop(collected_tokens);
+    queue_free(collected_tokens, NULL);
 
     new_directive->mark = new_directive->args[0]->mark;
 

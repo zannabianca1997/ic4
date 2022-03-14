@@ -50,6 +50,8 @@ DIRECTIVES:
     MALLOC_FAIL_OPEN "malloc failed in creating directive stream struct"
     MALLOC_FAIL_DIRECTIVE "malloc failed in creating directive struct"
     MALLOC_FAIL_STRDUP "malloc failed in duplicating string"
+    MALLOC_FAIL_LINECTRL_TOKENS "malloc failed in creating line control token space"
+    MALLOC_FAIL_INCLUDE_TOKENS "malloc failed in creating include token space"
     MALLOC_FAIL_DEFINE_TOKENS "malloc failed in creating define token space"
     MALLOC_FAIL_DEFINE_ARGS "malloc failed in creating define arguments space"
     MALLOC_FAIL_EMIT_TOKENS "malloc failed in creating emit token space"
@@ -58,10 +60,23 @@ DIRECTIVES:
     CONTEXT_GETTING "getting a new directive"
     CONTEXT_FREE_TEXT "parsing running text"
 
+    CONTEXT_LINECTRL "parsing line directive"
+    CONTEXT_DEFINE "parsing define directive"
+    CONTEXT_IF "parsing if directive"
+    CONTEXT_ELIF "parsing elif directive"
+    CONTEXT_ELSE "parsing else directive"
+    CONTEXT_ENDIF "parsing endif directive"
+    CONTEXT_PRAGMA "parsing pragma directive"
+    CONTEXT_ERROR "parsing error directive"
+
+    LINECTRL_NOARG "line directive need at least line number"
+    LINECTRL_LINENUM_TOO_HIGH "line number is too high for the system"
+
     QUEUE_FAIL_CREATING "Failed to create queue"
     QUEUE_ADD_FREE_TOKEN "Failed adding free token to free text queue"
     QUEUE_ADD_ERROR "Failed adding error token to error tokens queue"
     QUEUE_ADD_ARG "Failed adding argument name to argument queue"
+    QUEUE_ADD_DIRECTIVE_TOKEN "Failed adding directive token name to token queue"
 
     ERROR_NAME "Directive should start with a identifier"
     ERROR_MACRO_NAME "\"define\" directives should be followed with \"identifier\" or \"identifier(\""
