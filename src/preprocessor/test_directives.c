@@ -186,9 +186,23 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
                 if (!pp_tok_cmp(obtained->line_ctrl.args[i], &(expected->line_ctrl.args[i])))
                     return format("Linecontrol arg number %lu is different", i);
         }
-        else if (obtained->line_ctrl.line_num != expected->line_ctrl.line_num ||
-                 strcmp(obtained->line_ctrl.file_name, expected->line_ctrl.file_name) != 0)
-            return "Different arguments to line control";
+        else
+        {
+            if (obtained->line_ctrl.line_num != expected->line_ctrl.line_num)
+                return format("Expected line %d, obtained %d", expected->line_ctrl.line_num, obtained->line_ctrl.line_num);
+            if (expected->line_ctrl.file_name == NULL)
+            {
+                if (expected->line_ctrl.file_name != NULL)
+                    return "No file name was expected";
+            }
+            else
+            {
+                if (expected->line_ctrl.file_name == NULL)
+                    return "A file name was expected";
+                if (strcmp(obtained->line_ctrl.file_name, expected->line_ctrl.file_name) != 0)
+                    return "Wrong file name";
+            }
+        }
 
         break;
 
@@ -358,7 +372,10 @@ TEST(error_delaying,
                                                            {PP_TOK_IDENTIFIER, .name = "reported"},
                                                            {PP_TOK_IDENTIFIER, .name = "after"},
                                                        }},
-     {EXPECTED_EXACT, PP_DIRECTIVE_ERROR, .mark = {NULL, 1, 7}, .error = {.severity = LOG_ERROR, .msg = "Stray '@' in the input"}}, {EXPECTED_EXACT, PP_DIRECTIVE_ERROR, .mark = {NULL, 1, 16}, .error = {.severity = LOG_ERROR, .msg = "Stray '`' in the input"}} // @formatter:on
+     {EXPECTED_EXACT, PP_DIRECTIVE_ERROR, .mark = {NULL, 1, 7}, .error = {.severity = LOG_ERROR, .msg = "Stray '@' in the input"}}, //
+     {EXPECTED_EXACT, PP_DIRECTIVE_ERROR, .mark = {NULL, 1, 16}, .error = {.severity = LOG_ERROR, .msg = "Stray '`' in the input"}} //
+
+     // @formatter:on
 )
 
 // -- Line control
@@ -366,6 +383,36 @@ TEST(error_delaying,
 TEST(line_only,
      "#line 42",
      {EXPECTED_CONTENT, PP_DIRECTIVE_LINE_CTRL, .line_ctrl = {.need_macros = false, .line_num = 42, .file_name = NULL}})
+
+TEST(line_and_file,
+     "#line 42 \"guide.c\"",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_LINE_CTRL, .line_ctrl = {.need_macros = false, .line_num = 42, .file_name = "guide.c"}})
+
+TEST(line_file_is_escaped,
+     "#line 42 \"documents\\\\guide.c\"",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_LINE_CTRL, .line_ctrl = {.need_macros = false, .line_num = 42, .file_name = "documents\\guide.c"}})
+
+TEST(line_expanded_short,
+     "#line LINE_NUM ",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_LINE_CTRL, .line_ctrl = {.need_macros = true, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "LINE_NUM"}}}})
+
+TEST(line_expanded_same_len,
+     "#line LINE_NUM FILE_NAME",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_LINE_CTRL, .line_ctrl = {.need_macros = true, .nargs = 2, .args = {{PP_TOK_IDENTIFIER, .name = "LINE_NUM"}, {PP_TOK_IDENTIFIER, .name = "FILE_NAME"}}}})
+
+TEST(line_expanded_long,
+     "#line get_line_macro(arg1, arg2) \"file\" ",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_LINE_CTRL, .line_ctrl = {.need_macros = true, .nargs = 7, .args = {
+                                                                                                   // @formatter:off
+                                                                                                   {PP_TOK_IDENTIFIER, .name = "get_line_macro"},
+                                                                                                   {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT},
+                                                                                                   {PP_TOK_IDENTIFIER, .name = "arg1"},
+                                                                                                   {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_COMMA},
+                                                                                                   {PP_TOK_IDENTIFIER, .name = "arg2"},
+                                                                                                   {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
+                                                                                                   {PP_TOK_STRING_LIT, .string = {"file", 4}}
+                                                                                                   // @formatter:on
+                                                                                               }}})
 
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 
