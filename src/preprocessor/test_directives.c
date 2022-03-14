@@ -432,7 +432,18 @@ TEST(define_to_something,
                                                                                                                        {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
 
                                                                                                                    }}})
-TEST(define_fun_to_something,
+TEST(define_fun_noarg,
+     "#define FUN() ((long)42)",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_DEFINE, .define = {.macro_name = "FUN", .is_function = true, .nargs = 0, .ntokens = 6, .tokens = {
+                                                                                                                                {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT},
+                                                                                                                                {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT},
+                                                                                                                                {PP_TOK_IDENTIFIER, .name = "long"},
+                                                                                                                                {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
+                                                                                                                                {PP_TOK_PP_NUMBER, .name = "42"},
+                                                                                                                                {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
+
+                                                                                                                            }}})
+TEST(define_fun,
      "#define SUM(x, y) (x+y)",
      {EXPECTED_CONTENT, PP_DIRECTIVE_DEFINE, .define = {.macro_name = "SUM", .is_function = true, .nargs = 2, .args = {"x", "y"}, .ntokens = 5, .tokens = {
                                                                                                                                                     {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT},
