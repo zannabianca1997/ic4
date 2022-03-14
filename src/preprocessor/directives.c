@@ -599,7 +599,7 @@ static void make_pragma_directive(context_t *context, struct bookmark_s mark, qu
     context_free(lcontext);
 }
 
-static void make_error_directive_from_args(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+static void make_error_directive_from_args(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ERROR);
 
@@ -607,8 +607,6 @@ static void make_error_directive_from_args(context_t *context, struct bookmark_s
     queue_t *args_counted = queue_new();
     if (args_counted == NULL)
         log_error(lcontext, DIRECTIVES_QUEUE_FAIL_CREATING);
-
-    size_t punc_idx;
 
     // count the message len
     while (!queue_is_empty(args))
@@ -622,7 +620,7 @@ static void make_error_directive_from_args(context_t *context, struct bookmark_s
             msg_len += strlen(tok->name);
             break;
         case PP_TOK_STRING_LIT:
-            msg_len += 2 + escaped_len(tok->string.value, tok->string.len);
+            msg_len += 2 + escaped_len(tok->string.value, tok->string.len - 1);
             break;
         case PP_TOK_CHAR_CONST:
             msg_len += 2 + CHARESCAPE_LEN(tok->char_value);
@@ -635,11 +633,12 @@ static void make_error_directive_from_args(context_t *context, struct bookmark_s
             if (tok->macro_name.is_function)
                 msg_len++;
             break;
-        case PP_TOK_PUNCTUATOR:
-            punc_idx = 0;
+        case PP_TOK_PUNCTUATOR:;
+            size_t punc_idx = 0;
             while (PUNCTUATORS_STRINGS[punc_idx].punc != tok->punc_kind)
                 punc_idx++;
             msg_len += strlen(PUNCTUATORS_STRINGS[punc_idx].str);
+            break;
         case PP_TOK_DIRECTIVE_START:
         case PP_TOK_DIRECTIVE_STOP:
         case PP_TOK_ERROR:
@@ -676,7 +675,7 @@ static void make_error_directive_from_args(context_t *context, struct bookmark_s
             break;
         case PP_TOK_STRING_LIT:
             strcat(msg, "\"");
-            escaped_string(msg + strlen(msg), tok->string.value, tok->string.len);
+            escaped_string(msg + strlen(msg), tok->string.value, tok->string.len - 1);
             strcat(msg, "\"");
             break;
         case PP_TOK_CHAR_CONST:
@@ -694,8 +693,12 @@ static void make_error_directive_from_args(context_t *context, struct bookmark_s
             if (tok->macro_name.is_function)
                 strcat(msg, "(");
             break;
-        case PP_TOK_PUNCTUATOR:
+        case PP_TOK_PUNCTUATOR:;
+            size_t punc_idx = 0;
+            while (PUNCTUATORS_STRINGS[punc_idx].punc != tok->punc_kind)
+                punc_idx++;
             strcat(msg, PUNCTUATORS_STRINGS[punc_idx].str);
+            break;
         case PP_TOK_DIRECTIVE_START:
         case PP_TOK_DIRECTIVE_STOP:
         case PP_TOK_ERROR:
@@ -708,6 +711,9 @@ static void make_error_directive_from_args(context_t *context, struct bookmark_s
         }
 
         pp_tok_free(tok);
+
+        if (!queue_is_empty(args_counted))
+            strcat(msg, " ");
     }
 
     // creating directive

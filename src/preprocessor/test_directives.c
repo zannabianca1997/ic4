@@ -562,6 +562,15 @@ TEST(simple_ifndef_elif_2,
      {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "x"}}},
      {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
 
+// -- error
+
+TEST(error,
+     "#error \"Errore!!\"",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "\"Errore!!\""}})
+TEST(error_tokens,
+     "#error x+1 * (32 ^ y)",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ERROR, .error = {.severity = LOG_ERROR, .msg = "x + 1 * ( 32 ^ y )"}})
+
 // -- pragma
 
 TEST(pragma,
