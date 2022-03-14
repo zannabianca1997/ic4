@@ -130,7 +130,10 @@ struct logical_line_s *linestream_get(context_t *context, linestream_t *stream)
     {
         // short circuit if file is ended while skipping empty lines
         if (feof(stream->source))
+        {
+            context_free(lcontext);
             return NULL;
+        }
 
         // start entry of the index
         new_logical_line->index->row = stream->rawline_readed + 1;
