@@ -174,7 +174,12 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
     // now we need to check content alone
 
     if (obtained->type != expected->type)
-        return format("Expected %s directive, found %s", directive_name(expected->type), directive_name(obtained->type));
+    {
+        if (obtained->type != PP_DIRECTIVE_ERROR)
+            return format("Expected %s directive, found %s", directive_name(expected->type), directive_name(obtained->type));
+        else
+            return format("Expected %s directive, found %s (%s)", directive_name(expected->type), directive_name(obtained->type), obtained->error.msg);
+    }
 
     switch (obtained->type)
     {

@@ -56,6 +56,7 @@ DIRECTIVES:
     MALLOC_FAIL_DEFINE_ARGS "malloc failed in creating define arguments space"
     MALLOC_FAIL_ARGS "malloc failed in creating argument tokens space"
     MALLOC_FAIL_EMIT_TOKENS "malloc failed in creating emit token space"
+    MALLOC_FAIL_ELSE_TRACK "realloc failed in expanding else traking space"
 
     CONTEXT_OPENING "opening directive stream"
     CONTEXT_GETTING "getting a new directive"
@@ -92,3 +93,9 @@ DIRECTIVES:
 
     ERROR_NAME "Directive should start with a identifier"
     ERROR_UNKNOW "Unknow directive"
+
+    ELIF_OUTSIDE_IF "elif directive outside conditional"
+    ELIF_AFTER_ELSE "elif directive after else"
+    ELSE_OUTSIDE_IF "else directive outside conditional"
+    ELSE_AFTER_ELSE "double else directive"
+    ENDIF_WITHOUT_IF "endif without conditional"

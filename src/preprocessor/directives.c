@@ -107,6 +107,9 @@ struct directive_stream_s
 {
     pp_tokstream_t *source;
     queue_t *errors;
+
+    size_t if_depth, max_depth;
+    bool *else_emitted;
 };
 
 directive_stream_t *directive_stream_open(context_t *context, pp_tokstream_t *source)
@@ -119,6 +122,10 @@ directive_stream_t *directive_stream_open(context_t *context, pp_tokstream_t *so
     res->errors = queue_new();
     if (res->errors == NULL)
         log_error(context_new(context, DIRECTIVES_CONTEXT_OPENING), DIRECTIVES_QUEUE_FAIL_CREATING);
+
+    res->if_depth = 0;
+    res->max_depth = 0;
+    res->else_emitted = NULL;
 
     return res;
 }
@@ -763,7 +770,50 @@ struct pp_directive_s *directive_stream_get(context_t *context, directive_stream
         parse_running_text(lcontext, stream, new_directive);
     }
 
-    // TODO: add if structure checking
+    if (new_directive->type == PP_DIRECTIVE_IF || new_directive->type == PP_DIRECTIVE_IFDEF)
+    {
+        stream->if_depth++;
+        if (stream->if_depth > stream->max_depth)
+        {
+            bool *new_elses = realloc(stream->else_emitted, stream->if_depth * sizeof(bool));
+            if (new_elses == NULL)
+                log_error(lcontext, DIRECTIVES_MALLOC_FAIL_ELSE_TRACK);
+            stream->else_emitted = new_elses;
+            stream->max_depth = stream->if_depth;
+        }
+        stream->else_emitted[stream->if_depth - 1] = false;
+    }
+    else if (new_directive->type == PP_DIRECTIVE_ELSE)
+    {
+        if (!stream->if_depth)
+            make_error_directive(lcontext, new_directive->mark, LOG_ERROR, DIRECTIVES_ELSE_OUTSIDE_IF, new_directive);
+        else if (stream->else_emitted[stream->if_depth - 1])
+            make_error_directive(lcontext, new_directive->mark, LOG_ERROR, DIRECTIVES_ELSE_AFTER_ELSE, new_directive);
+        else
+            stream->else_emitted[stream->if_depth - 1] = true;
+    }
+    else if (new_directive->type == PP_DIRECTIVE_ELIF)
+    {
+        if (!stream->if_depth)
+        {
+            for (size_t i = 0; i < new_directive->nargs; i++)
+                pp_tok_free(new_directive->args[i]);
+            make_error_directive(lcontext, new_directive->mark, LOG_ERROR, DIRECTIVES_ELIF_OUTSIDE_IF, new_directive);
+        }
+        else if (stream->else_emitted[stream->if_depth - 1])
+        {
+            for (size_t i = 0; i < new_directive->nargs; i++)
+                pp_tok_free(new_directive->args[i]);
+            make_error_directive(lcontext, new_directive->mark, LOG_ERROR, DIRECTIVES_ELIF_AFTER_ELSE, new_directive);
+        }
+    }
+    else if (new_directive->type == PP_DIRECTIVE_ENDIF)
+    {
+        if (!stream->if_depth)
+            make_error_directive(lcontext, new_directive->mark, LOG_ERROR, DIRECTIVES_ENDIF_WITHOUT_IF, new_directive);
+        else
+            stream->if_depth--;
+    }
 
     context_free(lcontext);
     return new_directive;
