@@ -129,6 +129,12 @@ struct pp_expected_directive_s
 
         struct
         {
+            char *macro_name;
+            bool negated;
+        } ifdef;
+
+        struct
+        {
             enum loglevel_e severity;
             char *msg;
         } error;
@@ -275,6 +281,13 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
         for (size_t i = 0; i < obtained->nargs; i++)
             if (!pp_tok_cmp(obtained->args[i], &(expected->args[i])))
                 return format("Argument number %lu is different: expected %s, found %s", i, pp_tok_tostring(obtained->args[i]), pp_tok_tostring(&(expected->args[i])));
+        break;
+
+    case PP_DIRECTIVE_IFDEF:
+        if (strcmp(obtained->ifdef.macro_name, expected->ifdef.macro_name) != 0)
+            return "Wrong variable name";
+        if (obtained->ifdef.negated != expected->ifdef.negated)
+            return "Define conditional has different negation";
         break;
 
     // these directive are contentless, no check is required

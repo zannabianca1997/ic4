@@ -84,6 +84,10 @@ void directive_free(struct pp_directive_s *directive)
         free(directive->args);
         break;
 
+    case PP_DIRECTIVE_IFDEF:
+        free(directive->ifdef.macro_name);
+        break;
+
     case PP_DIRECTIVE_ELSE:
     case PP_DIRECTIVE_ENDIF:
         break;

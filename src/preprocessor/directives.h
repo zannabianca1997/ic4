@@ -36,6 +36,7 @@ struct pp_directive_s
         PP_DIRECTIVE_UNDEF,
 
         PP_DIRECTIVE_IF,
+        PP_DIRECTIVE_IFDEF,
         PP_DIRECTIVE_ELIF,
         PP_DIRECTIVE_ELSE,
         PP_DIRECTIVE_ENDIF,
@@ -105,6 +106,12 @@ struct pp_directive_s
         } error;
 
         char *undefined_name;
+
+        struct
+        {
+            char *macro_name;
+            bool negated;
+        } ifdef;
 
         struct // generic containers for simple directives -> if, elif, pragma
         {

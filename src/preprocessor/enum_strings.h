@@ -132,6 +132,7 @@ static const struct
                             {PP_DIRECTIVE_ELIF, "#elif"},
                             {PP_DIRECTIVE_ELSE, "#else"},
                             {PP_DIRECTIVE_ENDIF, "#endif"},
+                            {PP_DIRECTIVE_IFDEF, "#ifdef o #ifndef"},
                             {PP_DIRECTIVE_ERROR, "#error"},
                             {PP_DIRECTIVE_PRAGMA, "#pragma"},
                             {PP_DIRECTIVE_EMIT, "(internal) emit"}};
