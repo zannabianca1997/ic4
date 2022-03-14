@@ -479,6 +479,29 @@ TEST(include_expand_2,
      "#include MACRO1 MACRO2",
      {EXPECTED_CONTENT, PP_DIRECTIVE_INCLUDE, .include = {.need_macros = true, .nargs = 2, .args = {{PP_TOK_IDENTIFIER, .name = "MACRO1"}, {PP_TOK_IDENTIFIER, .name = "MACRO2"}}}})
 
+// --- if and conditionals
+
+TEST(simple_if,
+     "#if x+1\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IF, .nargs = 3, .args = {{PP_TOK_IDENTIFIER, .name = "x"}, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD}, {PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_if_else,
+     "#if x+1\n#else\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IF, .nargs = 3, .args = {{PP_TOK_IDENTIFIER, .name = "x"}, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD}, {PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELSE},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_if_elif,
+     "#if x+1\n#elif 1\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IF, .nargs = 3, .args = {{PP_TOK_IDENTIFIER, .name = "x"}, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD}, {PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_if_elif_2,
+     "#if x+1\n#elif 1\n#elif x\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IF, .nargs = 3, .args = {{PP_TOK_IDENTIFIER, .name = "x"}, {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD}, {PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "x"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 
 #undef TEST

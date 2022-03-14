@@ -22,6 +22,12 @@
 
 #include "messages.cat.h"
 
+#if __GNUC__
+#define ATTR_UNUSED __attribute((unused))
+#else
+#define ATTR_UNUSED
+#endif
+
 // -- directive end of life
 static void _pp_tok_free_wrapped(void *tok) { pp_tok_free((struct pp_token_s *)tok); }
 void directive_free(struct pp_directive_s *directive)
@@ -233,6 +239,7 @@ static void make_linectrl_directive(context_t *context, struct bookmark_s mark, 
     }
 
     new_directive->type = PP_DIRECTIVE_LINE_CTRL;
+    new_directive->mark = mark;
     new_directive->line_ctrl.need_macros = need_macro;
     if (need_macro)
     {
@@ -361,6 +368,7 @@ static void make_define_directive(context_t *context, struct bookmark_s mark, qu
 
     // setting up macro type and name
     new_directive->type = PP_DIRECTIVE_DEFINE;
+    new_directive->mark = mark;
 
     new_directive->define.macro_name = malloc(strlen(macro_name_tok->macro_name.name) + 1);
     if (new_directive->define.macro_name == NULL)
@@ -410,6 +418,7 @@ static void make_undef_directive(context_t *context, struct bookmark_s mark, que
     }
 
     new_directive->type = PP_DIRECTIVE_UNDEF;
+    new_directive->mark = mark;
     new_directive->undefined_name = malloc(strlen(identifier->name) + 1);
     if (new_directive->undefined_name == NULL)
         log_error(lcontext, DIRECTIVES_MALLOC_FAIL_STRDUP);
@@ -419,11 +428,12 @@ static void make_undef_directive(context_t *context, struct bookmark_s mark, que
     context_free(lcontext);
 }
 
-static void make_include_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+static void make_include_directive(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_DEFINE);
 
     new_directive->type = PP_DIRECTIVE_INCLUDE;
+    new_directive->mark = mark;
 
     if (queue_len(args) == 1)
     {
@@ -458,38 +468,81 @@ static void make_include_directive(context_t *context, struct bookmark_s mark, q
     context_free(lcontext);
 }
 
-static void make_if_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+static void make_directive_from_args(context_t *context, queue_t *args, struct pp_directive_s *new_directive)
+{
+    new_directive->nargs = queue_len(args);
+    new_directive->args = malloc(new_directive->nargs * sizeof(struct pp_token_s *));
+    if (new_directive->args == NULL)
+        log_error(context, DIRECTIVES_MALLOC_FAIL_ARGS);
+    size_t idx = 0;
+    while (!queue_is_empty(args))
+        new_directive->args[idx++] = queue_pop(args);
+}
+
+static void make_if_directive(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_IF);
-    log_error(lcontext, "Unimplemented");
+
+    new_directive->type = PP_DIRECTIVE_IF;
+    new_directive->mark = mark;
+    make_directive_from_args(lcontext, args, new_directive);
+
     context_free(lcontext);
 }
 
-static void make_elif_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+static void make_elif_directive(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ELIF);
-    log_error(lcontext, "Unimplemented");
+
+    new_directive->type = PP_DIRECTIVE_ELIF;
+    new_directive->mark = mark;
+    make_directive_from_args(lcontext, args, new_directive);
+
     context_free(lcontext);
 }
 
-static void make_else_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+static void make_else_directive(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ELSE);
-    log_error(lcontext, "Unimplemented");
+
+    if (queue_len(args) != 0)
+    {
+        struct pp_token_s *unwanted = queue_pop(args);
+        make_error_directive(lcontext, unwanted->mark, LOG_ERROR, DIRECTIVES_ELSE_ARGS, new_directive);
+        pp_tok_free(unwanted);
+        return;
+    }
+    new_directive->type = PP_DIRECTIVE_ELSE;
+    new_directive->mark = mark;
+
     context_free(lcontext);
 }
 
-static void make_endif_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+static void make_endif_directive(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ENDIF);
-    log_error(lcontext, "Unimplemented");
+
+    if (queue_len(args) != 0)
+    {
+        struct pp_token_s *unwanted = queue_pop(args);
+        make_error_directive(lcontext, unwanted->mark, LOG_ERROR, DIRECTIVES_ENDIF_ARGS, new_directive);
+        pp_tok_free(unwanted);
+        return;
+    }
+    new_directive->type = PP_DIRECTIVE_ENDIF;
+    new_directive->mark = mark;
+
     context_free(lcontext);
 }
 
-static void make_pragma_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+static void make_pragma_directive(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_PRAGMA);
-    log_error(lcontext, "Unimplemented");
+
+    new_directive->type = PP_DIRECTIVE_PRAGMA;
+    new_directive->mark = mark;
+    make_directive_from_args(lcontext, args, new_directive);
+
     context_free(lcontext);
 }
 

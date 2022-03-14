@@ -54,6 +54,7 @@ DIRECTIVES:
     MALLOC_FAIL_INCLUDE_TOKENS "malloc failed in creating include token space"
     MALLOC_FAIL_DEFINE_TOKENS "malloc failed in creating define token space"
     MALLOC_FAIL_DEFINE_ARGS "malloc failed in creating define arguments space"
+    MALLOC_FAIL_ARGS "malloc failed in creating argument tokens space"
     MALLOC_FAIL_EMIT_TOKENS "malloc failed in creating emit token space"
 
     CONTEXT_OPENING "opening directive stream"
@@ -78,6 +79,9 @@ DIRECTIVES:
     ERROR_IDENT_OR_LPAR_EXPECTED "Expected identifier or )"
     ERROR_IDENTIFIER_EXPECTED "Expected identifier"
     ERROR_EOL_EXPECTED "Expected end of line"
+
+    ELSE_ARGS "#else directive do not accept args"
+    ENDIF_ARGS "#endif directive do not accept args"
 
     QUEUE_FAIL_CREATING "Failed to create queue"
     QUEUE_ADD_FREE_TOKEN "Failed adding free token to free text queue"
