@@ -65,6 +65,7 @@ DIRECTIVES:
     CONTEXT_DEFINE "parsing define directive"
     CONTEXT_UNDEF "parsing undef directive"
     CONTEXT_IF "parsing if directive"
+    CONTEXT_IFDEF "parsing ifdef / ifndef directive"
     CONTEXT_ELIF "parsing elif directive"
     CONTEXT_ELSE "parsing else directive"
     CONTEXT_ENDIF "parsing endif directive"

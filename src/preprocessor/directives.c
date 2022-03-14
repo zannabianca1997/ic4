@@ -494,6 +494,47 @@ static void make_if_directive(context_t *context, struct bookmark_s mark, queue_
     context_free(lcontext);
 }
 
+static void make_ifdef_directive(context_t *context, struct bookmark_s mark, queue_t *args, bool negated, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_IFDEF);
+
+    if (queue_is_empty(args))
+    {
+        make_error_directive(lcontext, directive_end, LOG_ERROR, DIRECTIVES_ERROR_IDENTIFIER_EXPECTED, new_directive);
+        context_free(lcontext);
+        return;
+    }
+
+    struct pp_token_s *identifier = queue_pop(args);
+    if (identifier->type != PP_TOK_IDENTIFIER)
+    {
+        make_error_directive(lcontext, identifier->mark, LOG_ERROR, DIRECTIVES_ERROR_IDENTIFIER_EXPECTED, new_directive);
+        context_free(lcontext);
+        return;
+    }
+
+    if (!queue_is_empty(args))
+    {
+        struct pp_token_s *first_unwanted = queue_pop(args);
+        make_error_directive(lcontext, first_unwanted->mark, LOG_ERROR, DIRECTIVES_ERROR_EOL_EXPECTED, new_directive);
+        pp_tok_free(first_unwanted);
+        pp_tok_free(identifier);
+        context_free(lcontext);
+        return;
+    }
+
+    new_directive->type = PP_DIRECTIVE_IFDEF;
+    new_directive->mark = mark;
+    new_directive->ifdef.negated = negated;
+    new_directive->ifdef.macro_name = malloc(strlen(identifier->name) + 1);
+    if (new_directive->ifdef.macro_name == NULL)
+        log_error(lcontext, DIRECTIVES_MALLOC_FAIL_STRDUP);
+    strcpy(new_directive->ifdef.macro_name, identifier->name);
+
+    pp_tok_free(identifier);
+    context_free(lcontext);
+}
+
 static void make_elif_directive(context_t *context, struct bookmark_s mark, queue_t *args, ATTR_UNUSED struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ELIF);
@@ -623,6 +664,10 @@ static void parse_directive(context_t *context, directive_stream_t *stream, stru
             make_include_directive(context, name_token->mark, args, directive_end, new_directive);
         else if (strcmp(name_token->name, "if") == 0)
             make_if_directive(context, name_token->mark, args, directive_end, new_directive);
+        else if (strcmp(name_token->name, "ifdef") == 0)
+            make_ifdef_directive(context, name_token->mark, args, false, directive_end, new_directive);
+        else if (strcmp(name_token->name, "ifndef") == 0)
+            make_ifdef_directive(context, name_token->mark, args, true, directive_end, new_directive);
         else
             make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
         break;
