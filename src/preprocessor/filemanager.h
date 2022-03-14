@@ -34,7 +34,7 @@ typedef struct pp_file_s pp_file_t;
  * @param file the file giving the directive
  * @return struct pp_directive_s* the directive given, or NULL for end of input
  */
-struct pp_directive_s *pp_tsunit_get(context_t *context, pp_file_t *file);
+struct pp_directive_s *pp_file_get(context_t *context, pp_file_t *file);
 
 /**
  * @brief Close the file
@@ -42,7 +42,7 @@ struct pp_directive_s *pp_tsunit_get(context_t *context, pp_file_t *file);
  * @param file the file to close
  * @param recursive_close if the underlying sources need to be closed
  */
-void pp_file_close(pp_file_t *tsunit, bool recursive_close);
+void pp_file_close(pp_file_t *file, bool recursive_close);
 
 /**
  * @brief Open a new file manager
