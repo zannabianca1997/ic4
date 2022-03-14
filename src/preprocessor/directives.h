@@ -128,6 +128,9 @@ struct pp_directive_s
  */
 void directive_free(struct pp_directive_s *directive);
 
+// TODO: write directive duplicating
+// TODO: write directive marking
+
 // -- streams --
 
 /**
