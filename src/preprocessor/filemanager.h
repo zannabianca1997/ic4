@@ -22,28 +22,27 @@
 typedef struct pp_filemanager_s pp_filemanager_t;
 
 /**
- * @brief Contain an open translation unit
+ * @brief Contain an open file
  *
- * Will seamlessly follow #include directives
  */
-typedef struct pp_tsunit_s pp_tsunit_t;
+typedef struct pp_file_s pp_file_t;
 
 /**
- * @brief get the next directive from the translation unit
+ * @brief get the next directive from the file
  *
  * @param context the context in which the directive is required
- * @param tsunit the translation unit giving the directive
+ * @param file the file giving the directive
  * @return struct pp_directive_s* the directive given, or NULL for end of input
  */
-struct pp_directive_s *pp_tsunit_get(context_t *context, pp_tsunit_t *tsunit);
+struct pp_directive_s *pp_tsunit_get(context_t *context, pp_file_t *file);
 
 /**
- * @brief Close the translation unit
+ * @brief Close the file
  *
- * @param tsunit the translation unit to close
+ * @param file the file to close
  * @param recursive_close if the underlying sources need to be closed
  */
-void pp_tsunit_close(pp_tsunit_t *tsunit, bool recursive_close);
+void pp_file_close(pp_file_t *tsunit, bool recursive_close);
 
 /**
  * @brief Open a new file manager
@@ -65,12 +64,12 @@ pp_filemanager_t *pp_filemanager_open(
     FILE *(*fopen_f)(context_t *context, char const *fname, bool is_angled));
 
 /**
- * @brief open a translation unit
+ * @brief open a file
  *
  * @param context the context needing the unit
  * @param filemanager the filemanager
- * @return pp_tsunit_t* the translation unit opened
+ * @return pp_file_t* the file opened
  */
-pp_tsunit_t *pp_tsunit_open(context_t *context, pp_filemanager_t *filemanager);
+pp_file_t *pp_file_open(context_t *context, pp_filemanager_t *filemanager);
 
 #endif // _FILEMANAGER_H
