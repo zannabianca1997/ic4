@@ -515,6 +515,48 @@ TEST(simple_if_elif_2,
      {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "x"}}},
      {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
 
+TEST(simple_ifdef,
+     "#ifdef x\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = false}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_ifdef_else,
+     "#ifdef x\n#else\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = false}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELSE},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_ifdef_elif,
+     "#ifdef x\n#elif 1\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = false}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_ifdef_elif_2,
+     "#ifdef x\n#elif 1\n#elif x\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = false}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "x"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+
+TEST(simple_ifndef,
+     "#ifndef x\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = true}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_ifndef_else,
+     "#ifndef x\n#else\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = true}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELSE},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_ifndef_elif,
+     "#ifndef x\n#elif 1\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = true}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+TEST(simple_ifndef_elif_2,
+     "#ifndef x\n#elif 1\n#elif x\n#endif",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_IFDEF, .ifdef = {.macro_name = "x", .negated = true}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_PP_NUMBER, .name = "1"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ELIF, .nargs = 1, .args = {{PP_TOK_IDENTIFIER, .name = "x"}}},
+     {EXPECTED_CONTENT, PP_DIRECTIVE_ENDIF})
+
 // -- pragma
 
 TEST(pragma,
