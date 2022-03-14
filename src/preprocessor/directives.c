@@ -289,7 +289,7 @@ static void make_define_directive(context_t *context, struct bookmark_s mark, qu
     }
 
     // reading args if needed
-    if (new_directive->define.is_function)
+    if (macro_name_tok->macro_name.is_function)
     {
         struct pp_token_s *arg = queue_pop(args);
         if (arg == NULL)

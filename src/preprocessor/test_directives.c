@@ -228,10 +228,12 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
         break;
 
     case PP_DIRECTIVE_DEFINE:
-        if (obtained->define.ntokens != expected->define.ntokens ||
-            obtained->define.is_function != expected->define.is_function ||
-            strcmp(obtained->define.macro_name, expected->define.macro_name) != 0)
-            return "Different macro name or number of tokens in define";
+        if (obtained->define.ntokens != expected->define.ntokens)
+            return format("Different number of tokens in macro definition: expected %lu, got %lu", expected->define.ntokens, obtained->define.ntokens);
+        if (obtained->define.is_function != expected->define.is_function)
+            return "Different type of macro";
+        if (strcmp(obtained->define.macro_name, expected->define.macro_name) != 0)
+            return "Different macro name";
 
         // checking definition tokens
         for (size_t i = 0; i < obtained->define.ntokens; i++)
@@ -413,6 +415,32 @@ TEST(line_expanded_long,
                                                                                                    {PP_TOK_STRING_LIT, .string = {"file", 4}}
                                                                                                    // @formatter:on
                                                                                                }}})
+
+// -- define
+
+TEST(define_to_nothing,
+     "#define MACRO",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_DEFINE, .define = {.macro_name = "MACRO", .is_function = false, .ntokens = 0}})
+TEST(define_to_something,
+     "#define MACRO ((long)42)",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_DEFINE, .define = {.macro_name = "MACRO", .is_function = false, .ntokens = 6, .tokens = {
+                                                                                                                       {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT},
+                                                                                                                       {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT},
+                                                                                                                       {PP_TOK_IDENTIFIER, .name = "long"},
+                                                                                                                       {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
+                                                                                                                       {PP_TOK_PP_NUMBER, .name = "42"},
+                                                                                                                       {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
+
+                                                                                                                   }}})
+TEST(define_fun_to_something,
+     "#define SUM(x, y) (x+y)",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_DEFINE, .define = {.macro_name = "SUM", .is_function = true, .nargs = 2, .args = {"x", "y"}, .ntokens = 5, .tokens = {
+                                                                                                                                                    {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_LEFT},
+                                                                                                                                                    {PP_TOK_IDENTIFIER, .name = "x"},
+                                                                                                                                                    {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_ADD},
+                                                                                                                                                    {PP_TOK_IDENTIFIER, .name = "y"},
+                                                                                                                                                    {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
+                                                                                                                                                }}})
 
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 
