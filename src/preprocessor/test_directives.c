@@ -458,6 +458,12 @@ TEST(define_fun,
                                                                                                                                                     {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
                                                                                                                                                 }}})
 
+// --- undef
+
+TEST(undef,
+     "#undef MACRO",
+     {EXPECTED_CONTENT, PP_DIRECTIVE_UNDEF, .undefined_name = "MACRO"})
+
 #pragma GCC diagnostic pop // "-Wmissing-field-initializers"
 
 #undef TEST
