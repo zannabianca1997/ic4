@@ -58,6 +58,15 @@ struct pp_filemanager_s
 
 struct pp_file_s
 {
+    /**
+     * @brief the entry this file is referencing to
+     */
     struct filetable_entry_s *filetable_entry;
-    size_t current_idx;
+    /**
+     * @brief The directive that was returned last
+     * Last directive returned is filetable_entry->collected_directives[directives_returned-1].
+     * If directives_returned == filetable_entry->num_collected and a new directive is required,
+     * a new directive must be collected.
+     */
+    size_t directives_returned;
 };
