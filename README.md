@@ -17,7 +17,7 @@ This is a sintetic roadmap:
     - [X] Raw line detection
     - [X] Logical line merging
     - [X] Tokenization of line
-    - [ ] Parsing directives
+    - [X] Parsing directives
     - [ ] File managing
     - [ ] Preprocessor language
         - [ ] Conditionals
