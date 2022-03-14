@@ -61,6 +61,10 @@ void directive_free(struct pp_directive_s *directive)
         free(directive->define.tokens);
         break;
 
+    case PP_DIRECTIVE_UNDEF:
+        free(directive->undefined_name);
+        break;
+
     case PP_DIRECTIVE_ERROR:
         free(directive->error.msg);
         break;
@@ -376,6 +380,13 @@ static void make_define_directive(context_t *context, struct bookmark_s mark, qu
     context_free(lcontext);
 }
 
+static void make_undef_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
+{
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_UNDEF);
+    log_error(lcontext, "Unimplemented");
+    context_free(lcontext);
+}
+
 static void make_include_directive(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
     context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_DEFINE);
@@ -420,7 +431,7 @@ static void make_pragma_directive(context_t *context, struct bookmark_s mark, qu
 
 static void make_error_directive_from_args(context_t *context, struct bookmark_s mark, queue_t *args, struct bookmark_s directive_end, struct pp_directive_s *new_directive)
 {
-    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_PRAGMA);
+    context_t *lcontext = context_new(context, DIRECTIVES_CONTEXT_ERROR);
     log_error(lcontext, "Unimplemented");
     context_free(lcontext);
 }
@@ -475,6 +486,13 @@ static void parse_directive(context_t *context, directive_stream_t *stream, stru
     case 'd':
         if (strcmp(name_token->name, "define") == 0)
             make_define_directive(context, name_token->mark, args, directive_end, new_directive);
+        else
+            make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
+        break;
+
+    case 'u':
+        if (strcmp(name_token->name, "undef") == 0)
+            make_undef_directive(context, name_token->mark, args, directive_end, new_directive);
         else
             make_error_directive(context, name_token->mark, LOG_ERROR, DIRECTIVES_ERROR_UNKNOW, new_directive);
         break;

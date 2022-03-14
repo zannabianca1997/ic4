@@ -127,6 +127,7 @@ static const struct
 } DIRECTIVE_TYPE_NAMES[] = {{PP_DIRECTIVE_LINE_CTRL, "#line"},
                             {PP_DIRECTIVE_INCLUDE, "#include"},
                             {PP_DIRECTIVE_DEFINE, "#define"},
+                            {PP_DIRECTIVE_UNDEF, "#undef"},
                             {PP_DIRECTIVE_IF, "#if"},
                             {PP_DIRECTIVE_ELIF, "#elif"},
                             {PP_DIRECTIVE_ELSE, "#else"},

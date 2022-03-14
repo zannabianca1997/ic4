@@ -125,6 +125,8 @@ struct pp_expected_directive_s
             struct pp_token_s tokens[TESTS_MAX_MACRO_TOKENS];
         } define;
 
+        char *undefined_name;
+
         struct
         {
             enum loglevel_e severity;
@@ -249,6 +251,11 @@ static char *check_directive(struct pp_directive_s const *obtained, struct pp_ex
                 if (strcmp(obtained->define.args[i], expected->define.args[i]) != 0)
                     return format("macro arg number %lu is different", i);
         }
+        break;
+
+    case PP_DIRECTIVE_UNDEF:
+        if (strcmp(obtained->undefined_name, expected->undefined_name) != 0)
+            return "Different undefined name";
         break;
 
     case PP_DIRECTIVE_ERROR:
@@ -430,7 +437,6 @@ TEST(define_to_something,
                                                                                                                        {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
                                                                                                                        {PP_TOK_PP_NUMBER, .name = "42"},
                                                                                                                        {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
-
                                                                                                                    }}})
 TEST(define_fun_noarg,
      "#define FUN() ((long)42)",
@@ -441,7 +447,6 @@ TEST(define_fun_noarg,
                                                                                                                                 {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
                                                                                                                                 {PP_TOK_PP_NUMBER, .name = "42"},
                                                                                                                                 {PP_TOK_PUNCTUATOR, .punc_kind = PUNC_PAR_RIGHT},
-
                                                                                                                             }}})
 TEST(define_fun,
      "#define SUM(x, y) (x+y)",

@@ -31,7 +31,9 @@ struct pp_directive_s
     {
         PP_DIRECTIVE_LINE_CTRL,
         PP_DIRECTIVE_INCLUDE,
+
         PP_DIRECTIVE_DEFINE,
+        PP_DIRECTIVE_UNDEF,
 
         PP_DIRECTIVE_IF,
         PP_DIRECTIVE_ELIF,
@@ -101,6 +103,8 @@ struct pp_directive_s
             enum loglevel_e severity;
             char *msg;
         } error;
+
+        char *undefined_name;
 
         struct // generic containers for simple directives -> if, elif, pragma
         {
