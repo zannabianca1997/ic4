@@ -770,6 +770,7 @@ static struct pp_token_s *parse_header_name(context_t *context, struct pp_tokstr
     // short circuit
     if (
         !stream->is_line_include ||
+        stream->tokens_given != 2 ||
         (stream->current_line->content[stream->cursor] != '<' &&
          stream->current_line->content[stream->cursor] != '\"'))
     {
