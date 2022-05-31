@@ -9,6 +9,8 @@
  *
  */
 
+#include <stddef.h>
+
 /**
  * @brief Track a specific point from a source.
  *
@@ -16,7 +18,7 @@
  */
 struct bookmark
 {
-    unsigned row;
-    unsigned col;
+    size_t row;
+    size_t col;
     const char *source;
 };
