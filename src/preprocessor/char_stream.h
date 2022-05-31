@@ -12,6 +12,7 @@
 #define _CHAR_STREAM_H
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "../misc/bookmark.h"
 
