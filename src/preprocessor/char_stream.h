@@ -35,6 +35,7 @@ struct char_stream
     // public
 
     source_t *source; /** The source of the stream */
+    void *cookie;     /** the cookie of this source */
 
     struct bookmark mark; /** The mark of the last char readed */
     char last;            /** The last char readed */
