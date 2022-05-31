@@ -27,12 +27,12 @@
 typedef int source_t(void *cookie);
 
 /**
- * @brief Contain a char and its origin
+ * @brief Contain a char and its origin.
  *
  */
 struct marked_char
 {
-    char ch;
+    int ch; // Negative if file ended
     struct bookmark mark;
 }
 
