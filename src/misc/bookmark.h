@@ -24,14 +24,21 @@ struct bookmark
     size_t col;
 };
 
-inline static void advance(struct bookmark *mark)
+inline static void bm_advance(struct bookmark *mark)
 {
     mark->col++;
 }
-inline static void newline(struct bookmark *mark)
+inline static void bm_newline(struct bookmark *mark)
 {
     mark->row++;
     mark->col = 1;
+}
+inline static void bm_count(struct bookmark *mark, char ch)
+{
+    if (ch != '\n')
+        bm_advance(mark);
+    else
+        bm_newline(mark);
 }
 
 #endif // _BOOKMARK_H
