@@ -27,6 +27,16 @@
 typedef int source_t(void *cookie);
 
 /**
+ * @brief Contain a char and its origin
+ *
+ */
+struct marked_char
+{
+    char ch;
+    struct bookmark mark;
+}
+
+/**
  * @brief Contain all data needed for reading a char stream
  *
  */
@@ -37,13 +47,14 @@ struct char_stream
     source_t *source; /** The source of the stream */
     void *cookie;     /** the cookie of this source */
 
-    struct bookmark mark; /** The mark of the last char readed */
-    char last;            /** The last char readed */
+    struct marked_char last; /** The last char readed */
 
     // private
 
-    char _unget_buffer[CHAR_UNGET_MAX + _CHAR_ADD_MAX]; /** Buffer to collect ungetted and already processed chars */
-    size_t _unget_count;                                /** How many chars are in the buffer */
+    struct marked_char _unget_buffer[CHAR_UNGET_MAX + _CHAR_ADD_MAX]; /** Buffer to collect ungetted and already processed chars */
+    size_t _unget_count;                                              /** How many chars are in the buffer */
+
+    struct bookmark _source_mark; /** The mark of the last char getten from the source */
 };
 
 /**
@@ -60,7 +71,7 @@ void cs_open(struct char_stream *cs, source_t *source);
  * @param cs the source stream
  * @return char the char readed
  */
-char cs_getc(struct char_stream *cs);
+struct marked_char cs_getc(struct char_stream *cs);
 
 /**
  * @brief unget a char to be reread after.
@@ -71,6 +82,6 @@ char cs_getc(struct char_stream *cs);
  * @return true success
  * @return false failure, buffer is full.
  */
-bool cs_ungetc(struct char_stream *cs, char ch);
+bool cs_ungetc(struct char_stream *cs, struct marked_char ch);
 
 #endif // _CHAR_STREAM_H
