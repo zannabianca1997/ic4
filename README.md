@@ -89,6 +89,8 @@ First translation unit will take a filename, while last will emit integers.
 
 These flags are used to compile different capacity in the program
 
+- Preprocessor
+    - CHECK_UNGETC: check if the unget buffer is overflowed
 
 ## Developers
 
