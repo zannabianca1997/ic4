@@ -44,12 +44,12 @@ struct char_stream
 {
     // public
 
-    source_t *source; /** The source of the stream */
-    void *cookie;     /** the cookie of this source */
-
     struct marked_char last; /** The last char readed */
 
     // private
+
+    source_t *_source; /** The source of the stream */
+    void *_cookie;     /** the cookie of this source */
 
     struct marked_char _unget_buffer[CHAR_UNGET_MAX + _CHAR_ADD_MAX]; /** Buffer to collect ungetted and already processed chars */
     size_t _unget_count;                                              /** How many chars are in the buffer */
