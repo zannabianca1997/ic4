@@ -22,7 +22,6 @@ struct bookmark
 {
     size_t row;
     size_t col;
-    const char *source;
 };
 
 inline static void advance(struct bookmark *mark)
