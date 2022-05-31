@@ -8,6 +8,8 @@
  * @copyright Copyright (c) 2022
  *
  */
+#ifndef _BOOKMARK_H
+#define _BOOKMARK_H
 
 #include <stddef.h>
 
@@ -22,3 +24,15 @@ struct bookmark
     size_t col;
     const char *source;
 };
+
+inline static void advance(struct bookmark *mark)
+{
+    mark->col++;
+}
+inline static void newline(struct bookmark *mark)
+{
+    mark->row++;
+    mark->col = 1;
+}
+
+#endif // _BOOKMARK_H
