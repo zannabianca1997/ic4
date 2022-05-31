@@ -14,10 +14,10 @@ Objective is to translate the biggest subset of C I can manage.
 This is a sintetic roadmap:
 
 - [ ] Preprocessor
-    - [X] Raw line detection
-    - [X] Logical line merging
-    - [X] Tokenization of line
-    - [X] Parsing directives
+    - [ ] Raw line detection
+    - [ ] Logical line merging
+    - [ ] Tokenization of line
+    - [ ] Parsing directives
     - [ ] File managing
     - [ ] Preprocessor language
         - [ ] Conditionals
@@ -27,11 +27,11 @@ This is a sintetic roadmap:
 - [ ] Compiler
 - [ ] Linker
 - [ ] Assembler
-- [X] Miscellanea
-    - [X] Context tracking
-    - [X] Error reporting
-    - [X] Bookmark struct
-    - [X] Test discovery and running
+- [ ] Miscellanea
+    - [ ] Context tracking
+    - [ ] Error reporting
+    - [ ] Bookmark struct
+    - [ ] Test discovery and running
 
 ## Used C dialect
 
@@ -47,11 +47,7 @@ There is no plan to implement bitshift or bitwise operators, as they would be mo
 ## Running
 
 For now (and the foreseeable future) only GCC is tested for compilation.
-To  create the makefile make sure `python3` and [pycparser](https://github.com/eliben/pycparser) are installed. Then from the root directory run `utils\discover`.
 
-To run the tests run `make test`. To test the release `make BUILD=release test`.
-
-The main is still absent, planned to be added when the preprocessor is complete.
 
 ## Design
 
@@ -93,23 +89,7 @@ First translation unit will take a filename, while last will emit integers.
 
 These flags are used to compile different capacity in the program
 
-- Logging
-    - ANSI_FORMATTED_OUTPUT: logging module will expose some function to set logtarget formatting via [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code).
-- DEBUG: Activate multiple debug features
-    - default debuglevel is LOG_DEBUG instead of LOG_WARNING
-    - generate code to format prints of preprocessor tokens
-- Additional checks
-    - CHECK_ERRORLEVELS_VALIDITY: logging module will give an error when inconsistent errorlevels are setted
-    - CHECK_LOGTARGET_PTR: logging module will give an error when removing an unmanaged target
-    - CHECK_CONTEXT_CHILDS: freeing a context with childs will give a warning
-    - CHECK_UNGETTOKEN: check if unget_token is called twice. Should never be triggered
-- Preprocessor
-    - RAWLINE_BUFFER_INITIAL_LEN: lenght of the starting buffer for a rawline (defaults to 256)
-    - RAWLINE_BUFFER_GROWRATE: growth rate of the buffer for a rawline (defaults to 2)
-    - LOGICALLINE_SHRINK: shrink the logical lines struct to fit the data. *May* reduce memory usage, *will* slow down the program.
 
 ## Developers
 
 For now, everything is by me, zannabianca1997 <zannabianca199712@gmail.com>.
-
-The files under `utils\fake_libc_include` are from eliben's [pycparser](https://github.com/eliben/pycparser). See the approppriate license `utils\fake_libc_include\LICENSE`.
