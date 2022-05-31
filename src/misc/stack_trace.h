@@ -8,3 +8,14 @@
  * @copyright Copyright (c) 2022
  *
  */
+
+/**
+ * @brief Contain a stack trace.
+ *
+ * Need to be saved on stack.
+ */
+struct stack_trace
+{
+    const char *const _level_name;
+    const struct stack_trace *_next;
+};
