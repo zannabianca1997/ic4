@@ -30,8 +30,9 @@ static struct marked_char cs_next_char(struct char_stream *cs)
     else
     {
         // getting a new char
-        char ch = (*(cs->source))(cs->cookie);
-        bm_count(&(cs->_source_mark), ch);
+        int ch = (*(cs->source))(cs->cookie);
+        if (ch >= 0)
+            bm_count(&(cs->_source_mark), (char)ch);
         return (struct marked_char){ch, cs->_source_mark};
     }
 }
