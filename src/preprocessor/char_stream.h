@@ -62,8 +62,9 @@ struct char_stream
  *
  * @param cs the struct to initialize
  * @param source the char source
+ * @param cookie the magic cookie source need
  */
-void cs_open(struct char_stream *cs, source_t *source);
+void cs_open(struct char_stream *cs, source_t *source, void *cookie);
 
 /**
  * @brief Read a char from a stream

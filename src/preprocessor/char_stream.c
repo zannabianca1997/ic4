@@ -11,9 +11,10 @@
  */
 #include "char_stream.h"
 
-void cs_open(struct char_stream *cs, source_t *source)
+void cs_open(struct char_stream *cs, source_t *source, void *cookie)
 {
     cs->source = source;
+    cs->cookie = cookie;
 
     cs->_unget_count = 0;
     cs->_source_mark = (struct bookmark){1, 0, NULL};
