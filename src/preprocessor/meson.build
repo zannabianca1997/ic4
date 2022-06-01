@@ -1,0 +1,1 @@
+sources += files('char_stream.c')

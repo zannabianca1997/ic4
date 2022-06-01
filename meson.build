@@ -1,3 +1,7 @@
-project('ic4', 'c')
+project('ic4', 'c', default_options : 'c_std=c99', version : '0.2')
 
-executable('ic4','src/main.c')
+sources = [files('src/main.c')]
+
+subdir('src/preprocessor')
+
+executable('ic4', sources)
