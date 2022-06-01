@@ -17,7 +17,7 @@ void cs_open(struct char_stream *cs, source_t *source, void *cookie)
     cs->_cookie = cookie;
 
     cs->_unget_count = 0;
-    cs->_source_mark = (struct bookmark){1, 0, NULL};
+    cs->_source_mark = (struct bookmark){1, 0};
 }
 
 /**
