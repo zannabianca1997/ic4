@@ -34,7 +34,7 @@ struct marked_char
 {
     int ch; // Negative if file ended
     struct bookmark mark;
-}
+};
 
 /**
  * @brief Contain all data needed for reading a char stream
