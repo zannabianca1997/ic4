@@ -159,7 +159,7 @@ void diagnostic(const char *msg)
     diagnostic_end();
 }
 
-void plan(int tests, const char *msg)
+void plan(int tests, const char *skip_msg)
 {
     m_puts("TAP version 14\n");
 
@@ -170,7 +170,7 @@ void plan(int tests, const char *msg)
 
         diagnostic_start();
         diagnostic_puts("SKIP ");
-        diagnostic_puts(msg);
+        diagnostic_puts(skip_msg);
         diagnostic_end();
 
         exit(0);

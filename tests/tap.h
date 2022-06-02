@@ -92,9 +92,9 @@ void set_output(
  * @brief Plan a number of tests
  *
  * @param tests the number of planned test
- * @param msg the optional message to add
+ * @param skip_msg the optional message to add
  */
-void plan(int tests, const char *msg);
+void plan(int tests, const char *skip_msg);
 
 /**
  * @brief Print a diagnostic message
@@ -140,18 +140,18 @@ void bail_out(const char *msg);
 
 #define NO_PLAN -1
 #define SKIP_ALL -2
-#define ok(test, msg) ok_at_loc(__FILE__, __LINE__, test, msg)
-#define is(got, expected, msg) is_at_loc(__FILE__, __LINE__, got, expected, msg)
-#define isnt(got, expected, msg) isnt_at_loc(__FILE__, __LINE__, got, expected, msg)
-#define cmp_ok(a, op, b, msg) cmp_ok_at_loc(__FILE__, __LINE__, a, op, b, msg)
-#define cmp_mem(got, expected, n, msg) cmp_mem_at_loc(__FILE__, __LINE__, got, expected, n, msg)
+#define ok(test, name) ok_at_loc(__FILE__, __LINE__, test, name)
+#define is(got, expected, name) is_at_loc(__FILE__, __LINE__, got, expected, name)
+#define isnt(got, expected, name) isnt_at_loc(__FILE__, __LINE__, got, expected, name)
+#define cmp_ok(a, op, b, name) cmp_ok_at_loc(__FILE__, __LINE__, a, op, b, name)
+#define cmp_mem(got, expected, n, name) cmp_mem_at_loc(__FILE__, __LINE__, got, expected, n, name)
 
-#define pass(msg) ok(1, msg)
-#define fail(msg) ok(0, msg)
+#define pass(name) ok(1, name)
+#define fail(name) ok(0, name)
 
-#define skip_if(test, n, msg) \
-    if (test)                 \
-        skip(n, msg);         \
+#define skip_if(test, n, skip_msg) \
+    if (test)                      \
+        skip(n, skip_msg);         \
     else
 
 #endif
