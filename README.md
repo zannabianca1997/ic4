@@ -89,8 +89,16 @@ First translation unit will take a filename, while last will emit integers.
 
 These flags are used to compile different capacity in the program
 
-- Preprocessor
-    - CHECK_UNGETC: check if the unget buffer is overflowed
+
+| Flag               | Description                                   | Default |
+|--------------------|-----------------------------------------------|---------|
+| IDENTIFIER_MAX_LEN | number of significant chars of an identifier  | 63      |
+| CHECK_UNGETC       | check if the unget buffer is overflowed       | false   |
+| PP_NUM_MAX_LEN     | max lenght of a preprocessor number           | 63      |
+| STRING_LIT_MAX_LEN | max lenght of a string literal, AFTER joining | 4095    |
+
+
+
 
 ## Developers
 
