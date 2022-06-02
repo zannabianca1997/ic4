@@ -140,12 +140,12 @@ static void diagnostic_puts(const char *msg)
         line = msg;
 
         // run to the end of the line
-        while (*line || *line != '\n')
+        while (*line && *line != '\n')
             line++;
 
         // print the line
         m_puts_limited(msg, (size_t)(line - msg));
-        if (*line != '\n')
+        if (*line == '\n')
             m_puts("\n# "); // new diagnostic line
 
         msg = line + 1; // get ready for next line
