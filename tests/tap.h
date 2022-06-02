@@ -13,6 +13,8 @@
 
 #include <stddef.h>
 
+// TODO : document all functions
+
 int ok_at_loc(const char *file, int line, int test, const char *msg);
 int is_at_loc(const char *file, int line, const char *got,
               const char *expected, const char *msg);
@@ -22,13 +24,38 @@ int cmp_ok_at_loc(const char *file, int line, int a, const char *op,
                   int b, const char *msg);
 int cmp_mem_at_loc(const char *file, int line, const void *got,
                    const void *expected, size_t n, const char *msg);
-int bail_out_if(int test, const char *msg);
+
+/**
+ * @brief Set the output functions
+ *
+ * @param putc the function used to output a char
+ * @param cookie the magic cookie to give to the function
+ */
+void set_output(
+    void (*putc)(void *, char),
+    void *cookie);
+
+/**
+ * @brief Plan a number of tests
+ *
+ * @param tests the number of planned test
+ * @param msg the optional message to add
+ */
 void plan(int tests, const char *msg);
-int diagnostic(const char *msg);
-int exit_status(void);
+
+/**
+ * @brief Print a diagnostic message
+ *
+ * @param msg The message to print
+ */
+void diagnostic(const char *msg);
 void skip(int n, const char *msg);
+
 void todo(const char *msg);
 void end_todo(void);
+
+int exit_status(void);
+int bail_out_if(int test, const char *msg);
 
 #define NO_PLAN -1
 #define SKIP_ALL -2
