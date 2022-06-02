@@ -1,1 +1,3 @@
-#test_mains += [['char_stream', files('char_stream.c')]]
+
+
+test_mains += [['char_stream', files('char_stream.c'), directories.get('preprocessor')]]
