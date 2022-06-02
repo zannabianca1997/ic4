@@ -13,8 +13,6 @@
 
 #include <stddef.h>
 
-// TODO : document all functions
-
 /**
  * @brief Do a binary check
  *
@@ -83,11 +81,11 @@ int cmp_mem_at_loc(const char *file, int line, const void *got,
 /**
  * @brief Set the output functions
  *
- * @param putc the function used to output a char
+ * @param m_putc the function used to output a char
  * @param cookie the magic cookie to give to the function
  */
 void set_output(
-    void (*putc)(void *, char),
+    void (*m_putc)(void *, char),
     void *cookie);
 
 /**
