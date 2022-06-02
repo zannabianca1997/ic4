@@ -9,6 +9,7 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,10 +20,13 @@ static int failed_tests = 0;
 static int current_test = 0;
 static const char *todo_msg = NULL;
 
+static void default_putc(void *stream, char ch) { putc(ch, (FILE *)stream); }
+static void default_putchar(void *stream, char ch) { putchar(ch); }
+
 /**
  * @brief Contain the output function
  */
-static void (*putc_f)(void *, char) = NULL;
+static void (*putc_f)(void *, char) = &default_putchar;
 /**
  * @brief A magic cookie for the output function
  */
@@ -32,8 +36,16 @@ void set_output(
     void (*new_putc_f)(void *, char),
     void *new_cookie)
 {
-    putc_f = new_putc_f;
-    cookie = new_cookie;
+    if (new_putc_f)
+    {
+        putc_f = new_putc_f;
+        cookie = new_cookie;
+    }
+    else
+    {
+        putc_f = &default_putc;
+        cookie = new_cookie ? new_cookie : (void *)stdout;
+    }
 }
 
 /**
