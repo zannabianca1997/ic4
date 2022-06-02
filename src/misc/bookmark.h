@@ -31,7 +31,7 @@ inline static void bm_advance(struct bookmark *mark)
 inline static void bm_newline(struct bookmark *mark)
 {
     mark->row++;
-    mark->col = 1;
+    mark->col = 0;
 }
 inline static void bm_count(struct bookmark *mark, char ch)
 {
