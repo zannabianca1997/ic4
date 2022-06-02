@@ -1,0 +1,1 @@
+#test_mains += [['char_stream', files('char_stream.c')]]
