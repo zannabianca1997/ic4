@@ -9,8 +9,6 @@
  *
  */
 
-#pragma GCC poison printf sprintf vprintf vsprintf malloc calloc free realloc
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,7 +17,7 @@
 static int expected_tests = NO_PLAN;
 static int failed_tests = 0;
 static int current_test = 0;
-static char *todo_msg = NULL;
+static const char *todo_msg = NULL;
 
 /**
  * @brief Contain the output function
@@ -31,11 +29,11 @@ static void (*putc_f)(void *, char) = NULL;
 static void *cookie = NULL;
 
 void set_output(
-    void (*putc)(void *, char),
-    void *cookie)
+    void (*new_putc_f)(void *, char),
+    void *new_cookie)
 {
-    putc_f = putc;
-    cookie = cookie;
+    putc_f = new_putc_f;
+    cookie = new_cookie;
 }
 
 /**
@@ -43,17 +41,17 @@ void set_output(
  *
  * @param ch the char to print
  */
-static void putc(char ch) { (*putc_f)(cookie, ch); }
+static void m_putc(char ch) { (*putc_f)(cookie, ch); }
 
 /**
  * @brief Print a string to output
  *
  * @param s the string to print
  */
-static void puts(const char *s)
+static void m_puts(const char *s)
 {
     for (; *s; s++)
-        putc(*s);
+        m_putc(*s);
 }
 
 /**
@@ -61,22 +59,22 @@ static void puts(const char *s)
  *
  * @param n the number to print
  */
-static void putd(int n)
+static void m_putd(int n)
 {
     if (n > 9)
-        putd(n / 10);
-    putc('0' + n % 10);
+        m_putd(n / 10);
+    m_putc('0' + n % 10);
 }
 /**
  * @brief Print a hexadecimal number to output
  *
  * @param n the number to print
  */
-static void putx(int n)
+static void m_putx(int n)
 {
     if (n > 15)
-        putx(n / 16);
-    putc((n % 16 < 10) ? ('0' + n % 16) : ('A' - 10 + n % 16));
+        m_putx(n / 16);
+    m_putc((n % 16 < 10) ? ('0' + n % 16) : ('A' - 10 + n % 16));
 }
 
 /**
@@ -84,19 +82,79 @@ static void putx(int n)
  *
  * @param s the string to print
  */
-static void puts_limited(const char *s, size_t len)
+static void m_puts_limited(const char *s, size_t len)
 {
     const char *end = s + len;
-    for (; *s && s < len; s++)
-        putc(*s);
+    for (; *s && s < end; s++)
+        m_putc(*s);
+}
+
+/**
+ * @brief start a diagnostic message
+ */
+static void diagnostic_start() { m_puts("# "); }
+
+/**
+ * @brief End a diagnostic message
+ */
+static void diagnostic_end() { m_putc('\n'); }
+
+/**
+ * @brief Print a number as part of a diagnostic message
+ *
+ * @param n the number to print
+ */
+static void diagnostic_putd(int n) { m_putd(n); }
+
+/**
+ * @brief Print a hex number as part of a diagnostic message
+ *
+ * @param n the number to print
+ */
+static void diagnostic_putx(int n) { m_putx(n); }
+
+/**
+ * @brief Print part of a diagnostic message
+ * @param msg
+ */
+static void diagnostic_puts(const char *msg)
+{
+    // we need to find the newline to reprint the diagnostic start
+
+    char const *line; // mark the end of the line
+
+    do
+    {
+        line = msg;
+
+        // run to the end of the line
+        while (*line || *line != '\n')
+            line++;
+
+        // print the line
+        m_puts_limited(msg, (size_t)(line - msg));
+        if (*line != '\n')
+            m_puts("\n# "); // new diagnostic line
+
+        msg = line + 1; // get ready for next line
+    } while (*line);    // stop at the NULL
+}
+
+void diagnostic(const char *msg)
+{
+    diagnostic_start();
+    diagnostic_puts(msg);
+    diagnostic_end();
 }
 
 void plan(int tests, const char *msg)
 {
+    m_puts("TAP version 14\n");
+
     expected_tests = tests;
     if (tests == SKIP_ALL)
     {
-        puts("1..0 ");
+        m_puts("1..0 ");
 
         diagnostic_start();
         diagnostic_puts("SKIP ");
@@ -107,54 +165,54 @@ void plan(int tests, const char *msg)
     }
     if (tests != NO_PLAN)
     {
-        puts("1..");
-        putd(tests);
-        putc('\n');
+        m_puts("1..");
+        m_putd(tests);
+        m_putc('\n');
     }
 }
 
 int ok_at_loc(const char *file, int line, int test, const char *name)
 {
     if (!test)
-        puts("not ");
-    puts("ok ");
-    putd(++current_test);
+        m_puts("not ");
+    m_puts("ok ");
+    m_putd(++current_test);
 
     if (*name)
     {
-        puts(" - ");
-        puts(name);
+        m_puts(" - ");
+        m_puts(name);
     }
 
     if (todo_msg)
     {
-        puts(" # T"
-             "ODO");
+        m_puts(" # T"
+               "ODO");
         if (*todo_msg)
         {
-            putc(' ');
-            puts(todo_msg);
+            m_putc(' ');
+            m_puts(todo_msg);
         }
     }
-    putc('\n');
+    m_putc('\n');
     if (!test)
     {
-        puts("#   Failed ");
+        m_puts("#   Failed ");
         if (todo_msg)
-            puts("(TODO) ");
-        puts("test ");
+            m_puts("(TODO) ");
+        m_puts("test ");
         if (*name)
         {
-            putc('\'');
-            puts(name);
-            puts("'\n#  ");
+            m_putc('\'');
+            m_puts(name);
+            m_puts("'\n#  ");
         }
 
-        puts("at ");
-        puts(file);
-        puts(" line ");
-        putd(line);
-        puts(".\n");
+        m_puts("at ");
+        m_puts(file);
+        m_puts(" line ");
+        m_putd(line);
+        m_puts(".\n");
 
         if (!todo_msg)
             failed_tests++;
@@ -303,83 +361,25 @@ int cmp_mem_at_loc(const char *file, int line, const void *got,
     return !diff;
 }
 
-/**
- * @brief start a diagnostic message
- */
-static void diagnostic_start() { puts("# "); }
-
-/**
- * @brief End a diagnostic message
- */
-static void diagnostic_end() { putc('\n'); }
-
-/**
- * @brief Print a number as part of a diagnostic message
- *
- * @param n the number to print
- */
-static void diagnostic_putd(int n) { putd(n); }
-
-/**
- * @brief Print a hex number as part of a diagnostic message
- *
- * @param n the number to print
- */
-static void diagnostic_putx(int n) { putx(n); }
-
-/**
- * @brief Print part of a diagnostic message
- * @param msg
- */
-static void diagnostic_puts(const char *msg)
-{
-    // we need to find the newline to reprint the diagnostic start
-
-    char const *line; // mark the end of the line
-
-    do
-    {
-        line = msg;
-
-        // run to the end of the line
-        while (*line || *line != '\n')
-            line++;
-
-        // print the line
-        puts_limited(msg, (size_t)(line - msg));
-        if (*line != '\n')
-            puts("\n# "); // new diagnostic line
-
-        msg = line + 1; // get ready for next line
-    } while (*line);    // stop at the NULL
-}
-
-void diagnostic(const char *msg)
-{
-    diagnostic_start();
-    diagnostic_puts(msg);
-    diagnostic_end();
-}
-
 int exit_status()
 {
     int retval = 0;
     if (expected_tests == NO_PLAN)
     {
-        puts("1..");
-        putd(current_test);
-        putc('\n');
+        m_puts("1..");
+        m_putd(current_test);
+        m_putc('\n');
     }
     else if (current_test != expected_tests)
     {
         diagnostic_start();
         diagnostic_puts("Looks like you planned ");
-        putd(expected_tests);
+        m_putd(expected_tests);
         diagnostic_puts(" test");
         if (expected_tests > 1)
             diagnostic_puts("s");
         diagnostic_puts(" but ran ");
-        putd(current_test);
+        m_putd(current_test);
         diagnostic_puts(".");
         diagnostic_end();
 
@@ -389,12 +389,12 @@ int exit_status()
     {
         diagnostic_start();
         diagnostic_puts("Looks like you failed ");
-        putd(failed_tests);
+        m_putd(failed_tests);
         diagnostic_puts(" test");
         if (failed_tests > 1)
             diagnostic_puts("s");
         diagnostic_puts(" of ");
-        putd(current_test);
+        m_putd(current_test);
         diagnostic_puts(" run.");
         diagnostic_end();
 
@@ -405,9 +405,9 @@ int exit_status()
 
 void bail_out(const char *msg)
 {
-    puts("Bail out! ");
-    puts(msg);
-    putc('\n');
+    m_puts("Bail out! ");
+    m_puts(msg);
+    m_putc('\n');
     exit(255);
 }
 
@@ -415,9 +415,9 @@ void skip(int n, const char *msg)
 {
     while (n-- > 0)
     {
-        puts("ok ");
-        putd(++current_test);
-        putc(' ');
+        m_puts("ok ");
+        m_putd(++current_test);
+        m_putc(' ');
 
         diagnostic_start();
         diagnostic_puts("skip ");
