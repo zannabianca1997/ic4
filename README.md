@@ -99,7 +99,6 @@ These flags are used to compile different capacity in the program
 
 
 
-
 ## Developers
 
 For now, everything is by me, zannabianca1997 <zannabianca199712@gmail.com>.

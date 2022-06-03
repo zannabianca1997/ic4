@@ -16,7 +16,15 @@
 #include "char_stream.h"
 
 #ifndef IDENTIFIER_MAX_LEN
-#define IDENTIFIER_MAX_LEN 63 /**Number of significative chars of an identifier*/
+#define IDENTIFIER_MAX_LEN 63 /** Number of significative chars of an identifier */
+#endif
+
+#ifndef PP_NUMBER_MAX_LEN
+#define PP_NUMBER_MAX_LEN 63 /** Maximum lenght of a preprocessor number */
+#endif
+
+#ifndef STRING_LIT_MAX_LEN
+#define STRING_LIT_MAX_LEN 4096 /** Maximum lenght of a string literal */
 #endif
 
 #define TOKEN_UNGET_MAX 1 /**  The maximum number of tokens that can be ungetten */
@@ -183,12 +191,6 @@ struct pp_token
             PUNC_STRINGIZE, // stringize
             PUNC_TOKPASTE,  // token pasting
         } punc_kind;
-
-        // error message
-        struct
-        {
-            enum loglevel severity;
-        } error;
     };
 };
 
