@@ -20,11 +20,15 @@
 #define _CHAR_ADD_MAX 1  /** The maximum number of char that can be produced (e.g. the newline after \)*/
 
 /**
- * @brief type required for a char source function.
+ * @brief Contain a character source
  *
- * The parameter is a magic cookie (e.g. the FILE* object). Must return a negative number on file end.
  */
-typedef int source_t(void *cookie);
+struct source_stream
+{
+    const char *name;
+    int (*source_f)(void *);
+    void *cookie;
+};
 
 /**
  * @brief Contain a char and its origin.
@@ -48,8 +52,7 @@ struct char_stream
 
     // private
 
-    source_t *_source; /** The source of the stream */
-    void *_cookie;     /** the cookie of this source */
+    struct source_stream _source;
 
     struct marked_char _unget_buffer[CHAR_UNGET_MAX + _CHAR_ADD_MAX]; /** Buffer to collect ungetted and already processed chars */
     size_t _unget_count;                                              /** How many chars are in the buffer */
@@ -64,7 +67,7 @@ struct char_stream
  * @param source the char source
  * @param cookie the magic cookie source need
  */
-void cs_open(struct char_stream *cs, source_t *source, void *cookie);
+void cs_open(struct char_stream *cs, struct source_stream source);
 
 /**
  * @brief Read a char from a stream

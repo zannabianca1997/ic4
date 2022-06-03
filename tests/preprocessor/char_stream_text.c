@@ -70,7 +70,7 @@ int main(int argc, char const *argv[])
     {
         struct char_stream cs;
         const char *input = test_cases[i].input;
-        cs_open(&cs, &string_stream, (void *)&input);
+        cs_open(&cs, (struct source_stream){test_cases[i].name, &string_stream, (void *)&input});
 
         // reading back the whole stream
         char output_buffer[max_output_len];

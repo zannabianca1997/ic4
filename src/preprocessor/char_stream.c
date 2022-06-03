@@ -11,10 +11,9 @@
  */
 #include "char_stream.h"
 
-void cs_open(struct char_stream *cs, source_t *source, void *cookie)
+void cs_open(struct char_stream *cs, struct source_stream source)
 {
     cs->_source = source;
-    cs->_cookie = cookie;
 
     cs->_unget_count = 0;
     cs->_source_mark = (struct bookmark){1, 0};
@@ -31,7 +30,7 @@ static struct marked_char cs_next_char(struct char_stream *cs)
     else
     {
         // getting a new char
-        int ch = (*(cs->_source))(cs->_cookie);
+        int ch = (*(cs->_source.source_f))(cs->_source.cookie);
         if (ch >= 0)
             bm_count(&(cs->_source_mark), (char)ch);
         return (struct marked_char){ch, cs->_source_mark};
