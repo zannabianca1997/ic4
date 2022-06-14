@@ -15,37 +15,8 @@
 
 #include "char_stream.h"
 
-#ifndef IDENTIFIER_MAX_LEN
-#define IDENTIFIER_MAX_LEN 63 /** Number of significative chars of an identifier */
-#endif
-
-#ifndef PP_NUMBER_MAX_LEN
-#define PP_NUMBER_MAX_LEN 63 /** Maximum lenght of a preprocessor number */
-#endif
-
-#ifndef STRING_LIT_MAX_LEN
-#define STRING_LIT_MAX_LEN 4096 /** Maximum lenght of a string literal */
-#endif
-
 #define TOKEN_UNGET_MAX 1 /**  The maximum number of tokens that can be ungetten */
 #define _TOKEN_ADD_MAX 1  /** The maximum number of tokens that can be produced (e.g. the newline after \)*/
-
-/**
- * @brief Contains all data regardin a token stream
- */
-struct tokenizer
-{
-    // private
-    struct char_stream _source; // source of the data
-
-    size_t _tokens_given;    // number of tokens extracted from this line (for include checking)
-    bool _is_line_directive; // mark if this line is a directive (first token is #)
-    bool _is_line_include;   // mark if this line is an include (directive == true, first token after DIRECTIVE_START is an `include` identifier)
-    bool _is_line_define;    // mark if this line is a define (directive == true, first token after DIRECTIVE_START is a `define` identifier)
-
-    struct pp_token_s _ungetten_token[TOKEN_UNGET_MAX + _TOKEN_ADD_MAX]; // if not NULL, will be returned before any other
-    size_t _ungetten_token_len;
-};
 
 struct pp_token
 {
@@ -68,9 +39,6 @@ struct pp_token
 
         PP_TOK_DIRECTIVE_START, // directive start
         PP_TOK_DIRECTIVE_STOP,  // end of directive
-
-        PP_TOK_ERROR /**< tokenizer error. Will be thrown when we have
-                      *    filename context */
     } type;
 
     struct bookmark mark; // Mark the start of the token
@@ -78,7 +46,7 @@ struct pp_token
     union
     {
         // identifiers
-        char name[IDENTIFIER_MAX_LEN + 1];
+        char *name;
 
         // pp_number
         char *value;
@@ -100,8 +68,8 @@ struct pp_token
         // macro names
         struct
         {
-            char name[IDENTIFIER_MAX_LEN + 1]; // the name of the macro
-            bool is_function;                  // if the macro is function-like
+            char *name;       // the name of the macro
+            bool is_function; // if the macro is function-like
         } macro_name;
 
         // char consts
@@ -289,5 +257,55 @@ static const struct
     {"##", PUNC_TOKPASTE}, // token pasting
 
     {"", 0}}; // Terminator
+
+/**
+ * @brief Contains all data regardin a token stream
+ */
+struct tokenizer
+{
+    // private
+    struct char_stream _source; // source of the data
+
+    size_t _tokens_given;    // number of tokens extracted from this line (for include checking)
+    bool _is_line_directive; // mark if this line is a directive (first token is #)
+    bool _is_line_include;   // mark if this line is an include (directive == true, first token after DIRECTIVE_START is an `include` identifier)
+    bool _is_line_define;    // mark if this line is a define (directive == true, first token after DIRECTIVE_START is a `define` identifier)
+
+    struct pp_token _ungetten_token[TOKEN_UNGET_MAX + _TOKEN_ADD_MAX]; // if not NULL, will be returned before any other
+    size_t _ungetten_token_len;
+};
+
+/**
+ * @brief Start a tokenizer
+ *
+ * @param tok the tokenizer to start
+ * @param source_name the char source to read
+ */
+void tok_open(struct tokenizer *tok, struct source_stream source_name);
+
+/**
+ * @brief Obtain the next token in the stream
+ *
+ * @param tok the tokenizer
+ * @param a the token to fill out
+ */
+void tok_get(struct tokenizer *tok, struct pp_token *a);
+
+/**
+ * @brief Return a token to the tokenizer.
+ *  Next call to tok_get will return the same token.
+ * The token will be freed by this function - no duplication to worry about
+ *
+ * @param tok the tokenizer
+ * @param a the token to take back
+ */
+void tok_unget(struct tokenizer *tok, struct pp_token *a);
+
+/**
+ * @brief Destroy a token
+ *
+ * @param a the token to destroy
+ */
+void tok_free(struct pp_token *a);
 
 #endif // _TOKENIZER_H
