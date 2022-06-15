@@ -20,11 +20,6 @@ op    ::= 'ADD' (* 01 *) | 'MUL' (* 02 *) | 'IN'  (* 03 *) | 'OUT'  (* 04 *) | '
 
 param ::= [ '#' (* mode 1 *) | '@' (* mode 2 *) ] expr ;
 
-expr  ::= expr '+' expr | expr '-' expr
-        | expr '*' expr | expr '/' expr
-        | '+' expr | '-' expr
-        | '(' expr ')' | identifier | number ; (* with the usual precedence resolution *)
-
 expr   ::= ['+' | '-'] term   { ('+' | '-') term} ;
 term   ::= factor { ('*'|'/') factor} ;
 factor ::= number | identifier | '('  expr  ')' ;
