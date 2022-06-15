@@ -15,8 +15,8 @@ directive ::= 'DATA' { expr [','] } ;
 
 instr ::= op { param [','] } ;
 
-op    ::= 'ADD' (* 01 *) | 'MUL' (* 02 *) | 'IN'  (* 03 *) | 'OUT'  (* 04 *) | 'JZ'   (* 05 *)
-        | 'JNZ' (* 06 *) | 'SLT' (* 07 *) | 'SEQ' (* 08 *) | 'INCB' (* 09 *) | 'HALT' (* 99 *) ;
+op    ::= 'ADD' (* 01 *) | 'MUL' (* 02 *) | 'IN'  (* 03 *) | 'OUT'  (* 04 *) | 'JNZ' (* 05 *)
+         | 'JZ'   (* 06 *) | 'SLT' (* 07 *) | 'SEQ' (* 08 *) | 'INCB' (* 09 *) | 'HALT' (* 99 *) ;
 
 param ::= [ '#' (* mode 1 *) | '@' (* mode 2 *) ] expr ;
 
