@@ -9,7 +9,7 @@ Following the proposed [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%8
 ```EBNF
 input ::= { line '\n' } ;
 
-line  ::= [ identifier ':' ] [ instr | directive ] ['\\\\' comment] ;
+line  ::= [ identifier ':' ] [ instr | directive ] [';' comment] ;
 
 directive ::= 'DATA' { expr [','] } ;
 
