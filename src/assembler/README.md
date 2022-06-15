@@ -24,4 +24,8 @@ expr  ::= expr '+' expr | expr '-' expr
         | expr '*' expr | expr '/' expr
         | '+' expr | '-' expr
         | '(' expr ')' | identifier | number ; (* with the usual precedence resolution *)
+
+expr   ::= term   { ("+" | "-") term} ;
+term   ::= factor { ("*"|"/") factor} ;
+factor ::= number | identifier | "("  expr  ")" ;
 ```
