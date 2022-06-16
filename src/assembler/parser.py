@@ -4,7 +4,7 @@
 from pathlib import Path
 from tatsu import compile
 
-from .instructions import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
+from .commands import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
 from .expressions import Divide, Multiply, Subtract, Sum
 
 
