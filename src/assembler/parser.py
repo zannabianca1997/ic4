@@ -92,8 +92,6 @@ number = /\d+/ ;
     )
 )
 
-print(GRAMMAR)
-
 Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
 
