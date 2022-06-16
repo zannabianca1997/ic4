@@ -2,53 +2,101 @@
     Parse a file into an AST
 """
 from pathlib import Path
-from typing import Iterator
-
-from .instructions import Instruction
 from tatsu import compile
-from tatsu.model import ModelBuilderSemantics
 
-Parser = compile(r"""
+from .instructions import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
+from .expressions import Divide, Multiply, Subtract, Sum
+
+
+class IC4AssSemantic:
+    def number(self, ast):
+        return int(ast)
+
+    def label(self, ast):
+        return Label(ast, None)
+
+    def instruction(self, ast):
+        return Instruction(
+            OpCode[ast["op"]],
+            tuple(ast["params"]) if ast["params"] is not None else ()
+        )
+
+    def param(self, ast):
+        mode = ParamMode.MODE0
+        if ast["mode"] == '#':
+            mode = ParamMode.MODE1
+        elif ast["mode"] == '@':
+            mode = ParamMode.MODE2
+        return mode, ast["value"]
+
+    def directive(self, ast):
+        return Directive(
+            DirectiveCode[ast["code"]],
+            tuple(ast["params"]) if ast["params"] is not None else ()
+        )
+
+    def addexpr(self, ast):
+        if ast["op"] == "+":
+            return Sum(ast['left'], ast['right'])
+        return Subtract(ast['left'], ast['right'])
+
+    def multexpr(self, ast):
+        if ast["op"] == "*":
+            return Multiply(ast['left'], ast['right'])
+        return Divide(ast['left'], ast['right'])
+
+
+GRAMMAR = r"""
 @@grammar::IC4ASS
 @@parseinfo::False
 
-@@keyword :: DATA
+@@keyword :: INTS
 @@keyword :: ADD MUL IN OUT JNZ JZ SLT SEQ INCB HALT
 
 @@eol_comments :: /;.*?$/
 
-file::File = { lines+:line } $ ;
+file = { line } $ ;
 
-line::Line = labels:{ label ~ } content:( directive | instruction ) ;
+line = ( label | directive | instruction ) ;
 
 label = @:identifier ':' ;
 
-directive::Directive = name:dirname ~ { params+:expr ~ [',']} ;
-dirname::str = 'DATA' ;
+directive = direct_INTS ;
+direct_INTS = code:'INTS' ~ '(' { params+: expr [','] ~ } ')' ;
 
-instruction::Instruction = opcode:op ~ { params+:param ~ [',']} ;
+instruction = <instruction_rules_list> ;
 
-op::str = 'ADD' | 'MUL' | 'IN' | 'OUT' | 'JNZ' | 'JZ' 
-      |   'SLT' | 'SEQ' | 'INCB' | 'HALT' ;
+<instruction_rules>
 
-param::Parameter = mode:([ '#' | '@' ]) value:expr ;
+param = mode:([ '#' | '@' ]) value:expr ;
 
 expr    = @:addexpr | @:term ;
 term    = @:multexpr | @:factor ;
 factor  = number | identifier | '('  @:expr  ')' ;
 
-addexpr::AddExpr = left:expr op:('+' | '-') right:term ;
-multexpr::MulExpr = left:term op:('*' | '/') right:factor ;
-
+addexpr = left:expr op:('+' | '-') right:term ;
+multexpr = left:term op:('*' | '/') right:factor ;
 
 @name
-identifier::str = /[a-zA-Z_][a-zA-Z0-9_]*/ ;
+identifier = /[a-zA-Z_][a-zA-Z0-9_]*/ ;
 
-number::int = /\d+/ ;
-""",
-                 semantics=ModelBuilderSemantics())
+number = /\d+/ ;
+""".replace(
+    "<instruction_rules_list>",
+    " | ".join(f"instr_{opcode.name}" for opcode in OpCode)
+).replace(
+    "<instruction_rules>",
+    "\n".join(
+        f"instr_{opcode.name} = op:'{opcode.name}' ~ {' params+:param ~'*opcode.param_number()} ;"
+        for opcode in OpCode
+    )
+)
+
+print(GRAMMAR)
+
+Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
 
 def parse_file(file: Path):
     with open(file) as inp:
-        return Parser.parse(file.read(), start="file")
+        return Parser.parse(inp.read(), start="file", trace=True, colorize=True)
