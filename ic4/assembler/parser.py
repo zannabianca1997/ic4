@@ -1,10 +1,10 @@
 """
     Parse a file into an AST
 """
-from pathlib import Path
+from typing import Tuple
 from tatsu import compile
 
-from .commands import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
+from .commands import Command, Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
 from .expressions import Divide, Multiply, Subtract, Sum
 
 
@@ -95,5 +95,5 @@ number = /\d+/ ;
 Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
 
-def parse(input: str):
-    return Parser.parse(input, start="file")
+def parse(input: str) -> Tuple[Command]:
+    return tuple(Parser.parse(input, start="file"))
