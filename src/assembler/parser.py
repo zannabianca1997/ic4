@@ -55,9 +55,9 @@ GRAMMAR = r"""
 
 @@eol_comments :: /;.*?$/
 
-file = { line } $ ;
+file = { command } $ ;
 
-line = ( label | directive | instruction ) ;
+command = ( label | directive | instruction ) ;
 
 label = @:identifier ':' ;
 
