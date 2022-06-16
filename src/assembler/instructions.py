@@ -2,8 +2,8 @@
     Define basic instruction datatype
 """
 from dataclasses import dataclass
-from enum import IntEnum
-from typing import Tuple
+from enum import IntEnum, Enum, auto
+from typing import Tuple, Optional
 
 from .expressions import Expression
 
@@ -50,4 +50,20 @@ class ParamMode(IntEnum):
 @dataclass(frozen=True)
 class Instruction:
     opcode: OpCode
-    params: Tuple[ParamMode, Expression]
+    params: Tuple[Tuple[ParamMode, Expression], ...]
+
+
+class DirectiveCode(Enum):
+    INTS = auto()
+
+
+@dataclass(frozen=True)
+class Directive:
+    code: DirectiveCode
+    params: Tuple[Expression, ...]
+
+
+@dataclass(frozen=True)
+class Label:
+    name: str
+    pos: Optional[int]
