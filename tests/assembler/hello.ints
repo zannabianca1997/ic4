@@ -1,0 +1,12 @@
+; Hello world, by zannabianca1997
+
+JNZ #1 #start ; start the program
+
+string: DATA 72 101 108 108 111 32 119 111 114 108 100 0 ; Hello world in ascii
+
+start:
+INCB #string        ; put the relativ register at the start of the string
+loop: OUT  @0       ; out the current char
+      INCB #1       ; increase relative pointer
+      JNZ  @0 #loop ; loop until terminator
+HALT
