@@ -3,7 +3,7 @@
 """
 from dataclasses import dataclass
 from enum import IntEnum, Enum, auto
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 from .expressions import Expression
 
@@ -67,3 +67,6 @@ class Directive:
 class Label:
     name: str
     pos: Optional[int]
+
+
+Command = Union[Label, Directive, Instruction]
