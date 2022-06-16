@@ -13,7 +13,7 @@ class IC4AssSemantic:
         return int(ast)
 
     def label(self, ast):
-        return Label(ast, None)
+        return Label(ast)
 
     def instruction(self, ast):
         return Instruction(
