@@ -95,6 +95,5 @@ number = /\d+/ ;
 Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
 
-def parse_file(file: Path):
-    with open(file) as inp:
-        return Parser.parse(inp.read(), start="file")
+def parse(input: str):
+    return Parser.parse(input, start="file")
