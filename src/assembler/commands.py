@@ -66,7 +66,6 @@ class Directive:
 @dataclass(frozen=True)
 class Label:
     name: str
-    pos: Optional[int]
 
 
 Command = Union[Label, Directive, Instruction]
