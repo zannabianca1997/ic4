@@ -97,4 +97,4 @@ Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
 def parse_file(file: Path):
     with open(file) as inp:
-        return Parser.parse(inp.read(), start="file", trace=True, colorize=True)
+        return Parser.parse(inp.read(), start="file")
