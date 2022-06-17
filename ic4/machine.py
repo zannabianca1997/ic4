@@ -137,7 +137,7 @@ class Machine:
                 )
                 self._PC += 4
             elif opcode == 9:
-                self._RB += self._set_param(self._PC+1, parmode1)
+                self._RB += self._get_param(self._PC+1, parmode1)
                 self._PC += 2
             elif opcode == 99:
                 self._halted = True
