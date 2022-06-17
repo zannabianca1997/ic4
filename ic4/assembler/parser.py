@@ -95,5 +95,5 @@ number = /\d+/ ;
 Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
 
-def parse(input: str) -> Tuple[Command]:
+def parse(input: str) -> Tuple[Command, ...]:
     return tuple(Parser.parse(input, start="file"))

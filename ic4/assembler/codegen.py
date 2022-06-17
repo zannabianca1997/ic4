@@ -19,7 +19,7 @@ def generate_instruction(instr: Instruction) -> Tuple[Expression]:
     )
 
 
-def generate(commands: Iterable[Command]) -> Tuple[int]:
+def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
     """Generate a intcode program from a list of commands"""
     labels: Dict[str, int] = {}  # known labels
     code: List[Expression] = []  # code generated
