@@ -1,6 +1,6 @@
 [
     {
         "name": "check output",
-        "output": "Hello World\n"
+        "output": "Hello world\n"
     }
 ]
