@@ -2,6 +2,8 @@
 
 ## The Assembly Language
 
+Extension for assembly files is `.ica`, for compiled files `.int`.
+
 ### Instruction Set
 
 Loosely following the proposed [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) on the [Esolang Wiki](https://esolangs.org/wiki/Intcode), the grammar given to [TatSu](https://github.com/neogeny/TatSu) is:
