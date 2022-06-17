@@ -1,0 +1,29 @@
+[
+    {
+        "name": "check output 1",
+        "input": [
+            1
+        ],
+        "output": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            13285749
+        ]
+    },
+    {
+        "name": "check output 2",
+        "input": [
+            5
+        ],
+        "output": [
+            5000972
+        ]
+    }
+]
