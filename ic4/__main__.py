@@ -4,9 +4,7 @@
 from sys import stdin
 from typing import Iterable
 
-
-from .assembler.parser import parse
-from .assembler.codegen import generate
+from .assembler import assemble
 
 
 def usage(argv):
@@ -29,11 +27,8 @@ def main(argv: Iterable[str]) -> int:
         usage(argv)
         raise
 
-    # parse the source code
-    commands = parse(source)
-
     # generate output code
-    code = generate(commands)
+    code = assemble(source)
 
     print(','.join(str(val) for val in code))
 
