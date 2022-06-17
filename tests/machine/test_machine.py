@@ -13,8 +13,8 @@ from ic4.machine import Machine
 class IOExample(BaseModel):
     name: str
     descr: Optional[str] = None
-    input: Union[Tuple[int], str] = ()
-    output: Union[Tuple[int], str]
+    input: Union[Tuple[int, ...], str] = ()
+    output: Union[Tuple[int, ...], str]
 
     @validator('input')
     def input_is_tuple(cls, inp: Union[Iterable[int], str]):
@@ -35,7 +35,7 @@ class IOExample(BaseModel):
             f"output should be a list of integers or a string, not {out.__class__}")
 
 
-def _make_test_case(program_name: str, program: Tuple[int], ioexamples: Iterable[IOExample]):
+def _make_test_case(program_name: str, program: Tuple[int, ...], ioexamples: Iterable[IOExample]):
     """Create a test case"""
     class TestProgram(TestCase):
         _machine: Machine
