@@ -166,7 +166,8 @@ class Machine:
 
 if __name__ == "__main__":
     from sys import argv
-    program = tuple(int(x.strip()) for x in argv.pop().split(",") if x.strip())
+    program = tuple(int(x.strip())
+                    for x in open(argv[1]).read().split(",") if x.strip())
     machine = Machine(program)
     while machine.run():
         print(', '.join(takewhile(lambda x: x is not None,
