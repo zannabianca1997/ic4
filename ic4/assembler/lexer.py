@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 class Lexer:
-    # List of token names.
+    # List of token names.   This is always required
     tokens = (
+        'COMMENT',
         'NUMBER',
         'IDENTIFIER',
         'PLUS',
@@ -20,9 +21,15 @@ class Lexer:
         'LPAREN',
         'RPAREN',
         'IMMEDIATE',
-        'RELATIVE',
-        'COMMENT'
+        'RELATIVE'
     )
+
+    def t_COMMENT(self, t):
+        r';.*'
+        pass
+
+    # Identifiers
+    t_IDENTIFIER = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
     # Punctuators
     t_PLUS = r'\+'
@@ -34,46 +41,33 @@ class Lexer:
     t_IMMEDIATE = r'\#'
     t_RELATIVE = r'\@'
 
-    # Comments
-
-    def t_COMMENT(t):
-        r'\;.*'
-        pass
-        # No return value. Token discarded
-
     # Numbers
-
-    def t_NUMBER(t):
+    def t_NUMBER(self, t):
         r'\d+'
         t.value = int(t.value)
         return t
 
-    # Identifier
-    t_IDENTIFIER = r'[a-zA-Z_][a-zA-Z0-9_]*'
-
-    # Track line numbers
-
-    def t_newline(t):
+    # Define a rule so we can track line numbers
+    def t_newline(self, t):
         r'\n+'
         t.lexer.lineno += len(t.value)
 
-    # Ignored chars
+    # A string containing ignored characters (spaces and tabs)
     t_ignore = ' \t'
 
     # Error handling rule
-
-    def t_error(t):
+    def t_error(self, t):
         logger.warn(f"Illegal character '{t.value[0]}'")
         t.lexer.skip(1)
 
     # --- Build and lex methods ---
 
-    def build(self, **kwargs) -> None:
+    def __init__(self, **kwargs):
         self._lexer = lex.lex(module=self, **kwargs)
 
     def __call__(self, input: str) -> Iterator[lex.LexToken]:
         self._lexer.input(input)
         yield from takewhile(
-            lambda x: x is None,
+            lambda x: x is not None,
             (self._lexer.token() for _ in count())
         )

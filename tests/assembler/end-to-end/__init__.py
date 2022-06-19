@@ -69,13 +69,11 @@ class TestExamplePrograms(TestCase):
         get_name_path_and_source(__file__)
     )
     def test_lex(self, name: str, path: Path, program: str) -> None:
-        lexer = Lexer()
-        lexer.build(debug=True)
-        program = lexer(program)
+        lexed = Lexer(debug=True)(program)
 
         log_file_path = Path(getenv("LOG_DIR"))/"tests" / \
             path.relative_to(
                 Path(getenv("TEST_DIR")).absolute()).with_suffix("") / "lexed.txt"
         log_file_path.parent.mkdir(exist_ok=True, parents=True)
         with open(log_file_path, "w") as log_file:
-            print(*program, file=log_file, sep='\n')
+            print(*lexed, file=log_file, sep='\n')
