@@ -16,10 +16,10 @@ This is a sintetic roadmap:
 - [ ] Compiler
 - [ ] Linker
 - [ ] Assembler
-  - [v] Instructions
-  - [v] Labels
-  - [v] Directives
-    - [v] INTS
+  - [ ] Instructions
+  - [ ] Labels
+  - [ ] Directives
+    - [ ] INTS
     - [ ] ZEROS
     - [ ] INC and DEC
     - [ ] MOV

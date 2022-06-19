@@ -1,8 +1,9 @@
 from os import getenv
 from pathlib import Path
-from unittest import TestCase
+from unittest import TestCase, skip
 
 
+@skip
 class TestLogGrammar(TestCase):
     def test_log_grammar(self):
         from ic4.assembler.parser import GRAMMAR
