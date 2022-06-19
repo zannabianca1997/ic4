@@ -123,6 +123,16 @@ def ICAssLexer(source: TextIO, chunk_size: int = 1024, **build_options):
                 self.tokens_in_line += 1
             else:
                 self.tokens_in_line = 0
+        else:
+            if self.tokens_in_line:
+                # closing last line
+                self.tokens_in_line = 0
+                t = lex.LexToken()
+                t.type = 'LINE_END'
+                t.value = None
+                t.lineno = self.lineno
+                t.lexpos = self.lexpos
+                return t
         return next_token
 
     lexer.token = MethodType(token, lexer)

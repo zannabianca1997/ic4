@@ -25,7 +25,8 @@ class TestLexing(TestCase):
         ("simple addition", "3+2", (
             ('NUMBER', 3, 1, 0),
             ('PLUS', '+', 1, 1),
-            ('NUMBER', 2, 1, 2))),
+            ('NUMBER', 2, 1, 2),
+            ('LINE_END', None, 1, 3))),
         ("4 operations", "3+ 2 *6 /24", (
             ('NUMBER', 3, 1, 0),
             ('PLUS', '+', 1, 1),
@@ -33,12 +34,14 @@ class TestLexing(TestCase):
             ('TIMES', '*', 1, 5),
             ('NUMBER', 6, 1, 6),
             ('DIVIDE', '/', 1, 8),
-            ('NUMBER', 24, 1, 9))),
+            ('NUMBER', 24, 1, 9),
+            ('LINE_END', None, 1, 11))),
         ("Punctuators", "@#,:", (
             ('RELATIVE', '@', 1, 0),
             ('IMMEDIATE', '#', 1, 1),
             ('COMMA', ',', 1, 2),
-            ('COLON', ':', 1, 3))),
+            ('COLON', ':', 1, 3),
+            ('LINE_END', None, 1, 4))),
         ("Comments", """This is some code ; with comments
             But this is outside ; of the comments""", (
             ('IDENTIFIER', 'This', 1, 0),
@@ -49,7 +52,8 @@ class TestLexing(TestCase):
             ('IDENTIFIER', 'But', 2, 46),
             ('IDENTIFIER', 'this', 2, 50),
             ('IDENTIFIER', 'is', 2, 55),
-            ('IDENTIFIER', 'outside', 2, 58))),
+            ('IDENTIFIER', 'outside', 2, 58),
+            ('LINE_END', None, 2, 83))),
         ("Newlines", "\n\nINTS 0 ; one line interesting\n\n; this is filled even!\n\nADD 3 2 1\n\n;hello comments", (
             ('KEYWORD', 'INTS', 3, 2),
             ('NUMBER', 0, 3, 7),
@@ -81,6 +85,6 @@ class TestLexing(TestCase):
 
         self.assertTupleEqual(
             tuple((tok.value, tok.type) for tok in self.lexer),
-            tuple((word, 'KEYWORD' if (word in keywords) else 'IDENTIFIER')
-                  for word in words)
+            tuple([(word, 'KEYWORD' if (word in keywords) else 'IDENTIFIER')
+                  for word in words] + [(None, 'LINE_END')])
         )
