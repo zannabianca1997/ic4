@@ -105,10 +105,10 @@ class TestExamplePrograms(TestCase):
 
         log_file_path = Path(getenv("LOG_DIR"))/"tests" / \
             path.relative_to(
-                Path(getenv("TEST_DIR")).absolute()).with_suffix("") / "assembled.txt"
+                Path(getenv("TEST_DIR")).absolute()).with_suffix("") / "assembled.int"
         log_file_path.parent.mkdir(exist_ok=True, parents=True)
         with open(log_file_path, "w") as log_file:
-            pprint(program, log_file)
+            print(', '.join(str(x) for x in program), file=log_file)
 
     @parameterized.expand(
         get_name_path_and_source(__file__)
