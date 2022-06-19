@@ -9,7 +9,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Lexer:
+def _build_ICAssLexer(build_options):
+    """Get a unbuilt lexer"""
     # List of token names.   This is always required
     tokens = (
         'COMMENT',
@@ -27,16 +28,16 @@ class Lexer:
         'newline'
     )
 
-    def t_COMMENT(self, t):
+    def t_COMMENT(t):
         r';.*'
         pass
 
     # Identifiers and keyword (note the order)
     @lex.TOKEN(" | ".join(x.name for x in chain(OpCode, DirectiveCode)))
-    def t_KEYWORD(self, t):
+    def t_KEYWORD(t):
         return t
 
-    def t_IDENTIFIER(self, t):
+    def t_IDENTIFIER(t):
         r'[a-zA-Z_][a-zA-Z0-9_]*'
         return t
 
@@ -51,13 +52,13 @@ class Lexer:
     t_RELATIVE = r'\@'
 
     # Numbers
-    def t_NUMBER(self, t):
+    def t_NUMBER(t):
         r'\d+'
         t.value = int(t.value)
         return t
 
     # Define a rule so we can track line numbers
-    def t_newline(self, t):
+    def t_newline(t):
         r'\n+'
         t.lexer.lineno += len(t.value)
         return t
@@ -66,36 +67,36 @@ class Lexer:
     t_ignore = ' \t'
 
     # Error handling rule
-    def t_error(self, t):
+    def t_error(t):
         logger.warn(f"Illegal character '{t.value[0]}'")
         t.lexer.skip(1)
 
     # EOF handling rule
-    def t_eof(self, t):
+    def t_eof(t):
         # Get more input (Example)
-        more = self.source.read(self.chunk_size)
+        more = t.lexer.source.read(t.lexer.chunk_size)
         if more:
-            self._lexer.input(more)
-            return self._lexer.token()
+            t.lexer.input(more)
+            return t.lexer.token()
         return None
 
-    # --- Build and lex methods ---
+    return lex.lex(**build_options)
 
-    _class_lexers: Dict[Tuple[Tuple[str, Hashable], ...], lex.Lexer] = {}
-    _lexer: lex.Lexer
 
-    def __init__(self, source: TextIO, chunk_size: int = 1024, **kwargs):
-        # check if we have this lexer
-        hash_kwargs = tuple(sorted(kwargs.items()))
-        if hash_kwargs not in self._class_lexers:
-            logger.info("Buinding lexer with args {}", kwargs)
-            self._class_lexers[hash_kwargs] = lex.lex(module=self, **kwargs)
-        self._lexer = self._class_lexers[hash_kwargs].clone()
-        self.source = source
-        self.chunk_size = chunk_size
+_built_lexers: Dict[Tuple[Tuple[str, Hashable], ...], lex.Lexer] = {}
 
-    def __iter__(self) -> Iterator[lex.LexToken]:
-        return self
 
-    def __next__(self) -> lex.LexToken:
-        return self._lexer.next()
+def ICAssLexer(source: TextIO, chunk_size: int = 1024, **build_options):
+    """Reaturn a lexer that will read from the given source"""
+    # check if we have this lexer
+    hash_kwargs = tuple(sorted(build_options.items()))
+    if hash_kwargs not in _built_lexers:
+        logger.info("Buinding lexer with args {}", build_options)
+        _built_lexers[hash_kwargs] = _build_ICAssLexer(build_options)
+    lexer = _built_lexers[hash_kwargs].clone()  # clone the lexer
+
+    # add state as needed
+    lexer.source = source
+    lexer.chunk_size = chunk_size
+
+    return lexer

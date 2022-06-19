@@ -9,7 +9,7 @@ from unittest import TestCase
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
 
-from ic4.assembler.lexer import Lexer
+from ic4.assembler.lexer import ICAssLexer
 from ic4.machine import Machine
 
 
@@ -70,7 +70,7 @@ class TestExamplePrograms(TestCase):
         get_name_path_and_source(__file__)
     )
     def test_lex(self, name: str, path: Path, program: str) -> None:
-        lexed = Lexer(StringIO(program), debug=True)
+        lexed = ICAssLexer(StringIO(program), debug=True)
 
         log_file_path = Path(getenv("LOG_DIR"))/"tests" / \
             path.relative_to(
