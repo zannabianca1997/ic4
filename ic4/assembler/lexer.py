@@ -21,7 +21,8 @@ class Lexer:
         'LPAREN',
         'RPAREN',
         'IMMEDIATE',
-        'RELATIVE'
+        'RELATIVE',
+        'newline'
     )
 
     def t_COMMENT(self, t):
@@ -51,6 +52,7 @@ class Lexer:
     def t_newline(self, t):
         r'\n+'
         t.lexer.lineno += len(t.value)
+        return t
 
     # A string containing ignored characters (spaces and tabs)
     t_ignore = ' \t'
