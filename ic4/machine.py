@@ -2,7 +2,8 @@
     Implement a IntCode machine
 """
 
-from typing import Union, Callable, Iterable, Optional, Tuple, List
+from itertools import count, takewhile
+from typing import Union, Iterable, Optional, List
 
 
 class Machine:
@@ -161,3 +162,15 @@ class Machine:
     def halted(self) -> bool:
         """Return if the machine stopped"""
         return self._halted
+
+
+if __name__ == "__main__":
+    from sys import argv
+    program = tuple(int(x.strip()) for x in argv.pop().split(",") if x.strip())
+    machine = Machine(program)
+    while machine.run():
+        print(', '.join(takewhile(lambda x: x is not None,
+              (machine.get_output() for _ in count()))))
+        machine.give_input(int(input()))
+    print(', '.join(takewhile(lambda x: x is not None,
+          (machine.get_output() for _ in count()))))
