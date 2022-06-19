@@ -79,9 +79,10 @@ def _build_ICAssLexer(build_options):
     def t_eof(t):
         # Get more input
         more = t.lexer.source.read(t.lexer.chunk_size)
-        while more[-1] != '\n':  # go to the end of the line to avoid breaking tokens
-            more += t.lexer.source.read(1)
         if more:
+            # go to the end of the line to avoid breaking tokens
+            while more[-1] != '\n' and (ch := t.lexer.source.read(1)):
+                more += ch
             t.lexer.input(more)
             return t.lexer.token()
         return None
