@@ -25,6 +25,7 @@ def _build_ICAssLexer(build_options):
         'RPAREN',
         'IMMEDIATE',
         'RELATIVE',
+        'COMMA',
         'newline'
     )
 
@@ -43,13 +44,14 @@ def _build_ICAssLexer(build_options):
 
     # Punctuators
     t_PLUS = r'\+'
-    t_MINUS = r'-'
+    t_MINUS = r'\-'
     t_TIMES = r'\*'
-    t_DIVIDE = r'/'
+    t_DIVIDE = r'\/'
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
     t_IMMEDIATE = r'\#'
     t_RELATIVE = r'\@'
+    t_COMMA = r'\,'
 
     # Numbers
     def t_NUMBER(t):
