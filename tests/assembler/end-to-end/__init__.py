@@ -1,3 +1,4 @@
+from io import StringIO
 from itertools import count, takewhile
 from os import getenv
 from warnings import warn
@@ -69,7 +70,7 @@ class TestExamplePrograms(TestCase):
         get_name_path_and_source(__file__)
     )
     def test_lex(self, name: str, path: Path, program: str) -> None:
-        lexed = Lexer(debug=True)(program)
+        lexed = Lexer(StringIO(program), debug=True)
 
         log_file_path = Path(getenv("LOG_DIR"))/"tests" / \
             path.relative_to(

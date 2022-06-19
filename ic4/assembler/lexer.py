@@ -4,7 +4,7 @@ Lex an assembly file
 from .commands import DirectiveCode, OpCode
 import ply.lex as lex
 from itertools import chain, count, takewhile
-from typing import Iterator
+from typing import Dict, Hashable, Iterator, TextIO, Tuple
 import logging
 logger = logging.getLogger(__name__)
 
@@ -70,14 +70,32 @@ class Lexer:
         logger.warn(f"Illegal character '{t.value[0]}'")
         t.lexer.skip(1)
 
+    # EOF handling rule
+    def t_eof(self, t):
+        # Get more input (Example)
+        more = self.source.read(self.chunk_size)
+        if more:
+            self._lexer.input(more)
+            return self._lexer.token()
+        return None
+
     # --- Build and lex methods ---
 
-    def __init__(self, **kwargs):
-        self._lexer = lex.lex(module=self, **kwargs)
+    _class_lexers: Dict[Tuple[Tuple[str, Hashable], ...], lex.Lexer] = {}
+    _lexer: lex.Lexer
 
-    def __call__(self, input: str) -> Iterator[lex.LexToken]:
-        self._lexer.input(input)
-        yield from takewhile(
-            lambda x: x is not None,
-            (self._lexer.token() for _ in count())
-        )
+    def __init__(self, source: TextIO, chunk_size: int = 1024, **kwargs):
+        # check if we have this lexer
+        hash_kwargs = tuple(sorted(kwargs.items()))
+        if hash_kwargs not in self._class_lexers:
+            logger.info("Buinding lexer with args {}", kwargs)
+            self._class_lexers[hash_kwargs] = lex.lex(module=self, **kwargs)
+        self._lexer = self._class_lexers[hash_kwargs].clone()
+        self.source = source
+        self.chunk_size = chunk_size
+
+    def __iter__(self) -> Iterator[lex.LexToken]:
+        return self
+
+    def __next__(self) -> lex.LexToken:
+        return self._lexer.next()
