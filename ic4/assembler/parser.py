@@ -89,13 +89,10 @@ number = /\d+/ ;
     "<instruction_rules>",
     "\n".join(
         f"instr_{opcode.name} = op:'{opcode.name}' ~ " +
-        " [','] ".join(['params+:param ~']*opcode.param_number()) + ";"
+        " [','] ".join(['params+:param']*opcode.param_number()) + ";"
         for opcode in OpCode
     )
 )
-
-with open(Path(__file__).parent / 'generated_grammar.txt', "w") as grammar_log:
-    grammar_log.write(GRAMMAR)
 
 Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
