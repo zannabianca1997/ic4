@@ -1,9 +1,10 @@
 """
 Lex an assembly file
 """
-from itertools import count, takewhile
-from typing import Iterator
+from .commands import DirectiveCode, OpCode
 import ply.lex as lex
+from itertools import chain, count, takewhile
+from typing import Iterator
 import logging
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class Lexer:
     tokens = (
         'COMMENT',
         'NUMBER',
+        'KEYWORD',
         'IDENTIFIER',
         'PLUS',
         'MINUS',
@@ -29,8 +31,14 @@ class Lexer:
         r';.*'
         pass
 
-    # Identifiers
-    t_IDENTIFIER = r'[a-zA-Z_][a-zA-Z0-9_]*'
+    # Identifiers and keyword (note the order)
+    @lex.TOKEN(" | ".join(x.name for x in chain(OpCode, DirectiveCode)))
+    def t_KEYWORD(self, t):
+        return t
+
+    def t_IDENTIFIER(self, t):
+        r'[a-zA-Z_][a-zA-Z0-9_]*'
+        return t
 
     # Punctuators
     t_PLUS = r'\+'
