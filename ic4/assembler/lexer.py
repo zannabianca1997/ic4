@@ -104,6 +104,5 @@ def ICAssLexer(source: TextIO, chunk_size: int = 1024, **build_options):
     # add state as needed
     lexer.source = source
     lexer.chunk_size = chunk_size
-    lexer.first_token_in_line = True
 
     return lexer
