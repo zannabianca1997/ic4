@@ -1,6 +1,7 @@
 """
     Parse a file into an AST
 """
+from pathlib import Path
 from typing import Tuple
 from tatsu import compile
 
@@ -87,10 +88,14 @@ number = /\d+/ ;
 ).replace(
     "<instruction_rules>",
     "\n".join(
-        f"instr_{opcode.name} = op:'{opcode.name}' ~ {' params+:param ~'*opcode.param_number()} ;"
+        f"instr_{opcode.name} = op:'{opcode.name}' ~ " +
+        " [','] ".join(['params+:param ~']*opcode.param_number()) + ";"
         for opcode in OpCode
     )
 )
+
+with open(Path(__file__).parent / 'generated_grammar.txt', "w") as grammar_log:
+    grammar_log.write(GRAMMAR)
 
 Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
 
