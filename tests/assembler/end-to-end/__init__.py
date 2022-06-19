@@ -1,4 +1,6 @@
 from itertools import count, takewhile
+from os import getenv
+from pprint import pprint
 from warnings import warn
 from pathlib import Path
 from typing import Iterable, Tuple, Optional, Union
@@ -6,8 +8,9 @@ from unittest import TestCase
 
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
-from ic4.assembler import assemble
 
+from ic4.assembler import assemble
+from ic4.assembler.parser import parse
 from ic4.machine import Machine
 
 
@@ -38,8 +41,19 @@ class IOExample(BaseModel):
                 f"output should be a list of integers or a string, not {out.__class__}")
 
 
-def get_source_and_examples(dir: Path):
-    for source in Path(dir).parent.glob("*.ica"):
+def get_sources(dir: Path):
+    yield from Path(dir).parent.glob("*.ica")
+
+
+def get_name_path_and_source(dir: Path):
+    for source in get_sources(dir):
+        with open(source) as source_file:
+            source_code = source_file.read()
+        yield source.stem, source, source_code
+
+
+def get_name_source_and_examples(dir: Path):
+    for source in get_sources(dir):
         if not source.with_suffix(".json").exists():
             warn(f"{source!s} misses a companion .json file!")
             continue
@@ -54,7 +68,7 @@ class TestExamplePrograms(TestCase):
     machine: Machine
 
     @parameterized.expand(
-        get_source_and_examples(__file__)
+        get_name_source_and_examples(__file__)
     )
     def test_output(self, name: str, program: str, ioexamples: Iterable[IOExample]) -> None:
         program = assemble(program)
@@ -67,3 +81,44 @@ class TestExamplePrograms(TestCase):
                 self.assertTupleEqual(
                     output, ioexample.output
                 )
+
+    @parameterized.expand(
+        get_name_source_and_examples(__file__)
+    )
+    def test_output(self, name: str, program: str, ioexamples: Iterable[IOExample]) -> None:
+        program = assemble(program)
+        for ioexample in ioexamples:
+            with self.subTest(ioexample.name):
+                machine = Machine(program)
+                machine.give_input(ioexample.input)
+                output = tuple(takewhile(lambda x: x is not None,
+                               (machine.get_output() for _ in count())))
+                self.assertTupleEqual(
+                    output, ioexample.output
+                )
+
+    @parameterized.expand(
+        get_name_path_and_source(__file__)
+    )
+    def test_assemble(self, name: str, path: Path, program: str) -> None:
+        program = assemble(program)
+
+        log_file_path = Path(getenv("LOG_DIR"))/"tests" / \
+            path.relative_to(
+                Path(getenv("TEST_DIR")).absolute()).with_suffix("") / "assembled.txt"
+        log_file_path.parent.mkdir(exist_ok=True, parents=True)
+        with open(log_file_path, "w") as log_file:
+            pprint(program, log_file)
+
+    @parameterized.expand(
+        get_name_path_and_source(__file__)
+    )
+    def test_parse(self, name: str, path: Path, program: str) -> None:
+        program = parse(program)
+
+        log_file_path = Path(getenv("LOG_DIR"))/"tests" / \
+            path.relative_to(
+                Path(getenv("TEST_DIR")).absolute()).with_suffix("") / "parsed.txt"
+        log_file_path.parent.mkdir(exist_ok=True, parents=True)
+        with open(log_file_path, "w") as log_file:
+            pprint(program, log_file)
