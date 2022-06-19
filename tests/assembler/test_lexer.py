@@ -45,11 +45,20 @@ class TestLexing(TestCase):
             ('IDENTIFIER', 'is', 1, 5),
             ('IDENTIFIER', 'some', 1, 8),
             ('IDENTIFIER', 'code', 1, 13),
-            ('newline', '\n', 1, 33),
+            ('LINE_END', None, 1, 33),
             ('IDENTIFIER', 'But', 2, 46),
             ('IDENTIFIER', 'this', 2, 50),
             ('IDENTIFIER', 'is', 2, 55),
-            ('IDENTIFIER', 'outside', 2, 58)))
+            ('IDENTIFIER', 'outside', 2, 58))),
+        ("Newlines", "\n\nINTS 0 ; one line interesting\n\n; this is filled even!\n\nADD 3 2 1\n\n;hello comments", (
+            ('KEYWORD', 'INTS', 3, 2),
+            ('NUMBER', 0, 3, 7),
+            ('LINE_END', None, 3, 31),
+            ('KEYWORD', 'ADD', 7, 57),
+            ('NUMBER', 3, 7, 61),
+            ('NUMBER', 2, 7, 63),
+            ('NUMBER', 1, 7, 65),
+            ('LINE_END', None, 7, 66)))
     ])
     def test_lex(self, name: str, source: str, lexed: Iterable[Tuple[str, Any, int, int]]):
         self.stream.write(source)

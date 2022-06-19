@@ -1,6 +1,7 @@
 """
 Lex an assembly file
 """
+from types import MethodType
 from .commands import DirectiveCode, OpCode
 import ply.lex as lex
 from itertools import chain, count, takewhile
@@ -27,7 +28,7 @@ def _build_ICAssLexer(build_options):
         'RELATIVE',
         'COMMA',
         'COLON',
-        'newline'
+        'LINE_END'
     )
 
     def t_COMMENT(t):
@@ -65,6 +66,10 @@ def _build_ICAssLexer(build_options):
     def t_newline(t):
         r'\n+'
         t.lexer.lineno += len(t.value)
+        if t.lexer.tokens_in_line == 0:
+            return  # do not give line ends on empty lines
+        t.type = 'LINE_END'
+        t.value = None
         return t
 
     # A string containing ignored characters (spaces and tabs)
@@ -87,6 +92,7 @@ def _build_ICAssLexer(build_options):
             return t.lexer.token()
         return None
 
+    # build lexer
     return lex.lex(**build_options)
 
 
@@ -102,8 +108,23 @@ def ICAssLexer(source: TextIO, chunk_size: int = 1024, **build_options):
         _built_lexers[hash_kwargs] = _build_ICAssLexer(build_options)
     lexer = _built_lexers[hash_kwargs].clone()  # clone the lexer
 
-    # add state as needed
+    # add needed state
     lexer.source = source
     lexer.chunk_size = chunk_size
+    lexer.tokens_in_line = 0
+
+    # monkey patch the token function
+    old_token = lexer.token.__func__
+
+    def token(self):
+        next_token = old_token(self)
+        if next_token:
+            if next_token.type != 'LINE_END':
+                self.tokens_in_line += 1
+            else:
+                self.tokens_in_line = 0
+        return next_token
+
+    lexer.token = MethodType(token, lexer)
 
     return lexer
