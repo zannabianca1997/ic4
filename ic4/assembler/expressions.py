@@ -55,6 +55,8 @@ def simplify(
         If full_simplify == True the process will halt and throw a SimplifyException if it can't get 
         the expression down to a single int.
     """
+    if subs is None:
+        subs = {}
     if isinstance(expr, int):
         return expr  # cannot be simplier
     if isinstance(expr, str):
@@ -67,8 +69,8 @@ def simplify(
         return expr
 
     # it's one of the four binary operations
-    left = simplify(expr.left)
-    right = simplify(expr.right)
+    left = simplify(expr.left, subs)
+    right = simplify(expr.right, subs)
 
     if not (isinstance(left, int) and isinstance(right, int)):
         assert not full_simplify, "When fullsimplifyin an exception should be thrown before there"
