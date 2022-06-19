@@ -26,6 +26,7 @@ def _build_ICAssLexer(build_options):
         'IMMEDIATE',
         'RELATIVE',
         'COMMA',
+        'COLON',
         'newline'
     )
 
@@ -34,7 +35,7 @@ def _build_ICAssLexer(build_options):
         pass
 
     # Identifiers and keyword (note the order)
-    @lex.TOKEN(" | ".join(x.name for x in chain(OpCode, DirectiveCode)))
+    @lex.TOKEN(" | ".join(sorted((x.name for x in chain(OpCode, DirectiveCode)), key=lambda x: len(x), reverse=True)))
     def t_KEYWORD(t):
         return t
 
@@ -52,6 +53,7 @@ def _build_ICAssLexer(build_options):
     t_IMMEDIATE = r'\#'
     t_RELATIVE = r'\@'
     t_COMMA = r'\,'
+    t_COLON = r'\:'
 
     # Numbers
     def t_NUMBER(t):
