@@ -15,11 +15,8 @@ class Machine:
     _input: List[int]
     _output: List[int]
 
-    _input_fun: Optional[Callable[[], int]]
-    _output_fun: Optional[Callable[[int], bool]]
-
     def __init__(self,
-                 program: Tuple[int]) -> None:
+                 program: Iterable[int]) -> None:
         self._memory = list(program)
         self._PC = 0
         self._RB = 0
