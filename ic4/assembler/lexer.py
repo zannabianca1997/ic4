@@ -77,8 +77,10 @@ def _build_ICAssLexer(build_options):
 
     # EOF handling rule
     def t_eof(t):
-        # Get more input (Example)
+        # Get more input
         more = t.lexer.source.read(t.lexer.chunk_size)
+        while more[-1] != '\n':  # go to the end of the line to avoid breaking tokens
+            more += t.lexer.source.read(1)
         if more:
             t.lexer.input(more)
             return t.lexer.token()
@@ -102,5 +104,6 @@ def ICAssLexer(source: TextIO, chunk_size: int = 1024, **build_options):
     # add state as needed
     lexer.source = source
     lexer.chunk_size = chunk_size
+    lexer.first_token_in_line = True
 
     return lexer
