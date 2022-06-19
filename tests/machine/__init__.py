@@ -1,11 +1,11 @@
-import json
-from warnings import warn
 from itertools import count, takewhile
+from warnings import warn
 from pathlib import Path
-from typing import Dict, Iterable, Tuple, Optional, Type, Union
-from unittest import TestCase, TestSuite, main
-from slugify import slugify
-from pydantic import BaseModel, validator
+from typing import Iterable, Tuple, Optional, Union
+from unittest import TestCase
+
+from parameterized import parameterized
+from pydantic import BaseModel, validator, parse_file_as
 
 from ic4.machine import Machine
 
@@ -37,77 +37,35 @@ class IOExample(BaseModel):
                 f"output should be a list of integers or a string, not {out.__class__}")
 
 
-def _make_test_case(program_name: str, program: Tuple[int, ...], ioexamples: Iterable[IOExample]):
-    """Create a test case"""
-    class TestProgram(TestCase):
-        _machine: Machine
-        _program: Tuple[int] = program
-        _ioexamples: Dict[str, IOExample] = {
-            example.name: example for example in ioexamples}
+def get_source_and_examples(dir: Path):
+    sources = []
+    for source in Path(dir).parent.glob("*.int"):
+        if not source.with_suffix(".json").exists():
+            warn(f"{source!s} misses a companion .json file!")
+            continue
+        with open(source) as source_file:
+            source_code = tuple(int(x.strip())
+                                for x in source_file.read().split(",") if x.strip())
+        io_examples = parse_file_as(
+            Tuple[IOExample, ...], source.with_suffix(".json"))
+        sources.append((source.stem, source_code, io_examples))
+    return sources
 
-        def setUp(self) -> None:
-            # initialize the intcode machine
-            self._machine = Machine(self._program)
 
-    test_funcs = []
-    for name, example in TestProgram._ioexamples.items():
-        def test_fun(self: TestProgram):
-            self._machine.give_input(example.input)
-            output = tuple(takewhile(lambda x: x is not None, (self._machine.get_output()
-                                                               for _ in count())))
-            self.assertTupleEqual(
-                output, self._ioexamples[name].output, f"Test:{self._ioexamples[name].name}\n{self._ioexamples[name].descr or ''}\nOutput is different\n")
-        fname = "test_" + slugify(
-            example.name, separator="_",
-            regex_pattern=r"[^a-zA-Z0-9_]+"
-        )
-        # resolve duplicates
-        other_names = set(fun.__name__ for fun in test_funcs)
-        if fname in other_names:
-            i = 1
-            while f"{fname}_{i}" in other_names:
-                i += 1
-            fname = f"{fname}_{i}"
-        test_fun.__name__ = fname
-        test_funcs.append(test_fun)
-    # adding functions
-    for fun in test_funcs:
-        setattr(TestProgram, fun.__name__, fun)
-    # setting name
-    TestProgram.__name__ = "Test" + slugify(
-        program_name.capitalize().replace(" ", ""), separator="_",
-        regex_pattern=r"[^a-zA-Z0-9_]+",
-        lowercase=False
+class TestExamplePrograms(TestCase):
+    machine: Machine
+
+    @parameterized.expand(
+        get_source_and_examples(__file__)
     )
-    return TestProgram
-
-
-# recovering all cases
-test_cases = []
-for source in Path(__file__).parent.glob("*.int"):
-    if not source.with_suffix(".json").exists():
-        warn(f"{source} does not have a connected json file")
-        continue
-
-    with open(source.with_suffix(".json")) as examplefile:
-        _ioexamples = tuple(IOExample.parse_obj(x)
-                            for x in json.load(examplefile))
-    with open(source) as sourcefile:
-        _program = tuple(int(x.strip())
-                         for x in sourcefile.read().split(",") if x.strip())
-
-    test_cases.append(_make_test_case(
-        source.stem,
-        _program,
-        _ioexamples
-    ))
-
-del _make_test_case, _ioexamples, _program, source, examplefile, sourcefile
-
-
-def load_tests(loader, tests, pattern):
-    suite = TestSuite()
-    for test_class in test_cases:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    return suite
+    def test_output(self, name: str, program: Iterable[int], ioexamples: Iterable[IOExample]) -> None:
+        program = tuple(program)
+        for ioexample in ioexamples:
+            with self.subTest(ioexample.name):
+                machine = Machine(program)
+                machine.give_input(ioexample.input)
+                output = tuple(takewhile(lambda x: x is not None,
+                               (machine.get_output() for _ in count())))
+                self.assertTupleEqual(
+                    output, ioexample.output
+                )
