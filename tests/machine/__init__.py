@@ -38,7 +38,6 @@ class IOExample(BaseModel):
 
 
 def get_source_and_examples(dir: Path):
-    sources = []
     for source in Path(dir).parent.glob("*.int"):
         if not source.with_suffix(".json").exists():
             warn(f"{source!s} misses a companion .json file!")
@@ -48,8 +47,7 @@ def get_source_and_examples(dir: Path):
                                 for x in source_file.read().split(",") if x.strip())
         io_examples = parse_file_as(
             Tuple[IOExample, ...], source.with_suffix(".json"))
-        sources.append((source.stem, source_code, io_examples))
-    return sources
+        yield source.stem, source_code, io_examples
 
 
 class TestExamplePrograms(TestCase):
