@@ -115,7 +115,7 @@ _built_lexers: Dict[Tuple[Tuple[str, Hashable], ...], lex.Lexer] = {}
 
 
 def ICAssLexer(source: TextIO, chunk_size: int = -1, **build_options):
-    """Reaturn a lexer that will read from the given source"""
+    """Return a lexer that will read from the given source"""
     # check if we have this lexer
     hash_kwargs = tuple(sorted(build_options.items()))
     if hash_kwargs not in _built_lexers:
