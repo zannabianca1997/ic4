@@ -36,15 +36,12 @@ class ICAssLexer(Lexer):
     }
 
     ignore = " \t"
+    ignore_comment = r"\;.*"
 
-    KEYWORD = " | ".join(
-        sorted(
-            (x.name for x in chain(OpCode, DirectiveCode)),
-            key=lambda x: len(x),
-            reverse=True,
-        )
-    )
     IDENTIFIER = r"[a-zA-Z_][a-zA-Z0-9_]*"
+
+    for keyword in chain(OpCode, DirectiveCode):
+        IDENTIFIER[keyword.name] = KEYWORD
 
     # Punctuators
     PLUS = r"\+"
@@ -67,11 +64,9 @@ class ICAssLexer(Lexer):
         return t
 
     # this will match end of line, with optional whitespaces
-    @_(r"(?:[ \t]*(?:;.*?)?\n)+[ \t]*")
+    @_(r"\n(?:[ \t]*(?:;.*?)?\n)*[ \t]*")
     def LINE_END(self, t):
         self.lineno += t.value.count("\n")
+        t.index += t.value.index("\n")
+        t.value = None
         return t
-
-    def error(self, t):
-        print(f"Line {self.lineno}: Bad character {t.value[0]!r}", file=stderr)
-        self.index += 1

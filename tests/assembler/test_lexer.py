@@ -1,25 +1,24 @@
-from io import StringIO
 from itertools import chain
 from random import shuffle
 from typing import Any, Iterable, Tuple
 from unittest import TestCase, skip
-from ply.lex import Lexer, LexToken
+
 from parameterized import parameterized
+from sly.lex import Token, Lexer
+
 from ic4.assembler.commands import DirectiveCode, OpCode
 from ic4.assembler.lexer import ICAssLexer
 
 
-def tuplify(token: LexToken):
-    return token.type, token.value, token.lineno, token.lexpos
+def tuplify(token: Token):
+    return token.type, token.value, token.lineno, token.index
 
 
 class TestLexing(TestCase):
-    stream: StringIO
     lexer: Lexer
 
     def setUp(self) -> None:
-        self.stream = StringIO()
-        self.lexer = ICAssLexer(self.stream, debug=True)
+        self.lexer = ICAssLexer()
 
     @parameterized.expand(
         [
@@ -30,7 +29,6 @@ class TestLexing(TestCase):
                     ("NUMBER", 3, 1, 0),
                     ("PLUS", "+", 1, 1),
                     ("NUMBER", 2, 1, 2),
-                    ("LINE_END", None, 1, 3),
                 ),
             ),
             (
@@ -44,7 +42,6 @@ class TestLexing(TestCase):
                     ("NUMBER", 6, 1, 6),
                     ("DIVIDE", "/", 1, 8),
                     ("NUMBER", 24, 1, 9),
-                    ("LINE_END", None, 1, 11),
                 ),
             ),
             (
@@ -55,7 +52,6 @@ class TestLexing(TestCase):
                     ("IMMEDIATE", "#", 1, 1),
                     ("COMMA", ",", 1, 2),
                     ("COLON", ":", 1, 3),
-                    ("LINE_END", None, 1, 4),
                 ),
             ),
             (
@@ -72,13 +68,13 @@ class TestLexing(TestCase):
                     ("IDENTIFIER", "this", 2, 50),
                     ("IDENTIFIER", "is", 2, 55),
                     ("IDENTIFIER", "outside", 2, 58),
-                    ("LINE_END", None, 2, 83),
                 ),
             ),
             (
                 "Newlines",
                 "\n\nINTS 0 ; one line interesting\n\n; this is filled even!\n\nADD 3 2 1\n\n;hello comments",
                 (
+                    ("LINE_END", None, 1, 0),
                     ("KEYWORD", "INTS", 3, 2),
                     ("NUMBER", 0, 3, 7),
                     ("LINE_END", None, 3, 31),
@@ -91,33 +87,29 @@ class TestLexing(TestCase):
             ),
         ]
     )
-    @skip("Lexer not implemented")
     def test_lex(
         self, name: str, source: str, lexed: Iterable[Tuple[str, Any, int, int]]
     ):
-        self.stream.write(source)
-        self.stream.seek(0)
+        self.assertTupleEqual(
+            tuple(tuplify(tok) for tok in self.lexer.tokenize(source)), tuple(lexed)
+        )
 
-        self.assertTupleEqual(tuple(tuplify(tok) for tok in self.lexer), tuple(lexed))
-
-    @skip("Lexer not implemented")
     def test_keywords(self):
-        words = "Some names to distinguish from the keywords".split()
+        words = "Some names to distinguish from the keywords _and some_identifier_012".split()
         keywords = set(x.name for x in chain(OpCode, DirectiveCode))
         if keywords.intersection(words):
             self.skipTest(f"{keywords.intersection(words)} are keywords now!")
         words += list(keywords)
         shuffle(words)
-        self.stream.write(" ".join(words))
-        self.stream.seek(0)
 
         self.assertTupleEqual(
-            tuple((tok.value, tok.type) for tok in self.lexer),
+            tuple(
+                (tok.value, tok.type) for tok in self.lexer.tokenize(" ".join(words))
+            ),
             tuple(
                 [
                     (word, "KEYWORD" if (word in keywords) else "IDENTIFIER")
                     for word in words
                 ]
-                + [(None, "LINE_END")]
             ),
         )
