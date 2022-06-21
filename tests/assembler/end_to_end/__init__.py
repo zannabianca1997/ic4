@@ -3,11 +3,11 @@ from os import getenv
 from warnings import warn
 from pathlib import Path
 from typing import Iterable, Tuple, Optional, Union
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
-from ply.lex import LexToken
+from sly.lex import Token
 
 from ic4.assembler.lexer import ICAssLexer
 from ic4.machine import Machine
@@ -68,9 +68,8 @@ class TestExamplePrograms(TestCase):
     machine: Machine
 
     @parameterized.expand(get_name_path_and_source(__file__))
-    @skip("Lexer not implemented")
     def test_lex(self, name: str, path: Path, program: str) -> None:
-        lexed = ICAssLexer(StringIO(program), debug=True)
+        lexed = ICAssLexer().tokenize(program)
 
         log_file_path = (
             Path(getenv("LOG_DIR"))
@@ -81,5 +80,5 @@ class TestExamplePrograms(TestCase):
         log_file_path.parent.mkdir(exist_ok=True, parents=True)
         with open(log_file_path, "w") as log_file:
             for tok in lexed:
-                self.assertIsInstance(tok, LexToken)
+                self.assertIsInstance(tok, Token)
                 print(tok, file=log_file)
