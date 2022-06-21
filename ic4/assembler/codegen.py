@@ -13,10 +13,7 @@ def generate_instruction(instr: Instruction) -> Tuple[Expression]:
     opcode = int(instr.opcode)
     for i, (mode, _) in enumerate(instr.params):
         opcode += 100 * 10**i * int(mode)
-    return (
-        opcode,
-        *(val for _, val in instr.params)
-    )
+    return (opcode, *(val for _, val in instr.params))
 
 
 def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
@@ -33,7 +30,4 @@ def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
         if isinstance(command, Directive):
             if command.code == DirectiveCode.INTS:
                 code.extend(command.params)
-    return tuple(
-        simplify(val, labels, full_simplify=True)
-        for val in code
-    )
+    return tuple(simplify(val, labels, full_simplify=True) for val in code)

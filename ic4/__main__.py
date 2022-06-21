@@ -30,9 +30,10 @@ def main(argv: Iterable[str]) -> int:
     # generate output code
     code = assemble(source)
 
-    print(','.join(str(val) for val in code))
+    print(",".join(str(val) for val in code))
 
 
 if __name__ == "__main__":
     from sys import argv
+
     exit(main(argv))

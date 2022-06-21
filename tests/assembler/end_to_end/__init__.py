@@ -19,7 +19,7 @@ class IOExample(BaseModel):
     input: Union[Tuple[int, ...], str] = ()
     output: Union[Tuple[int, ...], str]
 
-    @validator('input')
+    @validator("input")
     def input_is_tuple(cls, inp: Union[Iterable[int], str]):
         if isinstance(inp, str):
             return tuple(ord(ch) for ch in inp)
@@ -27,9 +27,10 @@ class IOExample(BaseModel):
             return tuple(inp)
         except TypeError:
             raise ValueError(
-                f"input should be a list of integers or a string, not {inp.__class__}")
+                f"input should be a list of integers or a string, not {inp.__class__}"
+            )
 
-    @validator('output')
+    @validator("output")
     def output_is_tuple(cls, out: Union[Iterable[int], str]):
         if isinstance(out, str):
             return tuple(ord(ch) for ch in out)
@@ -37,7 +38,8 @@ class IOExample(BaseModel):
             return tuple(out)
         except TypeError:
             raise ValueError(
-                f"output should be a list of integers or a string, not {out.__class__}")
+                f"output should be a list of integers or a string, not {out.__class__}"
+            )
 
 
 def get_sources(dir: Path):
@@ -58,23 +60,23 @@ def get_name_source_and_examples(dir: Path):
             continue
         with open(source) as source_file:
             source_code = source_file.read()
-        io_examples = parse_file_as(
-            Tuple[IOExample, ...], source.with_suffix(".json"))
+        io_examples = parse_file_as(Tuple[IOExample, ...], source.with_suffix(".json"))
         yield source.stem, source_code, io_examples
 
 
 class TestExamplePrograms(TestCase):
     machine: Machine
 
-    @parameterized.expand(
-        get_name_path_and_source(__file__)
-    )
+    @parameterized.expand(get_name_path_and_source(__file__))
     def test_lex(self, name: str, path: Path, program: str) -> None:
         lexed = ICAssLexer(StringIO(program), debug=True)
 
-        log_file_path = Path(getenv("LOG_DIR"))/"tests" / \
-            path.relative_to(
-                Path(getenv("TEST_DIR")).absolute()).with_suffix("") / "lexed.txt"
+        log_file_path = (
+            Path(getenv("LOG_DIR"))
+            / "tests"
+            / path.relative_to(Path(getenv("TEST_DIR")).absolute()).with_suffix("")
+            / "lexed.txt"
+        )
         log_file_path.parent.mkdir(exist_ok=True, parents=True)
         with open(log_file_path, "w") as log_file:
-            print(*lexed, file=log_file, sep='\n')
+            print(*lexed, file=log_file, sep="\n")

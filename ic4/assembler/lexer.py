@@ -7,6 +7,7 @@ import ply.lex as lex
 from itertools import chain, count, takewhile
 from typing import Dict, Hashable, Iterator, TextIO, Tuple
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -14,66 +15,74 @@ def _build_ICAssLexer(build_options):
     """Get a unbuilt lexer"""
     # List of token names.   This is always required
     tokens = (
-        'COMMENT',
-        'NUMBER',
-        'KEYWORD',
-        'IDENTIFIER',
-        'PLUS',
-        'MINUS',
-        'TIMES',
-        'DIVIDE',
-        'LPAREN',
-        'RPAREN',
-        'IMMEDIATE',
-        'RELATIVE',
-        'COMMA',
-        'COLON',
-        'LINE_END'
+        "COMMENT",
+        "NUMBER",
+        "KEYWORD",
+        "IDENTIFIER",
+        "PLUS",
+        "MINUS",
+        "TIMES",
+        "DIVIDE",
+        "LPAREN",
+        "RPAREN",
+        "IMMEDIATE",
+        "RELATIVE",
+        "COMMA",
+        "COLON",
+        "LINE_END",
     )
 
     def t_COMMENT(t):
-        r';.*'
+        r";.*"
         pass
 
     # Identifiers and keyword (note the order)
-    @lex.TOKEN(" | ".join(sorted((x.name for x in chain(OpCode, DirectiveCode)), key=lambda x: len(x), reverse=True)))
+    @lex.TOKEN(
+        " | ".join(
+            sorted(
+                (x.name for x in chain(OpCode, DirectiveCode)),
+                key=lambda x: len(x),
+                reverse=True,
+            )
+        )
+    )
     def t_KEYWORD(t):
         return t
 
     def t_IDENTIFIER(t):
-        r'[a-zA-Z_][a-zA-Z0-9_]*'
+        r"[a-zA-Z_][a-zA-Z0-9_]*"
         return t
 
     # Punctuators
-    t_PLUS = r'\+'
-    t_MINUS = r'\-'
-    t_TIMES = r'\*'
-    t_DIVIDE = r'\/'
-    t_LPAREN = r'\('
-    t_RPAREN = r'\)'
-    t_IMMEDIATE = r'\#'
-    t_RELATIVE = r'\@'
-    t_COMMA = r'\,'
-    t_COLON = r'\:'
+    t_PLUS = r"\+"
+    t_MINUS = r"\-"
+    t_TIMES = r"\*"
+    t_DIVIDE = r"\/"
+    t_LPAREN = r"\("
+    t_RPAREN = r"\)"
+    t_IMMEDIATE = r"\#"
+    t_RELATIVE = r"\@"
+    t_COMMA = r"\,"
+    t_COLON = r"\:"
 
     # Numbers
     def t_NUMBER(t):
-        r'\d+'
+        r"\d+"
         t.value = int(t.value)
         return t
 
     # Define a rule so we can track line numbers
     def t_newline(t):
-        r'\n+'
+        r"\n+"
         t.lexer.lineno += len(t.value)
         if t.lexer.tokens_in_line == 0:
             return  # do not give line ends on empty lines
-        t.type = 'LINE_END'
+        t.type = "LINE_END"
         t.value = None
         return t
 
     # A string containing ignored characters (spaces and tabs)
-    t_ignore = ' \t'
+    t_ignore = " \t"
 
     # Error handling rule
     def t_error(t):
@@ -86,7 +95,7 @@ def _build_ICAssLexer(build_options):
         more = t.lexer.source.read(t.lexer.chunk_size)
         if more:
             # go to the end of the line to avoid breaking tokens
-            while more[-1] != '\n' and (ch := t.lexer.source.read(1)):
+            while more[-1] != "\n" and (ch := t.lexer.source.read(1)):
                 more += ch
             t.lexer.input(more)
             return t.lexer.token()
@@ -119,7 +128,7 @@ def ICAssLexer(source: TextIO, chunk_size: int = -1, **build_options):
     def token(self):
         next_token = old_token(self)
         if next_token:
-            if next_token.type != 'LINE_END':
+            if next_token.type != "LINE_END":
                 self.tokens_in_line += 1
             else:
                 self.tokens_in_line = 0
@@ -128,7 +137,7 @@ def ICAssLexer(source: TextIO, chunk_size: int = -1, **build_options):
                 # closing last line
                 self.tokens_in_line = 0
                 t = lex.LexToken()
-                t.type = 'LINE_END'
+                t.type = "LINE_END"
                 t.value = None
                 t.lineno = self.lineno
                 t.lexpos = self.lexpos
