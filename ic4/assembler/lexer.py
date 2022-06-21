@@ -2,13 +2,16 @@
 Lex an assembly file
 """
 from types import MethodType
-from .commands import DirectiveCode, OpCode
-import ply.lex as lex
 from itertools import chain
 from typing import Dict, Hashable, TextIO, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
+
+import ply.lex as lex
+
+from .commands import DirectiveCode, OpCode
+
 
 TOKENS = (
     "COMMENT",
