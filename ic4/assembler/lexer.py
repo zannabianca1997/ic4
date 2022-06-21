@@ -4,33 +4,36 @@ Lex an assembly file
 from types import MethodType
 from .commands import DirectiveCode, OpCode
 import ply.lex as lex
-from itertools import chain, count, takewhile
-from typing import Dict, Hashable, Iterator, TextIO, Tuple
+from itertools import chain
+from typing import Dict, Hashable, TextIO, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
+
+TOKENS = (
+    "COMMENT",
+    "NUMBER",
+    "KEYWORD",
+    "IDENTIFIER",
+    "PLUS",
+    "MINUS",
+    "TIMES",
+    "DIVIDE",
+    "LPAREN",
+    "RPAREN",
+    "IMMEDIATE",
+    "RELATIVE",
+    "COMMA",
+    "COLON",
+    "LINE_END",
+)
 
 
 def _build_ICAssLexer(build_options):
     """Get a unbuilt lexer"""
     # List of token names.   This is always required
-    tokens = (
-        "COMMENT",
-        "NUMBER",
-        "KEYWORD",
-        "IDENTIFIER",
-        "PLUS",
-        "MINUS",
-        "TIMES",
-        "DIVIDE",
-        "LPAREN",
-        "RPAREN",
-        "IMMEDIATE",
-        "RELATIVE",
-        "COMMA",
-        "COLON",
-        "LINE_END",
-    )
+
+    tokens = TOKENS
 
     def t_COMMENT(t):
         r";.*"
