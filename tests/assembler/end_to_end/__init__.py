@@ -3,7 +3,7 @@ from os import getenv
 from warnings import warn
 from pathlib import Path
 from typing import Iterable, Tuple, Optional, Union
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
@@ -68,6 +68,7 @@ class TestExamplePrograms(TestCase):
     machine: Machine
 
     @parameterized.expand(get_name_path_and_source(__file__))
+    @skip("Lexer not implemented")
     def test_lex(self, name: str, path: Path, program: str) -> None:
         lexed = ICAssLexer(StringIO(program), debug=True)
 
