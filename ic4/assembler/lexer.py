@@ -99,7 +99,7 @@ def _build_ICAssLexer(build_options):
 _built_lexers: Dict[Tuple[Tuple[str, Hashable], ...], lex.Lexer] = {}
 
 
-def ICAssLexer(source: TextIO, chunk_size: int = 1024, **build_options):
+def ICAssLexer(source: TextIO, chunk_size: int = -1, **build_options):
     """Reaturn a lexer that will read from the given source"""
     # check if we have this lexer
     hash_kwargs = tuple(sorted(build_options.items()))
