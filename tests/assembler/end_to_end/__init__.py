@@ -1,5 +1,4 @@
 from io import StringIO
-from itertools import count, takewhile
 from os import getenv
 from warnings import warn
 from pathlib import Path
@@ -8,6 +7,7 @@ from unittest import TestCase
 
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
+from ply.lex import LexToken
 
 from ic4.assembler.lexer import ICAssLexer
 from ic4.machine import Machine
@@ -79,4 +79,6 @@ class TestExamplePrograms(TestCase):
         )
         log_file_path.parent.mkdir(exist_ok=True, parents=True)
         with open(log_file_path, "w") as log_file:
-            print(*lexed, file=log_file, sep="\n")
+            for tok in lexed:
+                self.assertIsInstance(tok, LexToken)
+                print(tok, file=log_file)
