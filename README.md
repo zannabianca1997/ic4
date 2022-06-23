@@ -16,7 +16,7 @@ This is a sintetic roadmap:
 - [ ] Compiler
 - [ ] Linker
 - [ ] Assembler
-  - [v] Lexer
+  - [x] Lexer
   - [ ] Instructions
   - [ ] Labels
   - [ ] Directives
@@ -26,7 +26,7 @@ This is a sintetic roadmap:
     - [ ] MOV
     - [ ] PUSH and POP
     - [ ] CALL and RET
-- [v] Intcode machine
+- [x] Intcode machine
 
 ## Used C dialect
 
