@@ -1,9 +1,11 @@
-from io import StringIO
-from typing import Any, Iterable, Tuple
-from unittest import TestCase, skip
+from itertools import combinations, combinations_with_replacement, product
+import opcode
+from typing import Iterable
+from unittest import TestCase
 
 from parameterized import parameterized
 
+from ic4.assembler.commands import Instruction, OpCode, ParamMode
 from ic4.assembler.expressions import Divide, Expression, Multiply, Subtract, Sum
 from ic4.assembler.lexer import ICAssLexer
 from ic4.assembler.parser import ICAssParser
@@ -11,7 +13,6 @@ from ic4.assembler.parser import ICAssParser
 
 class TestParsingExpression(TestCase):
     def setUp(self) -> None:
-        self.stream = StringIO()
         self.lexer = ICAssLexer()
         self.parser = ICAssParser()
 
@@ -84,8 +85,34 @@ class TestParsingExpression(TestCase):
             ),
         ]
     )
-    def test_parse(self, name: str, source: str, parsed: Iterable[Expression]):
-        self.stream.write(source)
-        self.stream.seek(0)
+    def test_parse(self, name: str, source: str, parsed: Expression):
+        self.assertEqual(
+            self.parser.parse(self.lexer.tokenize(f"OUT {source}")),
+            Instruction(OpCode["OUT"], ((ParamMode.MODE0, parsed),)),
+        )
 
+
+def names(n: int) -> Iterable[str]:
+    return tuple(f"t_{i}" for i in range(n))
+
+
+class TestInstructions(TestCase):
+    def setUp(self) -> None:
+        self.lexer = ICAssLexer()
+        self.parser = ICAssParser()
+
+    @parameterized.expand(
+        [
+            (
+                f"{opcode.name} {''.join({ParamMode.MODE0:'A',ParamMode.MODE1:'I', ParamMode.MODE2:'R'}[mode] for mode in parammodes)}",
+                f"{opcode.name} {' '.join(f'{mode.prefix()}{param}' for mode, param in  zip(parammodes, names(opcode.param_number())))}",
+                Instruction(
+                    opcode, tuple(zip(parammodes, names(opcode.param_number())))
+                ),
+            )
+            for opcode in OpCode
+            for parammodes in product(ParamMode, repeat=opcode.param_number())
+        ]
+    )
+    def test_parse(self, name: str, source: str, parsed: Instruction):
         self.assertEqual(self.parser.parse(self.lexer.tokenize(source)), parsed)

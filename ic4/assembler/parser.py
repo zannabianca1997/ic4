@@ -3,7 +3,9 @@ Parse an assembly file
 """
 from sly import Parser
 
+
 from .expressions import Divide, Multiply, Subtract, Sum
+from .commands import Instruction, OpCode, ParamMode
 from .lexer import ICAssLexer
 
 
@@ -15,6 +17,26 @@ class ICAssParser(Parser):
         ("left", TIMES, DIVIDE),
         ("right", UMINUS),  # Unary minus operator
     )
+
+    @_("OPCODE { param [ COMMA ] }")
+    def instruction(self, p):
+        return Instruction(OpCode[p.OPCODE], tuple(p.param))
+
+    @_("param_mode expr")
+    def param(self, p):
+        return (p.param_mode, p.expr)
+
+    @_("")
+    def param_mode(self, p):
+        return ParamMode.MODE0
+
+    @_("IMMEDIATE")
+    def param_mode(self, p):
+        return ParamMode.MODE1
+
+    @_("RELATIVE")
+    def param_mode(self, p):
+        return ParamMode.MODE2
 
     @_("expr PLUS expr")
     def expr(self, p):

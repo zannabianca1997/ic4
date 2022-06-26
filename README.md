@@ -17,7 +17,7 @@ This is a sintetic roadmap:
 - [ ] Linker
 - [ ] Assembler
   - [v] Lexer
-  - [ ] Instructions
+  - [v] Instructions
   - [ ] Labels
   - [ ] Directives
     - [ ] INTS
