@@ -67,7 +67,7 @@ class ICAssLexer(Lexer):
         return t
 
     # this will match end of line, with optional whitespaces
-    @_(r"\n(?:[ \t]*(?:;.*?)?\n)*[ \t]*")
+    @_(r"\n(?:[ \t]*(?:;.*?)?\n)*")
     def LINE_END(self, t):
         self.lineno += t.value.count("\n")
         t.index += t.value.index("\n")
