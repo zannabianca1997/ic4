@@ -40,6 +40,10 @@ class ICAssParser(Parser):
     def expr(self, p):
         return p.NUMBER
 
+    @_("IDENTIFIER")
+    def expr(self, p):
+        return p.IDENTIFIER
+
     @_("LPAREN expr RPAREN")
     def expr(self, p):
         return p.expr

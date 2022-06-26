@@ -72,6 +72,16 @@ class TestParsingExpression(TestCase):
                 "(3+ 6) /24",
                 Divide(Sum(3, 6), 24),
             ),
+            (
+                "Identifier",
+                "a",
+                "a",
+            ),
+            (
+                "Identifier in math",
+                "a+3",
+                Sum("a", 3),
+            ),
         ]
     )
     def test_parse(self, name: str, source: str, parsed: Iterable[Expression]):
