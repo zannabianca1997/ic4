@@ -85,10 +85,10 @@ class TestLexing(TestCase):
                 "\n\nINTS 0 ; one line interesting\n\n; this is filled even!\n\nADD 3 2 1\n\n;hello comments",
                 (
                     ("LINE_END", None, 1, 0),
-                    ("KEYWORD", "INTS", 3, 2),
+                    ("DIRECTIVE", "INTS", 3, 2),
                     ("NUMBER", 0, 3, 7),
                     ("LINE_END", None, 3, 31),
-                    ("KEYWORD", "ADD", 7, 57),
+                    ("OPCODE", "ADD", 7, 57),
                     ("NUMBER", 3, 7, 61),
                     ("NUMBER", 2, 7, 63),
                     ("NUMBER", 1, 7, 65),
@@ -117,9 +117,16 @@ class TestLexing(TestCase):
                 (tok.value, tok.type) for tok in self.lexer.tokenize(" ".join(words))
             ),
             tuple(
-                [
-                    (word, "KEYWORD" if (word in keywords) else "IDENTIFIER")
-                    for word in words
-                ]
+                (
+                    word,
+                    "OPCODE"
+                    if (word in {x.name for x in OpCode})
+                    else (
+                        "DIRECTIVE"
+                        if (word in {x.name for x in DirectiveCode})
+                        else "IDENTIFIER"
+                    ),
+                )
+                for word in words
             ),
         )

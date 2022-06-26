@@ -20,7 +20,8 @@ class ICAssLexer(Lexer):
     tokens = {
         COMMENT,
         NUMBER,
-        KEYWORD,
+        OPCODE,
+        DIRECTIVE,
         IDENTIFIER,
         PLUS,
         MINUS,
@@ -40,8 +41,10 @@ class ICAssLexer(Lexer):
 
     IDENTIFIER = r"[a-zA-Z_][a-zA-Z0-9_]*"
 
-    for keyword in chain(OpCode, DirectiveCode):
-        IDENTIFIER[keyword.name] = KEYWORD
+    for keyword in OpCode:
+        IDENTIFIER[keyword.name] = OPCODE
+    for keyword in DirectiveCode:
+        IDENTIFIER[keyword.name] = DIRECTIVE
 
     # Punctuators
     PLUS = r"\+"
