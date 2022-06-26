@@ -23,6 +23,16 @@ class TestLexing(TestCase):
     @parameterized.expand(
         [
             (
+                "decimal number",
+                "323",
+                (("NUMBER", 323, 1, 0),),
+            ),
+            (
+                "hexadecimal number",
+                "0x323",
+                (("NUMBER", 0x323, 1, 0),),
+            ),
+            (
                 "simple addition",
                 "3+2",
                 (
