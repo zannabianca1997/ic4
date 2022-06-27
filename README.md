@@ -18,9 +18,9 @@ This is a sintetic roadmap:
 - [ ] Assembler
   - [v] Lexer
   - [v] Instructions
-  - [ ] Labels
+  - [v] Labels
   - [ ] Directives
-    - [ ] INTS
+    - [v] INTS
     - [ ] ZEROS
     - [ ] INC and DEC
     - [ ] MOV
