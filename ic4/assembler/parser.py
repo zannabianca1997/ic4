@@ -54,15 +54,15 @@ class ICAssParser(Parser):
 
     @_("")
     def param_mode(self, p):
-        return ParamMode.MODE0
+        return ParamMode.ABSOLUTE
 
     @_("IMMEDIATE")
     def param_mode(self, p):
-        return ParamMode.MODE1
+        return ParamMode.IMMEDIATE
 
     @_("RELATIVE")
     def param_mode(self, p):
-        return ParamMode.MODE2
+        return ParamMode.RELATIVE
 
     @_("expr PLUS expr")
     def expr(self, p):

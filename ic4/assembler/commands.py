@@ -36,12 +36,16 @@ class OpCode(IntEnum):
 
 
 class ParamMode(IntEnum):
-    MODE0 = 0
-    MODE1 = 1
-    MODE2 = 2
+    ABSOLUTE = 0
+    IMMEDIATE = 1
+    RELATIVE = 2
 
     def prefix(self) -> str:
-        return {ParamMode.MODE0: "", ParamMode.MODE1: "#", ParamMode.MODE2: "@"}[self]
+        return {
+            ParamMode.ABSOLUTE: "",
+            ParamMode.IMMEDIATE: "#",
+            ParamMode.RELATIVE: "@",
+        }[self]
 
 
 @dataclass(frozen=True)

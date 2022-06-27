@@ -18,7 +18,7 @@ class TestGenerate(TestCase):
     @parameterized.expand(
         [
             (
-                f"{opcode.name} {''.join({ParamMode.MODE0:'A',ParamMode.MODE1:'I', ParamMode.MODE2:'R'}[mode] for mode in parammodes)}",
+                f"{opcode.name} {''.join({ParamMode.ABSOLUTE:'A',ParamMode.IMMEDIATE:'I', ParamMode.RELATIVE:'R'}[mode] for mode in parammodes)}",
                 Instruction(
                     opcode, tuple(zip(parammodes, range(opcode.param_number())))
                 ),

@@ -98,13 +98,13 @@ class TestParsing(TestCase):
     def test_parse_expression(self, name: str, source: str, parsed: Expression):
         self.assertEqual(
             self.parser.parse(self.lexer.tokenize(f"OUT {source}\n"))[0],
-            Instruction(OpCode["OUT"], ((ParamMode.MODE0, parsed),)),
+            Instruction(OpCode["OUT"], ((ParamMode.ABSOLUTE, parsed),)),
         )
 
     @parameterized.expand(
         [
             (
-                f"{opcode.name} {''.join({ParamMode.MODE0:'A',ParamMode.MODE1:'I', ParamMode.MODE2:'R'}[mode] for mode in parammodes)}",
+                f"{opcode.name} {''.join({ParamMode.ABSOLUTE:'A',ParamMode.IMMEDIATE:'I', ParamMode.RELATIVE:'R'}[mode] for mode in parammodes)}",
                 f"{opcode.name} {' '.join(f'{mode.prefix()}{param}' for mode, param in  zip(parammodes, names(opcode.param_number())))}",
                 Instruction(
                     opcode, tuple(zip(parammodes, names(opcode.param_number())))
