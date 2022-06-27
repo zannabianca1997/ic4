@@ -5,7 +5,14 @@ from unittest import TestCase
 
 from parameterized import parameterized
 
-from ic4.assembler.commands import Instruction, Label, OpCode, ParamMode
+from ic4.assembler.commands import (
+    Directive,
+    DirectiveCode,
+    Instruction,
+    Label,
+    OpCode,
+    ParamMode,
+)
 from ic4.assembler.expressions import Divide, Expression, Multiply, Subtract, Sum
 from ic4.assembler.lexer import ICAssLexer
 from ic4.assembler.parser import ICAssParser
@@ -126,6 +133,21 @@ class TestParsing(TestCase):
                     Label("label2"),
                     Label("label3"),
                     Instruction(OpCode.HALT, ()),
+                ),
+            ),
+            (
+                "single plus directive",
+                "label : INTS 0\n",
+                (Label("label"), Directive(DirectiveCode.INTS, (0,))),
+            ),
+            (
+                "multiple plus directive",
+                "label1 : label2 : label3 : INTS 0\n",
+                (
+                    Label("label1"),
+                    Label("label2"),
+                    Label("label3"),
+                    Directive(DirectiveCode.INTS, (0,)),
                 ),
             ),
             (

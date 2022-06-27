@@ -18,22 +18,27 @@ class ICAssLexer(Lexer):
     """Lex IntCode Assembly"""
 
     tokens = {
+        # misc
         COMMENT,
-        NUMBER,
+        LINE_END,
+        COMMA,
+        # instructions
         OPCODE,
-        DIRECTIVE,
+        IMMEDIATE,
+        RELATIVE,
+        # directives
+        INTS,
+        # labels
         IDENTIFIER,
+        COLON,
+        # expressions
+        NUMBER,
         PLUS,
         MINUS,
         TIMES,
         DIVIDE,
         LPAREN,
         RPAREN,
-        IMMEDIATE,
-        RELATIVE,
-        COMMA,
-        COLON,
-        LINE_END,
     }
 
     ignore = " \t"
@@ -43,8 +48,9 @@ class ICAssLexer(Lexer):
 
     for keyword in OpCode:
         IDENTIFIER[keyword.name] = OPCODE
-    for keyword in DirectiveCode:
-        IDENTIFIER[keyword.name] = DIRECTIVE
+
+    # directives
+    IDENTIFIER["INTS"] = INTS
 
     # Punctuators
     PLUS = r"\+"

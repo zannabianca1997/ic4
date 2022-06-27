@@ -86,7 +86,7 @@ class TestLexing(TestCase):
                 (
                     ("LINE_END", "\n", 1, 0),
                     ("LINE_END", "\n", 2, 1),
-                    ("DIRECTIVE", "INTS", 3, 2),
+                    ("INTS", "INTS", 3, 2),
                     ("NUMBER", 0, 3, 7),
                     ("LINE_END", "\n", 3, 31),
                     ("LINE_END", "\n", 4, 32),
@@ -127,7 +127,7 @@ class TestLexing(TestCase):
                     "OPCODE"
                     if (word in {x.name for x in OpCode})
                     else (
-                        "DIRECTIVE"
+                        word
                         if (word in {x.name for x in DirectiveCode})
                         else "IDENTIFIER"
                     ),

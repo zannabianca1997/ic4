@@ -8,7 +8,7 @@ from sly import Parser
 
 
 from .expressions import Divide, Multiply, Subtract, Sum
-from .commands import Instruction, Label, OpCode, ParamMode
+from .commands import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
 from .lexer import ICAssLexer
 
 
@@ -27,16 +27,26 @@ class ICAssParser(Parser):
     def program(self, p):
         return tuple(chain(*p.command))
 
-    @_("{ IDENTIFIER COLON } [ instruction ]")
+    @_("labels instruction", "labels directive")
     def command(self, p):
-        if p.instruction is not None:
-            return (*(Label(x) for x in p.IDENTIFIER), p.instruction)
-        else:
-            return tuple(Label(x) for x in p.IDENTIFIER)
+        return (*p.labels, p[1])
+
+    @_("labels")
+    def command(self, p):
+        return p.labels
+
+    @_("{ IDENTIFIER COLON }")
+    def labels(self, p):
+        return tuple(Label(x) for x in p.IDENTIFIER)
 
     @_("OPCODE { param [ COMMA ] }")
     def instruction(self, p):
         return Instruction(OpCode[p.OPCODE], tuple(p.param))
+
+    # directives with expression parameters
+    @_("INTS { expr [ COMMA ] }")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], tuple(p.expr))
 
     @_("param_mode expr")
     def param(self, p):

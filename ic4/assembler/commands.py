@@ -57,7 +57,7 @@ class DirectiveCode(Enum):
 @dataclass(frozen=True)
 class Directive:
     code: DirectiveCode
-    params: Tuple[Expression, ...]
+    params: Tuple[Union[Tuple[ParamMode, Expression], Expression], ...]
 
 
 @dataclass(frozen=True)
