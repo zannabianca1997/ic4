@@ -12,5 +12,5 @@ loop: JZ curr_ch #end        ; loop until terminator
       OUT curr_ch            ; out the current char
       INC str_ptr            ; increase pointer
       LOAD str_ptr curr_ch   ; load next char
-JZ #0 #loop            
+JMP #loop            
 end: HALT
