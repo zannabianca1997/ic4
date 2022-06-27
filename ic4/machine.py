@@ -3,7 +3,8 @@
 """
 
 from itertools import count, takewhile
-from typing import Union, Iterable, Optional, List
+from os import stat
+from typing import TextIO, Union, Iterable, Optional, List
 
 
 class Machine:
@@ -17,7 +18,7 @@ class Machine:
     _input: List[int]
     _output: List[int]
 
-    def __init__(self, program: Iterable[int]) -> None:
+    def __init__(self, program: Iterable[int], debug: Optional[TextIO] = None):
         self._memory = list(program)
         self._PC = 0
         self._RB = 0
@@ -25,6 +26,31 @@ class Machine:
 
         self._input = []
         self._output = []
+
+        self._debug = debug
+
+    def state_dump(self) -> str:
+        """Get a pretty print of the machine state"""
+        state = ""
+        # log where in the line the pointers are
+        PC_start = 0
+        RB_start = 0
+        # print memory
+        for i, v in enumerate(self._memory):
+            if i == self._PC:
+                PC_start = len(state)
+            if i == self._RB:
+                RB_start = len(state) + 1
+            state += str(v) + ", "
+        state += "\n"
+        # print pointers
+        if PC_start < RB_start:
+            state += " " * PC_start + "^" + " " * (RB_start - PC_start - 1) + "@"
+        else:
+            state += " " * RB_start + "@" + " " * (PC_start - RB_start - 1) + "^"
+        state += "\n"
+
+        return state
 
     def _get_mem(self, idx: int) -> int:
         """Get memory at index"""
@@ -70,6 +96,8 @@ class Machine:
         if self._halted:
             return False
         while True:
+            if self._debug:
+                print(self.state_dump(), file=self._debug)
             op = self._get_mem(self._PC)
             opcode = op % 100
             parmode1 = (op // 100) % 10
@@ -176,12 +204,12 @@ class Machine:
 
 
 if __name__ == "__main__":
-    from sys import argv
+    from sys import argv, stdout
 
     program = tuple(
         int(x.strip()) for x in open(argv[1]).read().split(",") if x.strip()
     )
-    machine = Machine(program)
+    machine = Machine(program, debug=open(argv[2], "w") if len(argv) > 2 else None)
     while machine.run():
         print(
             ", ".join(
