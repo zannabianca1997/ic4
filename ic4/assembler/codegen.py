@@ -133,6 +133,52 @@ def generate_directive(
         # If not, it will create a invalid reference (the first time around)
         # here we can generate code to put the -1 back. Should we? I think not, or at least it should be higly optional
         return code
+    elif directive.code == DirectiveCode.STORE:
+        code = []
+        code.extend(
+            generate_directive(  # code to move the address into the code
+                Directive(
+                    DirectiveCode.MOV,
+                    (
+                        directive.params[1],
+                        (
+                            ParamMode.ABSOLUTE,
+                            "address_pos",  # placeholder for the position of the destination of the address
+                            # MOV do not expand any param, except the third
+                        ),
+                        1,
+                    ),
+                ),
+                {},
+                pos,
+            )
+        )
+        code.extend(
+            generate_directive(
+                Directive(
+                    DirectiveCode.MOV,
+                    (
+                        directive.params[0],
+                        (
+                            ParamMode.ABSOLUTE,
+                            "address_dest",  # placeholder for where the code will put the address.
+                            # MOV do not expand any param, except the third
+                        ),
+                        1,
+                    ),
+                ),
+                labels,
+                pos,
+            )
+        )
+        code = list(simplify_tuple(code))  # this will erase the +0 MOV tend to add
+        # patching code
+        address_dest = code.index("address_dest")
+        code[code.index("address_pos")] = pos + address_dest
+        code[address_dest] = -1  # this will be substituted by the code.
+        # If not, it will create a invalid reference (the first time around)
+        # here we can generate code to put the -1 back. Should we? I think not, or at least it should be higly optional
+        return code
     else:
         raise NotImplementedError(f"Directive {directive.code} it's unimplemented")
 

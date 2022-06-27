@@ -21,10 +21,11 @@ This is a sintetic roadmap:
   - [X] Labels
   - [ ] Directives
     - [X] INTS
+    - [ ] STRING
     - [X] ZEROS
     - [X] INC and DEC
     - [X] MOV
-    - [ ] LOAD and STORE
+    - [X] LOAD and STORE
     - [ ] PUSH and POP
     - [ ] CALL and RET
 - [x] Intcode machine
