@@ -21,7 +21,7 @@ This is a sintetic roadmap:
   - [X] Labels
   - [ ] Directives
     - [X] INTS
-    - [ ] ZEROS
+    - [X] ZEROS
     - [ ] INC and DEC
     - [ ] MOV
     - [ ] PUSH and POP
