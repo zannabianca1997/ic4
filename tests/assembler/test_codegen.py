@@ -92,3 +92,37 @@ class TestGenerate(TestCase):
                 Directive(DirectiveCode.ZEROS, (-1,)),
             ),
         )
+
+    def test_DEC(self):
+        self.assertTupleEqual(
+            generate((Directive(DirectiveCode.DEC, ((ParamMode.ABSOLUTE, 42),)),)),
+            generate(
+                (
+                    Instruction(
+                        OpCode.ADD,
+                        (
+                            (ParamMode.ABSOLUTE, 42),
+                            (ParamMode.IMMEDIATE, -1),
+                            (ParamMode.ABSOLUTE, 42),
+                        ),
+                    ),
+                )
+            ),
+        )
+
+    def test_INC(self):
+        self.assertTupleEqual(
+            generate((Directive(DirectiveCode.INC, ((ParamMode.ABSOLUTE, 42),)),)),
+            generate(
+                (
+                    Instruction(
+                        OpCode.ADD,
+                        (
+                            (ParamMode.ABSOLUTE, 42),
+                            (ParamMode.IMMEDIATE, 1),
+                            (ParamMode.ABSOLUTE, 42),
+                        ),
+                    ),
+                )
+            ),
+        )

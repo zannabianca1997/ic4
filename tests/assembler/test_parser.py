@@ -186,6 +186,26 @@ class TestParsing(TestCase):
                 "ZEROS 32",
                 Directive(DirectiveCode.ZEROS, (32,)),
             ),
+            (
+                "INC",
+                "INC 4",
+                Directive(DirectiveCode.INC, ((ParamMode.ABSOLUTE, 4),)),
+            ),
+            (
+                "INC relative",
+                "INC @4",
+                Directive(DirectiveCode.INC, ((ParamMode.RELATIVE, 4),)),
+            ),
+            (
+                "DEC",
+                "DEC 4",
+                Directive(DirectiveCode.DEC, ((ParamMode.ABSOLUTE, 4),)),
+            ),
+            (
+                "DEC relative",
+                "DEC @4",
+                Directive(DirectiveCode.DEC, ((ParamMode.RELATIVE, 4),)),
+            ),
         ]
     )
     def test_parse_directives(self, name: str, source: str, parsed: Instruction):

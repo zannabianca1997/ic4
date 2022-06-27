@@ -1,10 +1,6 @@
 """
 Lex an assembly file
 """
-from sys import stderr
-from types import MethodType
-from itertools import chain
-from typing import Dict, Hashable, TextIO, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,6 +25,8 @@ class ICAssLexer(Lexer):
         # directives
         INTS,
         ZEROS,
+        INC,
+        DEC,
         # labels
         IDENTIFIER,
         COLON,
@@ -53,6 +51,8 @@ class ICAssLexer(Lexer):
     # directives
     IDENTIFIER["INTS"] = INTS
     IDENTIFIER["ZEROS"] = ZEROS
+    IDENTIFIER["INC"] = INC
+    IDENTIFIER["DEC"] = DEC
 
     # Punctuators
     PLUS = r"\+"

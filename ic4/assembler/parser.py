@@ -52,6 +52,11 @@ class ICAssParser(Parser):
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], (p.expr,))
 
+    # directives with complete parameters
+    @_("INC param", "DEC param")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], (p.param,))
+
     @_("param_mode expr")
     def param(self, p):
         return (p.param_mode, p.expr)

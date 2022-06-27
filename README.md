@@ -22,7 +22,7 @@ This is a sintetic roadmap:
   - [ ] Directives
     - [X] INTS
     - [X] ZEROS
-    - [ ] INC and DEC
+    - [X] INC and DEC
     - [ ] MOV
     - [ ] PUSH and POP
     - [ ] CALL and RET

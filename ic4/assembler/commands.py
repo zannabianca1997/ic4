@@ -57,6 +57,8 @@ class Instruction:
 class DirectiveCode(Enum):
     INTS = auto()
     ZEROS = auto()
+    INC = auto()
+    DEC = auto()
 
 
 @dataclass(frozen=True)
