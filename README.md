@@ -16,16 +16,17 @@ This is a sintetic roadmap:
 - [ ] Compiler
 - [ ] Linker
 - [ ] Assembler
+  - [v] Lexer
   - [v] Instructions
   - [v] Labels
-  - [v] Directives
+  - [ ] Directives
     - [v] INTS
     - [ ] ZEROS
     - [ ] INC and DEC
     - [ ] MOV
     - [ ] PUSH and POP
     - [ ] CALL and RET
-- [v] Intcode machine
+- [x] Intcode machine
 
 ## Used C dialect
 

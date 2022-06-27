@@ -1,101 +1,97 @@
 """
-    Parse a file into an AST
+Parse an assembly file
 """
+from itertools import chain
+from os import getenv
 from pathlib import Path
-from typing import Tuple
-from tatsu import compile
+from sly import Parser
 
-from .commands import Command, Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
+
 from .expressions import Divide, Multiply, Subtract, Sum
+from .commands import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
+from .lexer import ICAssLexer
 
 
-class IC4AssSemantic:
-    def number(self, ast):
-        return int(ast)
+class ICAssParser(Parser):
+    tokens = ICAssLexer.tokens
 
-    def label(self, ast):
-        return Label(ast)
+    debugfile = Path(getenv("LOG_DIR")) / "parser.out"
 
-    def instruction(self, ast):
-        return Instruction(
-            OpCode[ast["op"]],
-            tuple(ast["params"]) if ast["params"] is not None else ()
-        )
-
-    def param(self, ast):
-        mode = ParamMode.MODE0
-        if ast["mode"] == '#':
-            mode = ParamMode.MODE1
-        elif ast["mode"] == '@':
-            mode = ParamMode.MODE2
-        return mode, ast["value"]
-
-    def directive(self, ast):
-        return Directive(
-            DirectiveCode[ast["code"]],
-            tuple(ast["params"]) if ast["params"] is not None else ()
-        )
-
-    def addexpr(self, ast):
-        if ast["op"] == "+":
-            return Sum(ast['left'], ast['right'])
-        return Subtract(ast['left'], ast['right'])
-
-    def multexpr(self, ast):
-        if ast["op"] == "*":
-            return Multiply(ast['left'], ast['right'])
-        return Divide(ast['left'], ast['right'])
-
-
-GRAMMAR = r"""
-@@grammar::IC4ASS
-@@parseinfo::False
-
-@@keyword :: INTS
-@@keyword :: ADD MUL IN OUT JNZ JZ SLT SEQ INCB HALT
-
-@@eol_comments :: /;.*?$/
-
-file = { command } $ ;
-
-command = ( label | directive | instruction ) ;
-
-label = @:identifier ':' ;
-
-directive = direct_INTS ;
-direct_INTS = code:'INTS' ~ '(' { params+: expr [','] ~ } ')' ;
-
-instruction = <instruction_rules_list> ;
-
-<instruction_rules>
-
-param = mode:([ '#' | '@' ]) value:expr ;
-
-expr    = @:addexpr | @:term ;
-term    = @:multexpr | @:factor ;
-factor  = number | identifier | '('  @:expr  ')' ;
-
-addexpr = left:expr op:('+' | '-') right:term ;
-multexpr = left:term op:('*' | '/') right:factor ;
-
-@name
-identifier = /[a-zA-Z_][a-zA-Z0-9_]*/ ;
-
-number = /\d+/ ;
-""".replace(
-    "<instruction_rules_list>",
-    " | ".join(f"instr_{opcode.name}" for opcode in OpCode)
-).replace(
-    "<instruction_rules>",
-    "\n".join(
-        f"instr_{opcode.name} = op:'{opcode.name}' ~ " +
-        " [','] ".join(['params+:param']*opcode.param_number()) + ";"
-        for opcode in OpCode
+    precedence = (
+        ("left", PLUS, MINUS),
+        ("left", TIMES, DIVIDE),
+        ("right", UMINUS),  # Unary minus operator
     )
-)
 
-Parser = compile(GRAMMAR, semantics=IC4AssSemantic())
+    @_("{ command LINE_END }")
+    def program(self, p):
+        return tuple(chain(*p.command))
 
+    @_("labels instruction", "labels directive")
+    def command(self, p):
+        return (*p.labels, p[1])
 
-def parse(input: str) -> Tuple[Command, ...]:
-    return tuple(Parser.parse(input, start="file"))
+    @_("labels")
+    def command(self, p):
+        return p.labels
+
+    @_("{ IDENTIFIER COLON }")
+    def labels(self, p):
+        return tuple(Label(x) for x in p.IDENTIFIER)
+
+    @_("OPCODE { param [ COMMA ] }")
+    def instruction(self, p):
+        return Instruction(OpCode[p.OPCODE], tuple(p.param))
+
+    # directives with expression parameters
+    @_("INTS { expr [ COMMA ] }")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], tuple(p.expr))
+
+    @_("param_mode expr")
+    def param(self, p):
+        return (p.param_mode, p.expr)
+
+    @_("")
+    def param_mode(self, p):
+        return ParamMode.MODE0
+
+    @_("IMMEDIATE")
+    def param_mode(self, p):
+        return ParamMode.MODE1
+
+    @_("RELATIVE")
+    def param_mode(self, p):
+        return ParamMode.MODE2
+
+    @_("expr PLUS expr")
+    def expr(self, p):
+        return Sum(p.expr0, p.expr1)
+
+    @_("expr MINUS expr")
+    def expr(self, p):
+        return Subtract(p.expr0, p.expr1)
+
+    @_("expr TIMES expr")
+    def expr(self, p):
+        return Multiply(p.expr0, p.expr1)
+
+    @_("expr DIVIDE expr")
+    def expr(self, p):
+        return Divide(p.expr0, p.expr1)
+
+    @_("MINUS expr %prec UMINUS")
+    def expr(self, p):
+        return Multiply(p.expr, -1)
+
+    @_("NUMBER")
+    def expr(self, p):
+        return p.NUMBER
+
+    @_("IDENTIFIER")
+    def expr(self, p):
+        return p.IDENTIFIER
+
+    @_("LPAREN expr RPAREN")
+    def expr(self, p):
+        return p.expr

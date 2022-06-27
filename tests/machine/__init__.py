@@ -16,7 +16,7 @@ class IOExample(BaseModel):
     input: Union[Tuple[int, ...], str] = ()
     output: Union[Tuple[int, ...], str]
 
-    @validator('input')
+    @validator("input")
     def input_is_tuple(cls, inp: Union[Iterable[int], str]):
         if isinstance(inp, str):
             return tuple(ord(ch) for ch in inp)
@@ -24,9 +24,10 @@ class IOExample(BaseModel):
             return tuple(inp)
         except TypeError:
             raise ValueError(
-                f"input should be a list of integers or a string, not {inp.__class__}")
+                f"input should be a list of integers or a string, not {inp.__class__}"
+            )
 
-    @validator('output')
+    @validator("output")
     def output_is_tuple(cls, out: Union[Iterable[int], str]):
         if isinstance(out, str):
             return tuple(ord(ch) for ch in out)
@@ -34,7 +35,8 @@ class IOExample(BaseModel):
             return tuple(out)
         except TypeError:
             raise ValueError(
-                f"output should be a list of integers or a string, not {out.__class__}")
+                f"output should be a list of integers or a string, not {out.__class__}"
+            )
 
 
 def get_source_and_examples(dir: Path):
@@ -43,27 +45,28 @@ def get_source_and_examples(dir: Path):
             warn(f"{source!s} misses a companion .json file!")
             continue
         with open(source) as source_file:
-            source_code = tuple(int(x.strip())
-                                for x in source_file.read().split(",") if x.strip())
-        io_examples = parse_file_as(
-            Tuple[IOExample, ...], source.with_suffix(".json"))
+            source_code = tuple(
+                int(x.strip()) for x in source_file.read().split(",") if x.strip()
+            )
+        io_examples = parse_file_as(Tuple[IOExample, ...], source.with_suffix(".json"))
         yield source.stem, source_code, io_examples
 
 
 class TestExamplePrograms(TestCase):
     machine: Machine
 
-    @parameterized.expand(
-        get_source_and_examples(__file__)
-    )
-    def test_output(self, name: str, program: Iterable[int], ioexamples: Iterable[IOExample]) -> None:
+    @parameterized.expand(get_source_and_examples(__file__))
+    def test_output(
+        self, name: str, program: Iterable[int], ioexamples: Iterable[IOExample]
+    ) -> None:
         program = tuple(program)
         for ioexample in ioexamples:
             with self.subTest(ioexample.name):
                 machine = Machine(program)
                 machine.give_input(ioexample.input)
-                output = tuple(takewhile(lambda x: x is not None,
-                               (machine.get_output() for _ in count())))
-                self.assertTupleEqual(
-                    output, ioexample.output
+                output = tuple(
+                    takewhile(
+                        lambda x: x is not None, (machine.get_output() for _ in count())
+                    )
                 )
+                self.assertTupleEqual(output, ioexample.output)

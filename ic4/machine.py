@@ -8,6 +8,7 @@ from typing import Union, Iterable, Optional, List
 
 class Machine:
     """A IntCode machine"""
+
     _memory: List[int]
     _PC: int
     _RB: int
@@ -16,8 +17,7 @@ class Machine:
     _input: List[int]
     _output: List[int]
 
-    def __init__(self,
-                 program: Iterable[int]) -> None:
+    def __init__(self, program: Iterable[int]) -> None:
         self._memory = list(program)
         self._PC = 0
         self._RB = 0
@@ -29,8 +29,7 @@ class Machine:
     def _get_mem(self, idx: int) -> int:
         """Get memory at index"""
         if idx < 0:
-            raise IndexError(
-                f"Accessed negative memory location {idx} for reading")
+            raise IndexError(f"Accessed negative memory location {idx} for reading")
         if len(self._memory) <= idx:  # memory is shorter than what we want
             return 0
         else:
@@ -39,12 +38,10 @@ class Machine:
     def _set_mem(self, idx: int, val: int) -> None:
         """Set memory at a index"""
         if idx < 0:
-            raise IndexError(
-                f"Accessed negative memory location {idx} for writing")
+            raise IndexError(f"Accessed negative memory location {idx} for writing")
         if len(self._memory) <= idx:  # memory is shorter than what we need
             if val != 0:
-                self._memory += [0] * \
-                    (idx + 1 - len(self._memory))  # pad the list
+                self._memory += [0] * (idx + 1 - len(self._memory))  # pad the list
                 self._memory[idx] = val
         else:
             self._memory[idx] = val
@@ -55,7 +52,7 @@ class Machine:
         if mode == 1:
             return self._get_mem(idx)
         if mode == 2:
-            return self._get_mem(self._RB+self._get_mem(idx))
+            return self._get_mem(self._RB + self._get_mem(idx))
         raise ValueError(f"Invalid param mode {mode}")
 
     def _set_param(self, idx: int, mode: int, val: int) -> None:
@@ -64,7 +61,7 @@ class Machine:
         elif mode == 1:
             raise ValueError(f"Param mode 1 cannot be used for writing!")
         elif mode == 2:
-            self._set_mem(self._RB+self._get_mem(idx), val)
+            self._set_mem(self._RB + self._get_mem(idx), val)
         else:
             raise ValueError(f"Invalid param mode {mode}")
 
@@ -80,62 +77,76 @@ class Machine:
             parmode3 = (op // 10000) % 10
             if not (0 <= parmode1 <= 2):
                 raise ValueError(
-                    f"{parmode1} is not an appropriate parameter mode for parameter 1")
+                    f"{parmode1} is not an appropriate parameter mode for parameter 1"
+                )
             if not (0 <= parmode2 <= 2):
                 raise ValueError(
-                    f"{parmode2} is not an appropriate parameter mode for parameter 2")
+                    f"{parmode2} is not an appropriate parameter mode for parameter 2"
+                )
             if not (0 <= parmode3 <= 2):
                 raise ValueError(
-                    f"{parmode3} is not an appropriate parameter mode for parameter 3")
+                    f"{parmode3} is not an appropriate parameter mode for parameter 3"
+                )
             if opcode == 1:
                 self._set_param(
-                    self._PC + 3, parmode3,
-                    self._get_param(self._PC+1, parmode1) +
-                    self._get_param(self._PC+2, parmode2)
+                    self._PC + 3,
+                    parmode3,
+                    self._get_param(self._PC + 1, parmode1)
+                    + self._get_param(self._PC + 2, parmode2),
                 )
                 self._PC += 4
             elif opcode == 2:
                 self._set_param(
-                    self._PC + 3, parmode3,
-                    self._get_param(self._PC+1, parmode1) *
-                    self._get_param(self._PC+2, parmode2)
+                    self._PC + 3,
+                    parmode3,
+                    self._get_param(self._PC + 1, parmode1)
+                    * self._get_param(self._PC + 2, parmode2),
                 )
                 self._PC += 4
             elif opcode == 3:
                 if not self._input:
                     return True  # wait for more input
-                self._set_param(self._PC+1, parmode1, self._input.pop(0))
+                self._set_param(self._PC + 1, parmode1, self._input.pop(0))
                 self._PC += 2
             elif opcode == 4:
-                self._output.append(
-                    self._get_param(self._PC+1, parmode1))
+                self._output.append(self._get_param(self._PC + 1, parmode1))
                 self._PC += 2
             elif opcode == 5:
-                if self._get_param(self._PC+1, parmode1):
-                    self._PC = self._get_param(self._PC+2, parmode2)
+                if self._get_param(self._PC + 1, parmode1):
+                    self._PC = self._get_param(self._PC + 2, parmode2)
                 else:
                     self._PC += 3
             elif opcode == 6:
-                if not self._get_param(self._PC+1, parmode1):
-                    self._PC = self._get_param(self._PC+2, parmode2)
+                if not self._get_param(self._PC + 1, parmode1):
+                    self._PC = self._get_param(self._PC + 2, parmode2)
                 else:
                     self._PC += 3
             elif opcode == 7:
                 self._set_param(
-                    self._PC + 3, parmode3,
-                    1 if (self._get_param(self._PC+1, parmode1) <
-                          self._get_param(self._PC+2, parmode2)) else 0
+                    self._PC + 3,
+                    parmode3,
+                    1
+                    if (
+                        self._get_param(self._PC + 1, parmode1)
+                        < self._get_param(self._PC + 2, parmode2)
+                    )
+                    else 0,
                 )
                 self._PC += 4
             elif opcode == 8:
                 self._set_param(
-                    self._PC + 3, parmode3,
-                    1 if (self._get_param(self._PC+1, parmode1) ==
-                          self._get_param(self._PC+2, parmode2)) else 0
+                    self._PC + 3,
+                    parmode3,
+                    1
+                    if (
+                        self._get_param(self._PC + 1, parmode1)
+                        == self._get_param(self._PC + 2, parmode2)
+                    )
+                    else 0,
                 )
                 self._PC += 4
             elif opcode == 9:
-                self._RB += self._get_param(self._PC+1, parmode1)
+                self._RB += self._get_param(self._PC + 1, parmode1)
                 self._PC += 2
             elif opcode == 99:
                 self._halted = True
@@ -166,12 +177,22 @@ class Machine:
 
 if __name__ == "__main__":
     from sys import argv
-    program = tuple(int(x.strip())
-                    for x in open(argv[1]).read().split(",") if x.strip())
+
+    program = tuple(
+        int(x.strip()) for x in open(argv[1]).read().split(",") if x.strip()
+    )
     machine = Machine(program)
     while machine.run():
-        print(', '.join(takewhile(lambda x: x is not None,
-              (machine.get_output() for _ in count()))))
+        print(
+            ", ".join(
+                takewhile(
+                    lambda x: x is not None, (machine.get_output() for _ in count())
+                )
+            )
+        )
         machine.give_input(int(input()))
-    print(', '.join(takewhile(lambda x: x is not None,
-          (machine.get_output() for _ in count()))))
+    print(
+        ", ".join(
+            takewhile(lambda x: x is not None, (machine.get_output() for _ in count()))
+        )
+    )
