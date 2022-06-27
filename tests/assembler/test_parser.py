@@ -1,5 +1,4 @@
-from itertools import combinations, combinations_with_replacement, product
-import opcode
+from itertools import product
 from typing import Iterable
 from unittest import TestCase
 
@@ -106,7 +105,7 @@ class TestParsing(TestCase):
         [
             (
                 f"{opcode.name} {''.join({ParamMode.MODE0:'A',ParamMode.MODE1:'I', ParamMode.MODE2:'R'}[mode] for mode in parammodes)}",
-                f"{opcode.name} {' '.join(f'{mode.prefix()}{param}' for mode, param in  zip(parammodes, names(opcode.param_number())))}\n",
+                f"{opcode.name} {' '.join(f'{mode.prefix()}{param}' for mode, param in  zip(parammodes, names(opcode.param_number())))}",
                 Instruction(
                     opcode, tuple(zip(parammodes, names(opcode.param_number())))
                 ),
@@ -116,7 +115,9 @@ class TestParsing(TestCase):
         ]
     )
     def test_parse_instructions(self, name: str, source: str, parsed: Instruction):
-        self.assertEqual(self.parser.parse(self.lexer.tokenize(source))[0], parsed)
+        self.assertEqual(
+            self.parser.parse(self.lexer.tokenize(source + "\n"))[0], parsed
+        )
 
     @parameterized.expand(
         [
@@ -162,3 +163,27 @@ class TestParsing(TestCase):
     )
     def test_parse_labels(self, name: str, source: str, parsed: Instruction):
         self.assertTupleEqual(self.parser.parse(self.lexer.tokenize(source)), parsed)
+
+    @parameterized.expand(
+        [
+            (
+                "INTS",
+                "INTS 0 1 2",
+                Directive(DirectiveCode.INTS, (0, 1, 2)),
+            ),
+            (
+                "INTS with expression",
+                "INTS 0 1-2",
+                Directive(DirectiveCode.INTS, (0, Subtract(1, 2))),
+            ),
+            (
+                "INTS comma to separe parameters",
+                "INTS 0 1 ,-2",
+                Directive(DirectiveCode.INTS, (0, 1, Multiply(2, -1))),
+            ),
+        ]
+    )
+    def test_parse_directives(self, name: str, source: str, parsed: Instruction):
+        self.assertEqual(
+            self.parser.parse(self.lexer.tokenize(source + "\n"))[0], parsed
+        )
