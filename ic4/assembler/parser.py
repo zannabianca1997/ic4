@@ -1,22 +1,38 @@
 """
 Parse an assembly file
 """
+from itertools import chain
+from os import getenv
+from pathlib import Path
 from sly import Parser
 
 
 from .expressions import Divide, Multiply, Subtract, Sum
-from .commands import Instruction, OpCode, ParamMode
+from .commands import Instruction, Label, OpCode, ParamMode
 from .lexer import ICAssLexer
 
 
 class ICAssParser(Parser):
     tokens = ICAssLexer.tokens
 
+    debugfile = Path(getenv("LOG_DIR")) / "parser.out"
+
     precedence = (
         ("left", PLUS, MINUS),
         ("left", TIMES, DIVIDE),
         ("right", UMINUS),  # Unary minus operator
     )
+
+    @_("{ command LINE_END }")
+    def program(self, p):
+        return tuple(chain(*p.command))
+
+    @_("{ IDENTIFIER COLON } [ instruction ]")
+    def command(self, p):
+        if p.instruction is not None:
+            return (*(Label(x) for x in p.IDENTIFIER), p.instruction)
+        else:
+            return tuple(Label(x) for x in p.IDENTIFIER)
 
     @_("OPCODE { param [ COMMA ] }")
     def instruction(self, p):

@@ -5,13 +5,17 @@ from unittest import TestCase
 
 from parameterized import parameterized
 
-from ic4.assembler.commands import Instruction, OpCode, ParamMode
+from ic4.assembler.commands import Instruction, Label, OpCode, ParamMode
 from ic4.assembler.expressions import Divide, Expression, Multiply, Subtract, Sum
 from ic4.assembler.lexer import ICAssLexer
 from ic4.assembler.parser import ICAssParser
 
 
-class TestParsingExpression(TestCase):
+def names(n: int) -> Iterable[str]:
+    return tuple(f"t_{i}" for i in range(n))
+
+
+class TestParsing(TestCase):
     def setUp(self) -> None:
         self.lexer = ICAssLexer()
         self.parser = ICAssParser()
@@ -85,27 +89,17 @@ class TestParsingExpression(TestCase):
             ),
         ]
     )
-    def test_parse(self, name: str, source: str, parsed: Expression):
+    def test_parse_expression(self, name: str, source: str, parsed: Expression):
         self.assertEqual(
-            self.parser.parse(self.lexer.tokenize(f"OUT {source}")),
+            self.parser.parse(self.lexer.tokenize(f"OUT {source}\n"))[0],
             Instruction(OpCode["OUT"], ((ParamMode.MODE0, parsed),)),
         )
-
-
-def names(n: int) -> Iterable[str]:
-    return tuple(f"t_{i}" for i in range(n))
-
-
-class TestInstructions(TestCase):
-    def setUp(self) -> None:
-        self.lexer = ICAssLexer()
-        self.parser = ICAssParser()
 
     @parameterized.expand(
         [
             (
                 f"{opcode.name} {''.join({ParamMode.MODE0:'A',ParamMode.MODE1:'I', ParamMode.MODE2:'R'}[mode] for mode in parammodes)}",
-                f"{opcode.name} {' '.join(f'{mode.prefix()}{param}' for mode, param in  zip(parammodes, names(opcode.param_number())))}",
+                f"{opcode.name} {' '.join(f'{mode.prefix()}{param}' for mode, param in  zip(parammodes, names(opcode.param_number())))}\n",
                 Instruction(
                     opcode, tuple(zip(parammodes, names(opcode.param_number())))
                 ),
@@ -114,5 +108,35 @@ class TestInstructions(TestCase):
             for parammodes in product(ParamMode, repeat=opcode.param_number())
         ]
     )
-    def test_parse(self, name: str, source: str, parsed: Instruction):
-        self.assertEqual(self.parser.parse(self.lexer.tokenize(source)), parsed)
+    def test_parse_instructions(self, name: str, source: str, parsed: Instruction):
+        self.assertEqual(self.parser.parse(self.lexer.tokenize(source))[0], parsed)
+
+    @parameterized.expand(
+        [
+            (
+                "single",
+                "label : HALT\n",
+                (Label("label"), Instruction(OpCode.HALT, ())),
+            ),
+            (
+                "multiple",
+                "label1 : label2 : label3 : HALT\n",
+                (
+                    Label("label1"),
+                    Label("label2"),
+                    Label("label3"),
+                    Instruction(OpCode.HALT, ()),
+                ),
+            ),
+            (
+                "on different line",
+                "label1 : \n HALT\n",
+                (
+                    Label("label1"),
+                    Instruction(OpCode.HALT, ()),
+                ),
+            ),
+        ]
+    )
+    def test_parse_labels(self, name: str, source: str, parsed: Instruction):
+        self.assertTupleEqual(self.parser.parse(self.lexer.tokenize(source)), parsed)
