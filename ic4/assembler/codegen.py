@@ -97,4 +97,8 @@ def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
                             )
                         )
                     )
+            else:
+                raise NotImplementedError(
+                    f"Directive {command.code} it's unimplemented"
+                )
     return tuple(simplify(val, labels, full_simplify=True) for val in code)
