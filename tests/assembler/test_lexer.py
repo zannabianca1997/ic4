@@ -33,6 +33,17 @@ class TestLexing(TestCase):
                 (("NUMBER", 0x323, 1, 0),),
             ),
             (
+                "char constants",
+                r"'a' ' ' '\\' '\x12' '\10'",
+                (
+                    ("NUMBER", ord("a"), 1, 0),
+                    ("NUMBER", ord(" "), 1, 4),
+                    ("NUMBER", ord("\\"), 1, 8),
+                    ("NUMBER", int("12", 16), 1, 13),
+                    ("NUMBER", int("10", 8), 1, 20),
+                ),
+            ),
+            (
                 "simple addition",
                 "3+2",
                 (

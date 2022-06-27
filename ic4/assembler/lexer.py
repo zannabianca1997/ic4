@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 from sly import Lexer
 
 from .commands import DirectiveCode, OpCode
+from ..utilities import char_const_re, unescape_char_const
 
 
 class ICAssLexer(Lexer):
@@ -15,7 +16,6 @@ class ICAssLexer(Lexer):
 
     tokens = {
         # misc
-        COMMENT,
         LINE_END,
         COMMA,
         # instructions
@@ -41,6 +41,8 @@ class ICAssLexer(Lexer):
         DIVIDE,
         LPAREN,
         RPAREN,
+        # char and string constants
+        STRING,
     }
 
     ignore = " \t"
@@ -72,13 +74,24 @@ class ICAssLexer(Lexer):
     COMMA = r"\,"
     COLON = r"\:"
 
-    @_(r"0x[0-9a-fA-F]+", r"\d+")
+    @_(
+        r"0x[0-9a-fA-F]+",
+        r"\d+",
+        char_const_re.pattern,
+    )
     def NUMBER(self, t):
         if t.value.startswith("0x"):
             t.value = int(t.value[2:], 16)
+        elif t.value.startswith("'"):
+            t.value = unescape_char_const(t.value)
         else:
             t.value = int(t.value)
         return t
+
+    # char and string constants
+    @_(r"\"[^\"\\]*(?:\\.[^\"\\]*)*\"")
+    def STRING(self, p):
+        raise NotImplementedError()
 
     # this will match end of line and file
     @_(r"\n")
