@@ -81,11 +81,33 @@ def simplify(
     left = simplify(expr.left, subs)
     right = simplify(expr.right, subs)
 
+    # arithmetic identities
+    if isinstance(expr, Sum):
+        if left == 0:
+            return right
+        if right == 0:
+            return left
+    if isinstance(expr, Subtract):
+        if right == 0:
+            return left
+    if isinstance(expr, Multiply):
+        if left == 0 or right == 0:
+            return 0
+        if left == 1:
+            return right
+        if right == 1:
+            return left
+    if isinstance(expr, Divide):
+        if left == 0:
+            return 0
+        if right == 1:
+            return left
+
     if not (isinstance(left, int) and isinstance(right, int)):
         assert (
             not full_simplify
         ), "When fullsimplifyin an exception should be thrown before there"
-        return expr.__class__(left, right)  # simplify
+        return expr.__class__(left, right)  # simplified version
 
     if isinstance(expr, Sum):
         return left + right
