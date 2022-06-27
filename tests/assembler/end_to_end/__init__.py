@@ -55,7 +55,7 @@ def get_log_path(file_path: Path) -> Path:
         / "tests"
         / file_path.relative_to(Path(getenv("TEST_DIR")).absolute()).with_suffix("")
     )
-    log_path.parent.mkdir(exist_ok=True, parents=True)
+    log_path.mkdir(exist_ok=True, parents=True)
     return log_path
 
 
