@@ -43,7 +43,8 @@ class ICAssParser(Parser):
     def instruction(self, p):
         return Instruction(OpCode[p.OPCODE], tuple(p.param))
 
-    # directives with expression parameters
+    # --- directives ---
+
     @_("INTS { expr [ COMMA ] }")
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], tuple(p.expr))
@@ -52,10 +53,18 @@ class ICAssParser(Parser):
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], (p.expr,))
 
-    # directives with complete parameters
     @_("INC param", "DEC param")
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], (p.param,))
+
+    @_("MOV param param [ expr ]")
+    def directive(self, p):
+        return Directive(
+            DirectiveCode[p[0]],
+            (p.param0, p.param1, p.expr or 1),
+        )
+
+    # --- parameters ---
 
     @_("param_mode expr")
     def param(self, p):

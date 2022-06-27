@@ -126,3 +126,54 @@ class TestGenerate(TestCase):
                 )
             ),
         )
+
+    def test_MOV(self):
+        self.assertTupleEqual(
+            generate(
+                (
+                    Directive(
+                        DirectiveCode.MOV,
+                        ((ParamMode.ABSOLUTE, 42), (ParamMode.ABSOLUTE, 76), 1),
+                    ),
+                )
+            ),
+            generate(
+                (
+                    Instruction(
+                        OpCode.ADD,
+                        (
+                            (ParamMode.ABSOLUTE, 42),
+                            (ParamMode.IMMEDIATE, 0),
+                            (ParamMode.ABSOLUTE, 76),
+                        ),
+                    ),
+                )
+            ),
+        )
+
+    def test_MOV_multiple(self):
+        for i in (0, 2, 10):  # number of places to move
+            with self.subTest(i):
+                self.assertTupleEqual(
+                    generate(
+                        (
+                            Directive(
+                                DirectiveCode.MOV,
+                                ((ParamMode.ABSOLUTE, 42), (ParamMode.ABSOLUTE, 76), i),
+                            ),
+                        )
+                    ),
+                    generate(
+                        (
+                            Instruction(
+                                OpCode.ADD,
+                                (
+                                    (ParamMode.ABSOLUTE, 42 + j),
+                                    (ParamMode.IMMEDIATE, 0),
+                                    (ParamMode.ABSOLUTE, 76 + j),
+                                ),
+                            )
+                            for j in range(i)
+                        )
+                    ),
+                )

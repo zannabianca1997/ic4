@@ -206,6 +206,22 @@ class TestParsing(TestCase):
                 "DEC @4",
                 Directive(DirectiveCode.DEC, ((ParamMode.RELATIVE, 4),)),
             ),
+            (
+                "MOV",
+                "MOV 4 @3",
+                Directive(
+                    DirectiveCode.MOV,
+                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3), 1),
+                ),
+            ),
+            (
+                "MOV multiple",
+                "MOV 4 @3 15",
+                Directive(
+                    DirectiveCode.MOV,
+                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3), 15),
+                ),
+            ),
         ]
     )
     def test_parse_directives(self, name: str, source: str, parsed: Instruction):

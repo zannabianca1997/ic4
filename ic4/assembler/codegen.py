@@ -13,7 +13,7 @@ from .commands import (
     OpCode,
     ParamMode,
 )
-from .expressions import Expression, SimplifyException, simplify
+from .expressions import Expression, SimplifyException, Sum, simplify
 
 
 class GenerateException(Exception):
@@ -79,4 +79,22 @@ def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
                         )
                     )
                 )
+            elif command.code == DirectiveCode.MOV:
+                # extracting mode and position of both params
+                m1, p1 = command.params[0]
+                m2, p2 = command.params[1]
+                # generating add instructions as needed
+                for i in range(command.params[2]):
+                    code.extend(
+                        generate_instruction(
+                            Instruction(
+                                OpCode.ADD,  # using add to move stuff. MUL a 1 a would be ok too
+                                (
+                                    (m1, Sum(p1, i)),
+                                    (ParamMode.IMMEDIATE, 0),
+                                    (m2, Sum(p2, i)),
+                                ),
+                            )
+                        )
+                    )
     return tuple(simplify(val, labels, full_simplify=True) for val in code)

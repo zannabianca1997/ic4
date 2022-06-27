@@ -26,6 +26,18 @@ Takes a variadic number of parameters, and copies them verbatim. Parameters can 
 Takes a single expression, that must be resolved with labels preceding it. Add that number of zeros to the program.
 
 ### INC
-Takes a param. Equivalent to `ADD {param} #1 {param}`, it INCrease its value
+Takes a param. Equivalent to `ADD {a} #1 {a}`, it INCrease its value
 ### DEC
-Takes a param. Equivalent to `ADD {param} #-1 {param}`, it DECrease its value
+Takes a param. Equivalent to `ADD {a} #-1 {a}`, it DECrease its value
+
+### MOV
+Takes two param or two param and a expression, that must be resolved with labels preceding it.
+Equivalent to `ADD {a} #0 {b}`, moving the value of the first param to the second.
+If the expression is present, it's equivalent to 
+```
+ADD {a} #0 {b}
+ADD {a}+1 #0 {b}+1
+...
+ADD {a}+n #0 {b}+n
+```
+The move is always made from the first to the last. It's then safe to move overlapping memory only towards 0
