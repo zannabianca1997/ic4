@@ -46,11 +46,21 @@ def get_sources(dir: Path):
     yield from Path(dir).parent.glob("*.ica")
 
 
-def get_name_path_and_source(dir: Path):
+def get_log_path(file_path: Path) -> Path:
+    log_path = (
+        Path(getenv("LOG_DIR"))
+        / "tests"
+        / file_path.relative_to(Path(getenv("TEST_DIR")).absolute()).with_suffix("")
+    )
+    log_path.parent.mkdir(exist_ok=True, parents=True)
+    return log_path
+
+
+def get_name_log_path_and_source(dir: Path):
     for source in get_sources(dir):
         with open(source) as source_file:
             source_code = source_file.read()
-        yield source.stem, source, source_code
+        yield source.stem, get_log_path(source), source_code
 
 
 def get_name_source_and_examples(dir: Path):
@@ -67,18 +77,11 @@ def get_name_source_and_examples(dir: Path):
 class TestExamplePrograms(TestCase):
     machine: Machine
 
-    @parameterized.expand(get_name_path_and_source(__file__))
-    def test_lex(self, name: str, path: Path, program: str) -> None:
-        lexed = ICAssLexer().tokenize(program)
-
-        log_file_path = (
-            Path(getenv("LOG_DIR"))
-            / "tests"
-            / path.relative_to(Path(getenv("TEST_DIR")).absolute()).with_suffix("")
-            / "lexed.txt"
-        )
-        log_file_path.parent.mkdir(exist_ok=True, parents=True)
-        with open(log_file_path, "w") as log_file:
-            for tok in lexed:
+    @parameterized.expand(get_name_log_path_and_source(__file__))
+    def test_lex(self, name: str, log_path: Path, program: str) -> None:
+        """Main purpose of this test is that the program must be lexed without errors.
+        As a side effect, the lexed program is logged"""
+        with open(log_path / "lexed.txt", "w") as log_file:
+            for tok in ICAssLexer().tokenize(program):
                 self.assertIsInstance(tok, Token)
                 print(tok, file=log_file)
