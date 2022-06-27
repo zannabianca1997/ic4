@@ -62,6 +62,7 @@ class DirectiveCode(Enum):
     MOV = auto()
     LOAD = auto()
     STORE = auto()
+    JMP = auto()
 
 
 @dataclass(frozen=True)

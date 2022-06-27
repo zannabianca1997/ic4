@@ -68,6 +68,10 @@ class ICAssParser(Parser):
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], (p.param0, p.param1))
 
+    @_("JMP param")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], (p.param,))
+
     # --- parameters ---
 
     @_("param_mode expr")

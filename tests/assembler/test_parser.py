@@ -238,6 +238,14 @@ class TestParsing(TestCase):
                     ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3)),
                 ),
             ),
+            (
+                "JMP",
+                "JMP @3",
+                Directive(
+                    DirectiveCode.JMP,
+                    ((ParamMode.RELATIVE, 3),),
+                ),
+            ),
         ]
     )
     def test_parse_directives(self, name: str, source: str, parsed: Instruction):

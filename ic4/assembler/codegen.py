@@ -179,6 +179,10 @@ def generate_directive(
         # If not, it will create a invalid reference (the first time around)
         # here we can generate code to put the -1 back. Should we? I think not, or at least it should be higly optional
         return code
+    elif directive.code == DirectiveCode.JMP:
+        return generate_instruction(
+            Instruction(OpCode.JNZ, ((ParamMode.IMMEDIATE, 1), directive.params[0]))
+        )
     else:
         raise NotImplementedError(f"Directive {directive.code} it's unimplemented")
 

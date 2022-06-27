@@ -265,3 +265,19 @@ class TestGenerate(TestCase):
         self.assertTupleEqual(MOV_code, LOAD_code)
         # checking the placeholder is negative
         self.assertLess(LOAD_code[address_dest], 0, "Placeholder should be negative")
+
+    def test_JMP(self):
+        self.assertTupleEqual(
+            generate((Directive(DirectiveCode.JMP, ((ParamMode.ABSOLUTE, 42),)),)),
+            generate(
+                (
+                    Instruction(
+                        OpCode.JNZ,
+                        (
+                            (ParamMode.IMMEDIATE, 1),
+                            (ParamMode.ABSOLUTE, 42),
+                        ),
+                    ),
+                )
+            ),
+        )
