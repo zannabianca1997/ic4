@@ -20,12 +20,75 @@ class GenerateException(Exception):
     pass
 
 
-def generate_instruction(instr: Instruction) -> Tuple[Expression]:
+def generate_instruction(instr: Instruction) -> Tuple[Expression, ...]:
     """Generate the code for an instruction"""
     opcode = int(instr.opcode)
     for i, (mode, _) in enumerate(instr.params):
         opcode += 100 * 10**i * int(mode)
     return (opcode, *(val for _, val in instr.params))
+
+
+def generate_directive(
+    directive: Directive, labels: Dict[str, int] = None
+) -> Tuple[Expression, ...]:
+    if directive.code == DirectiveCode.INTS:
+        return directive.params
+    elif directive.code == DirectiveCode.ZEROS:
+        (numzero,) = directive.params
+        try:
+            numzero = simplify(numzero, labels, full_simplify=True)
+        except SimplifyException as e:
+            raise GenerateException(
+                "ZEROS need an expression in term of already seen labels"
+            ) from e
+        if numzero < 0:
+            raise GenerateException("ZEROS need a positive expression")
+        return tuple([0] * numzero)
+    elif directive.code == DirectiveCode.INC:
+        return generate_instruction(
+            Instruction(
+                OpCode.ADD,
+                (
+                    directive.params[0],
+                    (ParamMode.IMMEDIATE, 1),
+                    directive.params[0],
+                ),
+            )
+        )
+    elif directive.code == DirectiveCode.DEC:
+        return generate_instruction(
+            Instruction(
+                OpCode.ADD,
+                (
+                    directive.params[0],
+                    (ParamMode.IMMEDIATE, -1),
+                    directive.params[0],
+                ),
+            )
+        )
+    elif directive.code == DirectiveCode.MOV:
+        # extracting mode and position of both params
+        m1, p1 = directive.params[0]
+        m2, p2 = directive.params[1]
+        # storing code generated
+        code = []
+        # generating add instructions as needed
+        for i in range(directive.params[2]):
+            code.extend(
+                generate_instruction(
+                    Instruction(
+                        OpCode.ADD,  # using add to move stuff. MUL a 1 a would be ok too
+                        (
+                            (m1, Sum(p1, i)),
+                            (ParamMode.IMMEDIATE, 0),
+                            (m2, Sum(p2, i)),
+                        ),
+                    )
+                )
+            )
+        return tuple(code)
+    else:
+        raise NotImplementedError(f"Directive {directive.code} it's unimplemented")
 
 
 def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
@@ -40,65 +103,5 @@ def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
                 warn(f"Label '{command.name}' is redefined")
             labels[command.name] = len(code)  # point to the next instruction
         if isinstance(command, Directive):
-            if command.code == DirectiveCode.INTS:
-                code.extend(command.params)
-            elif command.code == DirectiveCode.ZEROS:
-                (numzero,) = command.params
-                try:
-                    numzero = simplify(numzero, labels, full_simplify=True)
-                except SimplifyException as e:
-                    raise GenerateException(
-                        "ZEROS need an expression in term of already seen labels"
-                    ) from e
-                if numzero < 0:
-                    raise GenerateException("ZEROS need a positive expression")
-                code.extend([0] * numzero)
-            elif command.code == DirectiveCode.INC:
-                code.extend(
-                    generate_instruction(
-                        Instruction(
-                            OpCode.ADD,
-                            (
-                                command.params[0],
-                                (ParamMode.IMMEDIATE, 1),
-                                command.params[0],
-                            ),
-                        )
-                    )
-                )
-            elif command.code == DirectiveCode.DEC:
-                code.extend(
-                    generate_instruction(
-                        Instruction(
-                            OpCode.ADD,
-                            (
-                                command.params[0],
-                                (ParamMode.IMMEDIATE, -1),
-                                command.params[0],
-                            ),
-                        )
-                    )
-                )
-            elif command.code == DirectiveCode.MOV:
-                # extracting mode and position of both params
-                m1, p1 = command.params[0]
-                m2, p2 = command.params[1]
-                # generating add instructions as needed
-                for i in range(command.params[2]):
-                    code.extend(
-                        generate_instruction(
-                            Instruction(
-                                OpCode.ADD,  # using add to move stuff. MUL a 1 a would be ok too
-                                (
-                                    (m1, Sum(p1, i)),
-                                    (ParamMode.IMMEDIATE, 0),
-                                    (m2, Sum(p2, i)),
-                                ),
-                            )
-                        )
-                    )
-            else:
-                raise NotImplementedError(
-                    f"Directive {command.code} it's unimplemented"
-                )
+            code.extend(generate_directive(command, labels))
     return tuple(simplify(val, labels, full_simplify=True) for val in code)
