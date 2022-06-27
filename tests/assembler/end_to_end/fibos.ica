@@ -12,5 +12,5 @@ loop:
     ADD next_numbers+2, #0, next_numbers+1
 JNZ numbers_to_print #loop
 end: HALT
-numbers_to_print: INTS 0
+numbers_to_print: ZEROS 1
 next_numbers: INTS 1 1 0

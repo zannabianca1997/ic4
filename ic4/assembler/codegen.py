@@ -5,7 +5,11 @@ from distutils.log import warn
 from typing import Dict, Iterable, List, Tuple
 
 from .commands import Command, Directive, DirectiveCode, Instruction, Label
-from .expressions import Expression, simplify
+from .expressions import Expression, SimplifyException, simplify
+
+
+class GenerateException(Exception):
+    pass
 
 
 def generate_instruction(instr: Instruction) -> Tuple[Expression]:
@@ -30,4 +34,15 @@ def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
         if isinstance(command, Directive):
             if command.code == DirectiveCode.INTS:
                 code.extend(command.params)
+            elif command.code == DirectiveCode.ZEROS:
+                (numzero,) = command.params
+                try:
+                    numzero = simplify(numzero, labels, full_simplify=True)
+                except SimplifyException as e:
+                    raise GenerateException(
+                        "ZEROS need an expression in term of already seen labels"
+                    ) from e
+                if numzero < 0:
+                    raise GenerateException("ZEROS need a positive expression")
+                code.extend([0] * numzero)
     return tuple(simplify(val, labels, full_simplify=True) for val in code)

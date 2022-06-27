@@ -8,13 +8,14 @@ from ic4.assembler.commands import (
     Directive,
     DirectiveCode,
     Instruction,
+    Label,
     OpCode,
     ParamMode,
 )
-from ic4.assembler.codegen import generate
+from ic4.assembler.codegen import GenerateException, generate
 
 
-class TestGenerate(TestCase):
+class TestGenerateInstruction(TestCase):
     @parameterized.expand(
         [
             (
@@ -56,8 +57,38 @@ class TestGenerate(TestCase):
     def test_instruction(self, name: str, code: Command, output: Tuple[int, ...]):
         self.assertTupleEqual(generate((code,)), output)
 
+
+class TestGenerate(TestCase):
     def test_INTS(self):
         self.assertTupleEqual(
             generate((Directive(DirectiveCode.INTS, (1, 1, 2, 3, 5, 8, 13)),)),
             (1, 1, 2, 3, 5, 8, 13),
+        )
+
+    def test_ZEROS(self):
+        for i in (0, 10, 1000):
+            with self.subTest(i):
+                self.assertTupleEqual(
+                    generate((Directive(DirectiveCode.ZEROS, (i,)),)),
+                    tuple([0] * i),
+                )
+
+    def test_ZEROS_raise_incomplete(self):
+        self.assertRaises(
+            GenerateException,
+            generate,
+            (
+                Label("a"),
+                Directive(DirectiveCode.ZEROS, ("b",)),
+            ),
+        )
+
+    def test_ZEROS_raise_negative(self):
+        self.assertRaises(
+            GenerateException,
+            generate,
+            (
+                Label("a"),
+                Directive(DirectiveCode.ZEROS, (-1,)),
+            ),
         )

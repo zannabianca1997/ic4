@@ -56,6 +56,7 @@ class Instruction:
 
 class DirectiveCode(Enum):
     INTS = auto()
+    ZEROS = auto()
 
 
 @dataclass(frozen=True)

@@ -28,6 +28,7 @@ class ICAssLexer(Lexer):
         RELATIVE,
         # directives
         INTS,
+        ZEROS,
         # labels
         IDENTIFIER,
         COLON,
@@ -51,6 +52,7 @@ class ICAssLexer(Lexer):
 
     # directives
     IDENTIFIER["INTS"] = INTS
+    IDENTIFIER["ZEROS"] = ZEROS
 
     # Punctuators
     PLUS = r"\+"

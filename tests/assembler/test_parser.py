@@ -181,6 +181,11 @@ class TestParsing(TestCase):
                 "INTS 0 1 ,-2",
                 Directive(DirectiveCode.INTS, (0, 1, Multiply(2, -1))),
             ),
+            (
+                "ZEROS",
+                "ZEROS 32",
+                Directive(DirectiveCode.ZEROS, (32,)),
+            ),
         ]
     )
     def test_parse_directives(self, name: str, source: str, parsed: Instruction):
