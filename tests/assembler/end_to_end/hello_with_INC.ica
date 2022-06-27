@@ -3,10 +3,11 @@
 JNZ #1 #start ; start the program
 
 string: INTS 72 101 108 108 111 32 119 111 114 108 100 10 0 ; Hello world in ascii
-pos: INTS string
 
 start:
-loop: OUT pos       ; out the current char
-      INC pos       ; increase pointer
-      JNZ pos #loop ; loop until terminator
+loop: 
+      ref1: OUT string                ; out the current char
+      INC ref1+1                      ; increase pointer
+      INC ref2+1                      ; increase pointer
+ref2: JNZ string #loop                ; loop until terminator
 HALT
