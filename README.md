@@ -23,7 +23,8 @@ This is a sintetic roadmap:
     - [X] INTS
     - [X] ZEROS
     - [X] INC and DEC
-    - [ ] MOV
+    - [X] MOV
+    - [X] LOAD and STORE
     - [ ] PUSH and POP
     - [ ] CALL and RET
 - [x] Intcode machine
