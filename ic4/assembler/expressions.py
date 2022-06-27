@@ -2,7 +2,7 @@
     Methods to manipulate arithmetic expressions
 """
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Iterable, Optional, Tuple, Union
 
 # A single, atomic factor: a number, a identifier,
 # or a parentisized expression.
@@ -41,6 +41,14 @@ Expression = Union[Sum, Subtract, Term]
 
 class SimplifyException(Exception):
     pass
+
+
+def simplify_tuple(
+    exprs: Iterable[Expression],
+    subs: Optional[Dict[str, Expression]] = None,
+    full_simplify: bool = False,
+) -> Tuple[Expression, ...]:
+    return tuple(simplify(val, subs, full_simplify=full_simplify) for val in exprs)
 
 
 def simplify(
