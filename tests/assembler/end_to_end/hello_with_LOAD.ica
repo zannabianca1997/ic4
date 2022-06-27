@@ -7,11 +7,10 @@ str_ptr: INTS string ; pointer to the current char
 curr_ch: ZEROS 1     ; current char
 
 start:
-LOAD str_ptr curr_ch   ; load current char
-INC str_ptr            ; increase pointer
+LOAD str_ptr curr_ch   ; load first char
 loop: JZ curr_ch #end        ; loop until terminator
       OUT curr_ch            ; out the current char
-      LOAD str_ptr curr_ch   ; load current char
       INC str_ptr            ; increase pointer
-JZ #1 #loop            
+      LOAD str_ptr curr_ch   ; load next char
+JZ #0 #loop            
 end: HALT
