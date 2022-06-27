@@ -8,8 +8,10 @@ from unittest import TestCase
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
 from sly.lex import Token
+from ic4.assembler.commands import Command, Directive, Instruction, Label
 
 from ic4.assembler.lexer import ICAssLexer
+from ic4.assembler.parser import ICAssParser
 from ic4.machine import Machine
 
 
@@ -75,8 +77,6 @@ def get_name_source_and_examples(dir: Path):
 
 
 class TestExamplePrograms(TestCase):
-    machine: Machine
-
     @parameterized.expand(get_name_log_path_and_source(__file__))
     def test_lex(self, name: str, log_path: Path, program: str) -> None:
         """Main purpose of this test is that the program must be lexed without errors.
@@ -85,3 +85,17 @@ class TestExamplePrograms(TestCase):
             for tok in ICAssLexer().tokenize(program):
                 self.assertIsInstance(tok, Token)
                 print(tok, file=log_file)
+
+    @parameterized.expand(get_name_log_path_and_source(__file__))
+    def test_parse(self, name: str, log_path: Path, program: str) -> None:
+        """Main purpose of this test is that the program must be parsed without errors.
+        As a side effect, the parsed program is logged"""
+        with open(log_path / "parsed.txt", "w") as log_file:
+            for command in ICAssParser().parse(ICAssLexer().tokenize(program)):
+                self.assert_(
+                    any(
+                        isinstance(command, cls)
+                        for cls in (Label, Instruction, Directive)
+                    )
+                )
+                print(command, file=log_file)
