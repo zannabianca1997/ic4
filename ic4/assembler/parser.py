@@ -64,6 +64,10 @@ class ICAssParser(Parser):
             (p.param0, p.param1, p.expr or 1),
         )
 
+    @_("LOAD param param", "STORE param param")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], (p.param0, p.param1))
+
     # --- parameters ---
 
     @_("param_mode expr")

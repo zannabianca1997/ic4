@@ -222,6 +222,22 @@ class TestParsing(TestCase):
                     ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3), 15),
                 ),
             ),
+            (
+                "LOAD",
+                "LOAD 4 @3",
+                Directive(
+                    DirectiveCode.LOAD,
+                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3)),
+                ),
+            ),
+            (
+                "STORE",
+                "STORE 4 @3",
+                Directive(
+                    DirectiveCode.STORE,
+                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3)),
+                ),
+            ),
         ]
     )
     def test_parse_directives(self, name: str, source: str, parsed: Instruction):

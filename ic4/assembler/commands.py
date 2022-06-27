@@ -60,6 +60,8 @@ class DirectiveCode(Enum):
     INC = auto()
     DEC = auto()
     MOV = auto()
+    LOAD = auto()
+    STORE = auto()
 
 
 @dataclass(frozen=True)

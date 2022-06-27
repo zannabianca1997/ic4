@@ -177,3 +177,47 @@ class TestGenerate(TestCase):
                         )
                     ),
                 )
+
+    def test_LOAD(self):
+        LOAD_code = generate(
+            (
+                Directive(
+                    DirectiveCode.LOAD,
+                    ((ParamMode.ABSOLUTE, 42), (ParamMode.ABSOLUTE, 76)),
+                ),
+            )
+        )
+        MOV_code = generate(
+            (
+                Directive(
+                    DirectiveCode.MOV,
+                    (
+                        (ParamMode.ABSOLUTE, 42),
+                        (ParamMode.ABSOLUTE, "address_pos"),
+                        1,
+                    ),
+                ),
+                Directive(
+                    DirectiveCode.MOV,
+                    (
+                        (ParamMode.ABSOLUTE, "address_dest"),
+                        (ParamMode.ABSOLUTE, 76),
+                        1,
+                    ),
+                ),
+            ),
+            full_simplify=False,
+        )
+        # recovering the placeholders
+        address_pos = MOV_code.index("address_pos")
+        address_dest = MOV_code.index("address_dest")
+        # patching mov code
+        MOV_code = list(MOV_code)
+        MOV_code[address_pos] = address_dest
+        # the exact value of MOV_code[address_dest] is unimportant
+        MOV_code[address_dest] = LOAD_code[address_dest]
+        MOV_code = tuple(MOV_code)
+        # checking equality
+        self.assertTupleEqual(MOV_code, LOAD_code)
+        # checking the placeholder is negative
+        self.assertLess(LOAD_code[address_dest], 0, "Placeholder should be negative")

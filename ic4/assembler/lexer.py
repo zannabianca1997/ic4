@@ -28,6 +28,8 @@ class ICAssLexer(Lexer):
         INC,
         DEC,
         MOV,
+        LOAD,
+        STORE,
         # labels
         IDENTIFIER,
         COLON,
@@ -55,6 +57,8 @@ class ICAssLexer(Lexer):
     IDENTIFIER["INC"] = INC
     IDENTIFIER["DEC"] = DEC
     IDENTIFIER["MOV"] = MOV
+    IDENTIFIER["LOAD"] = LOAD
+    IDENTIFIER["STORE"] = STORE
 
     # Punctuators
     PLUS = r"\+"

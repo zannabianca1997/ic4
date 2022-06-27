@@ -1,0 +1,17 @@
+; Hello world, by zannabianca1997
+
+JNZ #1 #start ; start the program
+
+string: INTS 72 101 108 108 111 32 119 111 114 108 100 10 0 ; Hello world in ascii
+str_ptr: INTS string ; pointer to the current char
+curr_ch: ZEROS 1     ; current char
+
+start:
+LOAD str_ptr curr_ch   ; load current char
+INC str_ptr            ; increase pointer
+loop: JZ curr_ch #end        ; loop until terminator
+      OUT curr_ch            ; out the current char
+      LOAD str_ptr curr_ch   ; load current char
+      INC str_ptr            ; increase pointer
+JZ #1 #loop            
+end: HALT

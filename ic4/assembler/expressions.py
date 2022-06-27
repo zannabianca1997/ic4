@@ -70,7 +70,7 @@ def simplify(
     if isinstance(expr, str):
         if expr in subs:
             # simplify that expression and then return that
-            return simplify(subs[expr], subs)
+            return simplify(subs[expr], subs, full_simplify=full_simplify)
         if full_simplify:
             raise SimplifyException(
                 f"Cannot find '{expr}' within the substitution given ({subs})"
@@ -78,8 +78,8 @@ def simplify(
         return expr
 
     # it's one of the four binary operations
-    left = simplify(expr.left, subs)
-    right = simplify(expr.right, subs)
+    left = simplify(expr.left, subs, full_simplify=full_simplify)
+    right = simplify(expr.right, subs, full_simplify=full_simplify)
 
     # arithmetic identities
     if isinstance(expr, Sum):

@@ -13,7 +13,7 @@ from .commands import (
     OpCode,
     ParamMode,
 )
-from .expressions import Expression, SimplifyException, Sum, simplify
+from .expressions import Expression, SimplifyException, Sum, simplify, simplify_tuple
 
 
 class GenerateException(Exception):
@@ -29,7 +29,7 @@ def generate_instruction(instr: Instruction) -> Tuple[Expression, ...]:
 
 
 def generate_directive(
-    directive: Directive, labels: Dict[str, int] = None
+    directive: Directive, labels: Dict[str, int], pos: int
 ) -> Tuple[Expression, ...]:
     if directive.code == DirectiveCode.INTS:
         return directive.params
@@ -73,7 +73,7 @@ def generate_directive(
         # storing code generated
         code = []
         # generating add instructions as needed
-        for i in range(directive.params[2]):
+        for i in range(simplify(directive.params[2], labels, full_simplify=True)):
             code.extend(
                 generate_instruction(
                     Instruction(
@@ -87,11 +87,59 @@ def generate_directive(
                 )
             )
         return tuple(code)
+    elif directive.code == DirectiveCode.LOAD:
+        code = []
+        code.extend(
+            generate_directive(  # code to move the address into the code
+                Directive(
+                    DirectiveCode.MOV,
+                    (
+                        directive.params[0],
+                        (
+                            ParamMode.ABSOLUTE,
+                            "address_pos",  # placeholder for the position of the destination of the address
+                            # MOV do not expand any param, except the third
+                        ),
+                        1,
+                    ),
+                ),
+                {},
+                pos,
+            )
+        )
+        code.extend(
+            generate_directive(
+                Directive(
+                    DirectiveCode.MOV,
+                    (
+                        (
+                            ParamMode.ABSOLUTE,
+                            "address_dest",  # placeholder for where the code will put the address.
+                            # MOV do not expand any param, except the third
+                        ),
+                        directive.params[1],
+                        1,
+                    ),
+                ),
+                labels,
+                pos,
+            )
+        )
+        code = list(simplify_tuple(code))  # this will erase the +0 MOV tend to add
+        # patching code
+        address_dest = code.index("address_dest")
+        code[code.index("address_pos")] = pos + address_dest
+        code[address_dest] = -1  # this will be substituted by the code.
+        # If not, it will create a invalid reference (the first time around)
+        # here we can generate code to put the -1 back. Should we? I think not, or at least it should be higly optional
+        return code
     else:
         raise NotImplementedError(f"Directive {directive.code} it's unimplemented")
 
 
-def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
+def generate(
+    commands: Iterable[Command], full_simplify: bool = True
+) -> Tuple[Expression, ...]:
     """Generate a intcode program from a list of commands"""
     labels: Dict[str, int] = {}  # known labels
     code: List[Expression] = []  # code generated
@@ -103,5 +151,5 @@ def generate(commands: Iterable[Command]) -> Tuple[int, ...]:
                 warn(f"Label '{command.name}' is redefined")
             labels[command.name] = len(code)  # point to the next instruction
         if isinstance(command, Directive):
-            code.extend(generate_directive(command, labels))
-    return tuple(simplify(val, labels, full_simplify=True) for val in code)
+            code.extend(generate_directive(command, labels, len(code)))
+    return simplify_tuple(code, labels, full_simplify=full_simplify)
