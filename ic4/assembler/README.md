@@ -4,18 +4,20 @@
 
 Extension for assembly files is `.ica`, for compiled files `.int`.
 
-### Instruction Set
-
+### Grammar
 
 There are three basic units in the language:
 - **Labels:** written as `name:` they mark the next position as `name`.
-- **Directives:** instruction for the assembler.
-- **Instructions:** IntCode instructions.
+- **Directives:** instruction for the assembler, ended by a newline.
+- **Instructions:** IntCode instructions, ended by a newline.
+
+## Labels
+
+They can appear on a line by themselves, or before any directive or instruction. They are composed like `identifier :`. They mark the *next cell* with `identifier`, that's freely usable in expression (even ones before, with the exception of variable lenght directive arguments).
 
 ## Instructions
 
 See [the IntCode specifications](https://esolangs.org/wiki/Intcode). Parameter modes are specified by a prefix: `#` for immediate mode, `@` for relative, and none for absolute.
-
 
 ## Directives
 
@@ -45,6 +47,20 @@ The move is always made from the first to the last. It's then safe to move overl
 ### LOAD
 Takes two params. The value stored in the **cell** at the position given by the first param value is moved into the second param. `LOAD {a} {b}` is equivalent to the pseudocode `b = mem[a]`.
 For now `LOAD` is implemented with minimal self modifing code. Without some guarantees on stack presence and structure (control on the relative pointer) this is the best INTCODE permit. Assembled `LOAD` code is not position indipendent, even if its parameter are.
+
 ### STORE
 Takes two params. The value of the first param is moved in the **cell** at the position given by the second param value. `STORE {a} {b}` is equivalent to the pseudocode `mem[b] = a`
 For now `STORE` is implemented with minimal self modifing code. Without some guarantees on stack presence and structure (control on the relative pointer) this is the best INTCODE permit. Assembled `STORE` code is not position indipendent, even if its parameter are.
+
+## Expression
+
+Expression are composed by the four operations, brakets, number and identifiers. All instructions and directives accept optional commas to separe expressions.
+
+## Numbers
+All numbers are integers, and can be spexified in four ways:
+- **Decimal:** `10`, `34`, ...
+- **Hexadecimal:** `0x2a`, `0xFF`, ...
+- **Char constant:** `'a'`, `'\n'`, `'\0'`, `'\xAA'`, ...
+
+## Identifiers
+Identifiers follow the rules of C identifiers.
