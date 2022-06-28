@@ -13,7 +13,14 @@ from .commands import (
     OpCode,
     ParamMode,
 )
-from .expressions import Expression, SimplifyException, Sum, simplify, simplify_tuple
+from .expressions import (
+    Expression,
+    Multiply,
+    SimplifyException,
+    Sum,
+    simplify,
+    simplify_tuple,
+)
 
 
 class GenerateException(Exception):
@@ -183,6 +190,50 @@ def generate_directive(
         return generate_instruction(
             Instruction(OpCode.JNZ, ((ParamMode.IMMEDIATE, 1), directive.params[0]))
         )
+    elif directive.code == DirectiveCode.PUSH:
+        code = []
+        code.extend(
+            generate_directive(
+                Directive(
+                    DirectiveCode.MOV,  # MOVe data to the top of the stack
+                    (directive.params[0], (ParamMode.RELATIVE, 0), directive.params[1]),
+                ),
+                {},
+                pos,
+            ),
+        )
+        code.extend(
+            generate_instruction(
+                Instruction(OpCode.INCB, ((ParamMode.IMMEDIATE, directive.params[1]),))
+            )
+        )
+        return code
+    elif directive.code == DirectiveCode.POP:
+        code = []
+        code.extend(
+            generate_instruction(
+                Instruction(
+                    OpCode.INCB,
+                    ((ParamMode.IMMEDIATE, Multiply(directive.params[1], -1)),),
+                )
+            )
+        )
+        if directive.params[0] is not None:  # skip MOV if there is no end parameter
+            code.extend(
+                generate_directive(
+                    Directive(
+                        DirectiveCode.MOV,  # MOVe data from the top of the stack
+                        (
+                            (ParamMode.RELATIVE, 0),
+                            directive.params[0],
+                            directive.params[1],
+                        ),
+                    ),
+                    {},
+                    pos,
+                )
+            )
+        return code
     else:
         raise NotImplementedError(f"Directive {directive.code} it's unimplemented")
 
