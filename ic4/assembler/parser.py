@@ -74,7 +74,7 @@ class ICAssParser(Parser):
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], (p.param,))
 
-    @_("PUSH param [ COMMA ] [ expr ]")
+    @_("PUSH [ param ] [ COMMA ] [ expr ]")
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], (p.param, p.expr or 1))
 

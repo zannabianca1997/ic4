@@ -194,16 +194,21 @@ def generate_directive(
         )
     elif directive.code == DirectiveCode.PUSH:
         code = []
-        code.extend(
-            generate_directive(
-                Directive(
-                    DirectiveCode.MOV,  # MOVe data to the top of the stack
-                    (directive.params[0], (ParamMode.RELATIVE, 0), directive.params[1]),
+        if directive.params[0] is not None:
+            code.extend(
+                generate_directive(
+                    Directive(
+                        DirectiveCode.MOV,  # MOVe data to the top of the stack
+                        (
+                            directive.params[0],
+                            (ParamMode.RELATIVE, 0),
+                            directive.params[1],
+                        ),
+                    ),
+                    {},
+                    pos,
                 ),
-                {},
-                pos,
-            ),
-        )
+            )
         code.extend(
             generate_instruction(
                 Instruction(OpCode.INCB, ((ParamMode.IMMEDIATE, directive.params[1]),))

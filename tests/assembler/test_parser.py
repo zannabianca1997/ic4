@@ -263,6 +263,14 @@ class TestParsing(TestCase):
                 ),
             ),
             (
+                "PUSH only size",
+                "PUSH , 15",
+                Directive(
+                    DirectiveCode.PUSH,
+                    (None, 15),
+                ),
+            ),
+            (
                 "POP",
                 "POP @3",
                 Directive(
