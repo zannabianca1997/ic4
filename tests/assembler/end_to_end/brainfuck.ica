@@ -1,0 +1,139 @@
+; brainfuck interpreter
+; by zannabianca1997
+
+; load the program from stdin
+IN readed_ch
+loop: JZ readed_ch #init
+    STORE readed_ch mem_ptr
+    INC mem_ptr
+    IN readed_ch
+JMP #loop
+
+init: INC mem_ptr  ; add space to mark end of program
+
+exec:
+LOAD instr_ptr curr_instr  ; load current instruction
+LOAD mem_ptr   curr_val    ; load current memory value
+
+; jump into jump table
+MUL curr_instr #3 curr_instr         ; multiply instruction by 3 so JMPs can fit into the jump table
+ADD curr_instr #jmp_table curr_instr ; add start of the jump table to the current instruction
+JMP curr_instr                       ; jump to the current instruction
+
+jmp_table:                                                 ; jump table start
+zero_start:  HALT                                          ; 0 -> HALT
+zero_end:    ZEROS 3*('+'- 0 ) - (zero_end  - zero_start ) ; space until '+' landing point
+plus_start:  JMP #increase                                  ; + -> increase
+plus_end:    ZEROS 3*(','-'+') - (plus_end  - plus_start ) ; space until ',' landing point
+comma_start: JMP #input                                     ; , -> input
+comma_end:   ZEROS 3*('-'-',') - (comma_end - comma_start) ; space until '-' landing point
+minus_start: JMP #decrease                                  ; - -> increase
+minus_end:   ZEROS 3*('.'-'-') - (minus_end - minus_start) ; space until '.' landing point
+dot_start:   JMP #output                                     ; . -> output
+dot_end:     ZEROS 3*('<'-'.') - (dot_end   - dot_start  ) ; space until '<' landing point
+left_start:  JMP #go_left                                   ; < -> go_left
+left_end:    ZEROS 3*('>'-'<') - (left_end  - left_start ) ; space until '>' landing point
+right_start: JMP #go_right                                  ; > -> go_right
+right_end:   ZEROS 3*('['-'>') - (right_end - right_start) ; space until '[' landing point
+lpar_start:  JMP #lparen                                    ; [ -> lparen
+lpar_end:    ZEROS 3*(']'-'[') - (lpar_end  - lpar_start ) ; space until ']' landing point
+             JMP #rparen                                    ; ] -> rparen
+
+; handlers
+increase:
+    INC curr_val
+    STORE curr_val mem_ptr ; save new value
+    INC instr_ptr          ; go to next instruction
+    JMP #exec
+
+decrease:
+    DEC curr_val
+    STORE curr_val mem_ptr ; save new value
+    INC instr_ptr          ; go to next instruction
+    JMP #exec
+
+input:
+    IN curr_val
+    STORE curr_val mem_ptr ; save new value
+    INC instr_ptr          ; go to next instruction
+    JMP #exec
+
+output:
+    OUT curr_val
+    INC instr_ptr          ; go to next instruction
+    JMP #exec
+
+go_right:
+    INC mem_ptr
+    INC instr_ptr          ; go to next instruction
+    JMP #exec
+
+go_left:
+    DEC mem_ptr
+    INC instr_ptr          ; go to next instruction
+    JMP #exec
+
+lparen:
+    JZ curr_val #end_loop_if   ; if the value is 0, start searching for ]
+        ; skip loop
+        INC instr_ptr           ; go to next instruction
+        JMP #exec
+    end_loop_if:
+
+    ; go to the corresponding ]
+    MOV #1 par_depth ; we are inside this loop
+    back_par_loop:
+        INC instr_ptr
+        LOAD instr_ptr curr_instr  ; load current instruction
+
+        SEQ curr_instr #'[' condition_out ; check if it's an end loop
+        JZ condition_out #end_close_if_2  ; if it's different, skip if
+            INC par_depth
+        end_close_if_2:
+
+        SEQ curr_instr #']' condition_out ; check if it's a start
+        JZ condition_out #end_open_if_2   ; if it's different, skip if
+            DEC par_depth
+            JNZ par_depth #end_open_if_2  ; if we found the matching [
+                INC instr_ptr   ; restart interpreter
+                JMP #exec
+        end_open_if_2:
+    JMP #back_par_loop
+
+rparen:
+    ; go to the corresponding [
+    MOV #1 par_depth ; we are inside this loop
+    forward_par_loop:
+        DEC instr_ptr
+        LOAD instr_ptr curr_instr  ; load current instruction
+
+        SEQ curr_instr #']' condition_out ; check if it's an end loop
+        JZ condition_out #end_close_if_1 ; if it's different, skip if
+            INC par_depth
+        end_close_if_1:
+
+        SEQ curr_instr #'[' condition_out ; check if it's a start
+        JZ condition_out #end_open_if_1  ; if it's different, skip if
+            DEC par_depth
+            JZ par_depth #exec           ; restart interpreter if we found the matching [
+        end_open_if_1:
+    JMP #forward_par_loop
+
+HALT
+; run variables
+instr_ptr:  INTS  program ; instruction pointer
+mem_ptr:    INTS  program ; memory pointer
+curr_instr: ZEROS 1       ; current instruction
+curr_val:   ZEROS 1       ; current value in mem
+
+; variable for [] navigation
+par_depth:  ZEROS 1       ; depth of parenthesis
+
+; variable for input
+readed_ch:  ZEROS 1       ; char readed
+
+; miscellanea
+condition_out: ZEROS 1    ; condition output
+
+; program space
+program:                  ; Program is loaded starting from here
