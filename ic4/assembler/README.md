@@ -36,7 +36,7 @@ Takes a param. Equivalent to `ADD {a} #-1 {a}`, it DECrease its value
 Unconditional jump to its only parameter
 
 ### MOV
-Takes two param or two param and a expression, that must be resolved with labels preceding it.
+Takes two param or two param and an optional expression, that must be resolved with labels preceding it.
 Equivalent to `ADD {a} #0 {b}`, moving the value of the first param to the second.
 If the expression is present, it's equivalent to 
 ```
@@ -45,6 +45,7 @@ ADD {a}+1 #0 {b}+1
 ...
 ADD {a}+n #0 {b}+n
 ```
+Note that `a` and `b` mantain the original mode. If `a` is immediate the memory will instead be filled with the same value.
 The move is always made from the first to the last. It's then safe to move overlapping memory only towards 0.
 
 ### LOAD

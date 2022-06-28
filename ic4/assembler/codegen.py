@@ -86,7 +86,9 @@ def generate_directive(
                     Instruction(
                         OpCode.ADD,  # using add to move stuff. MUL a 1 a would be ok too
                         (
-                            (m1, Sum(p1, i)),
+                            (m1, Sum(p1, i))
+                            if m1 is not ParamMode.IMMEDIATE
+                            else (m1, p1),
                             (ParamMode.IMMEDIATE, 0),
                             (m2, Sum(p2, i)),
                         ),
