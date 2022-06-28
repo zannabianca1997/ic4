@@ -62,7 +62,8 @@ Takes an optional param and an optional expression. Uses relative mode to manage
 MOV {a} @0 [size]
 INCB [size]
 ```
-As in `MOV` `size` is assumed 1 if not present. If `a` is absent, unspecified data will be loaded. After the `PUSH` the pushed values starts then at `@-size` up to `@0`
+As in `MOV` `size` is assumed 1 if not present. If `a` is absent, unspecified data will be loaded. After the `PUSH` the pushed values starts then at `@-size` up to `@0`.
+Also like `MOV` if `a` is in immediate mode the space will be filled with the given value.
 Take care that `PUSH` do not create the stack: an appropriate `RB` must be setted beforehand
 
 ### POP
