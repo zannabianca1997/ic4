@@ -11,6 +11,8 @@ from .expressions import Divide, Multiply, Subtract, Sum
 from .commands import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
 from .lexer import ICAssLexer
 
+Path(getenv("LOG_DIR")).mkdir(parents=True, exist_ok=True)  # creating log dir
+
 
 class ICAssParser(Parser):
     tokens = ICAssLexer.tokens
