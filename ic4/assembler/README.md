@@ -32,6 +32,9 @@ Takes a param. Equivalent to `ADD {a} #1 {a}`, it INCrease its value
 ### DEC
 Takes a param. Equivalent to `ADD {a} #-1 {a}`, it DECrease its value
 
+## JMP
+Unconditional jump to its only parameter
+
 ### MOV
 Takes two param or two param and a expression, that must be resolved with labels preceding it.
 Equivalent to `ADD {a} #0 {b}`, moving the value of the first param to the second.
