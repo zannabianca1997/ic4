@@ -113,6 +113,12 @@ class TestLexParse(TestCase):
         for x in compiled:
             self.assertIsInstance(x, int)
 
+    @parameterized.expand(get_name_log_path_and_source(__file__))
+    def test_params(self, name: str, log_path: Path, program: str) -> None:
+        """Check consistency of all the emitted commands"""
+        for command in ICAssParser().parse(ICAssLexer().tokenize(program)):
+            command.params_check()
+
 
 class TestRun(TestCase):
     @parameterized.expand(get_name_source_and_example(__file__))
