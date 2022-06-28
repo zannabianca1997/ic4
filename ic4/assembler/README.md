@@ -52,6 +52,24 @@ For now `LOAD` is implemented with minimal self modifing code. Without some guar
 Takes two params. The value of the first param is moved in the **cell** at the position given by the second param value. `STORE {a} {b}` is equivalent to the pseudocode `mem[b] = a`
 For now `STORE` is implemented with minimal self modifing code. Without some guarantees on stack presence and structure (control on the relative pointer) this is the best INTCODE permit. Assembled `STORE` code is not position indipendent, even if its parameter are.
 
+### PUSH
+Takes a param and an optional expression. Uses relative mode to manage a stack: `PUSH {a} [size]` is equivalent to
+```
+MOV {a} @0 [size]
+INCB [size]
+```
+As in `MOV` `size` is assumed 1 if not present. After the `PUSH` the pushed values starts then at `@-size` up to `@0`
+Take care that `PUSH` do not create the stack: an appropriate `RB` must be setted beforehand
+
+### POP
+Takes an optional param and an optional expression. Uses relative mode to manage a stack: `POP {a} [size]` is equivalent to
+```
+INCB -[size]
+MOV @0 {a} [size]
+```
+As in `PUSH` `size` is assumed 1 if not present. If `a` is absent, the `MOV` directive will be skipped. To specify a size with `a` absent one can use the optional comma separator.
+Take care that `POP` do not create the stack: an appropriate `RB` must be setted beforehand
+
 ## Expression
 
 Expression are composed by the four operations, brakets, number and identifiers. All instructions and directives accept optional commas to separe expressions.
