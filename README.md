@@ -26,9 +26,9 @@ This is a sintetic roadmap:
     - [X] INC and DEC
     - [X] MOV
     - [X] LOAD and STORE
-    - [ ] PUSH and POP
+    - [X] PUSH and POP
     - [ ] CALL and RET
-- [x] Intcode machine
+- [X] Intcode machine
 
 ## Used C dialect
 
