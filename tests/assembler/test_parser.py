@@ -310,6 +310,22 @@ class TestParsing(TestCase):
                     (None, 15),
                 ),
             ),
+            (
+                "CALL",
+                "CALL #15",
+                Directive(
+                    DirectiveCode.CALL,
+                    ((ParamMode.IMMEDIATE, 15),),
+                ),
+            ),
+            (
+                "RET",
+                "RET",
+                Directive(
+                    DirectiveCode.RET,
+                    (),
+                ),
+            ),
         ]
     )
     def test_parse_directives(self, name: str, source: str, expected: Directive):

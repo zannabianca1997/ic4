@@ -1,0 +1,53 @@
+; Factorial program
+; by zannabianca1997
+
+; mainly used to test CALLing functions and program layout
+
+; init code
+INCB #stack  ; setup stack
+CALL #main
+HALT
+
+factorial:
+    JNZ @-3 #recurse ; if the first parameter is 0
+        MOV #1 @-2   ; set the return value to 1
+        RET          ; return
+    recurse:         ; else
+
+    ; recurse
+    PUSH , 1 ; free space for 1 variable (@0-1)
+
+    MOV @(-3-1) @(0-1) ; MOVe first parameter into local variable
+    DEC @(0-1)         ; DECrease the local variable
+
+    ; calling factorial recursively
+    PUSH @(0-1)     ; PUSHing local variable as parameter
+    PUSH            ; PUSHing space for return value
+    CALL #factorial ; CALLing function
+    POP  @(0-1-1)   ; POPping return value into local variable
+    POP             ; POPping parameter space
+
+    ; multiplying local variable for the parameter into the result
+    MUL @(-3-1) @(0-1) @(-2-1)
+
+    POP  , 1 ; discard local variables
+    RET
+
+main:
+    PUSH , 1 ; free space for 1 variable (@0-1)
+
+    IN  @(0-1) ; read into local variable
+
+    ; calling factorial
+    PUSH @(0-1)     ; PUSHing local variable as parameter
+    PUSH            ; PUSHing space for return value
+    CALL #factorial ; CALLing function
+    POP  @(0-1-1)   ; POPping return value into local variable
+    POP             ; POPping parameter space
+
+    OUT @(0-1) ; output local variable
+
+    POP  , 1 ; discard local variables
+    RET
+
+stack:

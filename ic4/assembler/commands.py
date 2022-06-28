@@ -6,6 +6,7 @@ from enum import IntEnum, Enum, auto
 from typing import Tuple, Optional, Union
 
 from py import code
+from yaml import DirectiveToken
 
 from .expressions import Expression, simplify
 
@@ -103,6 +104,8 @@ class DirectiveCode(Enum):
     JMP = auto()
     PUSH = auto()
     POP = auto()
+    CALL = auto()
+    RET = auto()
 
 
 @dataclass(frozen=True)
@@ -155,6 +158,18 @@ class Directive:
             leng = simplify(leng)
             if isinstance(leng, int):
                 assert leng >= 0
+        if self.code == DirectiveCode.CALL:
+            assert len(self.params) == 1
+            (p,) = self.params
+            assert isinstance(p, tuple) and len(p) == 2
+            mode, addr = p
+            assert isinstance(mode, ParamMode)
+            if mode != ParamMode.RELATIVE:
+                addr = simplify(addr)
+                if isinstance(addr, int):
+                    assert addr >= 0
+        if self.code == DirectiveCode.RET:
+            assert len(self.params) == 0
 
 
 @dataclass(frozen=True)

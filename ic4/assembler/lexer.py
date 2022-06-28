@@ -33,6 +33,8 @@ class ICAssLexer(Lexer):
         JMP,
         PUSH,
         POP,
+        CALL,
+        RET,
         # labels
         IDENTIFIER,
         COLON,
@@ -67,6 +69,8 @@ class ICAssLexer(Lexer):
     IDENTIFIER["JMP"] = JMP
     IDENTIFIER["PUSH"] = PUSH
     IDENTIFIER["POP"] = POP
+    IDENTIFIER["CALL"] = CALL
+    IDENTIFIER["RET"] = RET
 
     # Punctuators
     PLUS = r"\+"

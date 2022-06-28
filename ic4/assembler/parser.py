@@ -82,6 +82,14 @@ class ICAssParser(Parser):
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], (p.param, p.expr or 1))
 
+    @_("CALL param")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], (p.param,))
+
+    @_("RET")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], ())
+
     # --- parameters ---
 
     @_("param_mode expr")

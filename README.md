@@ -15,19 +15,20 @@ This is a sintetic roadmap:
 
 - [ ] Compiler
 - [ ] Linker
-- [ ] Assembler
+- [X] Assembler
   - [X] Lexer
   - [X] Instructions
   - [X] Labels
-  - [ ] Directives
+  - [X] Directives
     - [X] INTS
     - [ ] STRING
     - [X] ZEROS
+    - [X] JMP
     - [X] INC and DEC
     - [X] MOV
     - [X] LOAD and STORE
     - [X] PUSH and POP
-    - [ ] CALL and RET
+    - [X] CALL and RET
 - [X] Intcode machine
 
 ## Used C dialect

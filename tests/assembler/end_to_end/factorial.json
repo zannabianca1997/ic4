@@ -1,0 +1,29 @@
+[
+    {
+        "name": "zero",
+        "input": [
+            0
+        ],
+        "output": [
+            1
+        ]
+    },
+    {
+        "name": "one",
+        "input": [
+            1
+        ],
+        "output": [
+            1
+        ]
+    },
+    {
+        "name": "ten",
+        "input": [
+            10
+        ],
+        "output": [
+            3628800
+        ]
+    }
+]

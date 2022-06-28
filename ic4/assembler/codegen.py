@@ -106,7 +106,7 @@ def generate_directive(
                         directive.params[0],
                         (
                             ParamMode.ABSOLUTE,
-                            "address_pos",  # placeholder for the position of the destination of the address
+                            "\x01address_pos",  # placeholder for the position of the destination of the address
                             # MOV do not expand any param, except the third
                         ),
                         1,
@@ -123,7 +123,7 @@ def generate_directive(
                     (
                         (
                             ParamMode.ABSOLUTE,
-                            "address_dest",  # placeholder for where the code will put the address.
+                            "\x01address_dest",  # placeholder for where the code will put the address.
                             # MOV do not expand any param, except the third
                         ),
                         directive.params[1],
@@ -131,13 +131,13 @@ def generate_directive(
                     ),
                 ),
                 labels,
-                pos,
+                pos + len(code),
             )
         )
         code = list(simplify_tuple(code))  # this will erase the +0 MOV tend to add
         # patching code
-        address_dest = code.index("address_dest")
-        code[code.index("address_pos")] = pos + address_dest
+        address_dest = code.index("\x01address_dest")
+        code[code.index("\x01address_pos")] = pos + address_dest
         code[address_dest] = -1  # this will be substituted by the code.
         # If not, it will create a invalid reference (the first time around)
         # here we can generate code to put the -1 back. Should we? I think not, or at least it should be higly optional
@@ -152,7 +152,7 @@ def generate_directive(
                         directive.params[1],
                         (
                             ParamMode.ABSOLUTE,
-                            "address_pos",  # placeholder for the position of the destination of the address
+                            "\x01address_pos",  # placeholder for the position of the destination of the address
                             # MOV do not expand any param, except the third
                         ),
                         1,
@@ -170,20 +170,20 @@ def generate_directive(
                         directive.params[0],
                         (
                             ParamMode.ABSOLUTE,
-                            "address_dest",  # placeholder for where the code will put the address.
+                            "\x01address_dest",  # placeholder for where the code will put the address.
                             # MOV do not expand any param, except the third
                         ),
                         1,
                     ),
                 ),
                 labels,
-                pos,
+                pos + len(code),
             )
         )
         code = list(simplify_tuple(code))  # this will erase the +0 MOV tend to add
         # patching code
-        address_dest = code.index("address_dest")
-        code[code.index("address_pos")] = pos + address_dest
+        address_dest = code.index("\x01address_dest")
+        code[code.index("\x01address_pos")] = pos + address_dest
         code[address_dest] = -1  # this will be substituted by the code.
         # If not, it will create a invalid reference (the first time around)
         # here we can generate code to put the -1 back. Should we? I think not, or at least it should be higly optional
@@ -237,9 +237,40 @@ def generate_directive(
                         ),
                     ),
                     {},
-                    pos,
+                    pos + len(code),
                 )
             )
+        return code
+    if directive.code == DirectiveCode.CALL:
+        code = []
+        code.extend(
+            generate_directive(
+                Directive(
+                    DirectiveCode.PUSH, ((ParamMode.IMMEDIATE, "\x01ret_address"), 1)
+                ),
+                {},
+                pos,
+            )
+        )
+        code.extend(
+            generate_directive(
+                Directive(DirectiveCode.JMP, directive.params), {}, pos + len(code)
+            )
+        )
+        # in the end we patch the return address
+        return simplify_tuple(code, {"\x01ret_address": pos + len(code)})
+    if directive.code == DirectiveCode.RET:
+        code = []
+        code.extend(
+            generate_instruction(Instruction(OpCode.INCB, ((ParamMode.IMMEDIATE, -1),)))
+        )
+        code.extend(
+            generate_directive(
+                Directive(DirectiveCode.JMP, ((ParamMode.RELATIVE, 0),)),
+                {},
+                pos + len(code),
+            )
+        )
         return code
     else:
         raise NotImplementedError(f"Directive {directive.code} it's unimplemented")

@@ -75,6 +75,22 @@ MOV @0 {a} [size]
 As in `PUSH` `size` is assumed 1 if not present. If `a` is absent, the data will be discarded. To specify a size with `a` absent one can use the optional comma separator.
 Take care that `POP` do not create the stack: an appropriate `RB` must be setted beforehand
 
+## CALL
+Takes a parameter. `PUSH` the instruction pointer of the next instruction on the stack. Then jump to the parameter. `CALL {a}` is equivalent to 
+```
+PUSH __ret
+JMP {a}
+__ret:
+```
+
+## RET
+`POP` a value from the stack and jumps to it
+Equivalent to 
+```
+INCB -1
+JMP @0
+```
+
 ## Expression
 
 Expression are composed by the four operations, brakets, number and identifiers. All instructions and directives accept optional commas to separe expressions.
