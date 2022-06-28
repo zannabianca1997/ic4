@@ -1,10 +1,11 @@
 from itertools import product
-from typing import Iterable
+from typing import Iterable, Tuple
 from unittest import TestCase
 
 from parameterized import parameterized
 
 from ic4.assembler.commands import (
+    INSTRUCTION_PARAMS_WRITING_TABLE,
     Directive,
     DirectiveCode,
     Instruction,
@@ -109,15 +110,30 @@ class TestParsing(TestCase):
                 Instruction(
                     opcode, tuple(zip(parammodes, names(opcode.param_number())))
                 ),
+                parammodes,
+                INSTRUCTION_PARAMS_WRITING_TABLE[opcode],
             )
             for opcode in OpCode
             for parammodes in product(ParamMode, repeat=opcode.param_number())
         ]
     )
-    def test_parse_instructions(self, name: str, source: str, parsed: Instruction):
-        self.assertEqual(
-            self.parser.parse(self.lexer.tokenize(source + "\n"))[0], parsed
-        )
+    def test_parse_instructions(
+        self,
+        name: str,
+        source: str,
+        expected: Instruction,
+        modes: Tuple[ParamMode, ...],
+        writing: Tuple[bool, ...],
+    ):
+        parsed = self.parser.parse(self.lexer.tokenize(source + "\n"))[0]
+        # check the throw
+        if any(
+            writ and mode == ParamMode.IMMEDIATE for writ, mode in zip(writing, modes)
+        ):
+            self.assertRaises(AssertionError, parsed.params_check)
+        else:
+            parsed.params_check()  # should run
+        self.assertEqual(parsed, expected)
 
     @parameterized.expand(
         [
@@ -296,7 +312,7 @@ class TestParsing(TestCase):
             ),
         ]
     )
-    def test_parse_directives(self, name: str, source: str, parsed: Instruction):
-        self.assertEqual(
-            self.parser.parse(self.lexer.tokenize(source + "\n"))[0], parsed
-        )
+    def test_parse_directives(self, name: str, source: str, expected: Directive):
+        parsed = self.parser.parse(self.lexer.tokenize(source + "\n"))[0]
+        parsed.params_check()  # check parameters are ok
+        self.assertEqual(parsed, expected)
