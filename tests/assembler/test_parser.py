@@ -246,6 +246,46 @@ class TestParsing(TestCase):
                     ((ParamMode.RELATIVE, 3),),
                 ),
             ),
+            (
+                "PUSH",
+                "PUSH @3",
+                Directive(
+                    DirectiveCode.PUSH,
+                    ((ParamMode.RELATIVE, 3), 1),
+                ),
+            ),
+            (
+                "PUSH multiple",
+                "PUSH @3 15",
+                Directive(
+                    DirectiveCode.PUSH,
+                    ((ParamMode.RELATIVE, 3), 15),
+                ),
+            ),
+            (
+                "POP",
+                "POP @3",
+                Directive(
+                    DirectiveCode.POP,
+                    ((ParamMode.RELATIVE, 3), 1),
+                ),
+            ),
+            (
+                "POP multiple",
+                "POP @3 15",
+                Directive(
+                    DirectiveCode.POP,
+                    ((ParamMode.RELATIVE, 3), 15),
+                ),
+            ),
+            (
+                "POP only size",
+                "POP , 15",
+                Directive(
+                    DirectiveCode.POP,
+                    (None, 15),
+                ),
+            ),
         ]
     )
     def test_parse_directives(self, name: str, source: str, parsed: Instruction):
