@@ -213,7 +213,8 @@ if __name__ == "__main__":
     while machine.run():
         print(
             ", ".join(
-                takewhile(
+                str(x)
+                for x in takewhile(
                     lambda x: x is not None, (machine.get_output() for _ in count())
                 )
             )
@@ -221,6 +222,9 @@ if __name__ == "__main__":
         machine.give_input(int(input()))
     print(
         ", ".join(
-            takewhile(lambda x: x is not None, (machine.get_output() for _ in count()))
+            str(x)
+            for x in takewhile(
+                lambda x: x is not None, (machine.get_output() for _ in count())
+            )
         )
     )
