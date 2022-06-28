@@ -1,0 +1,33 @@
+; Invert list of number
+; by zannabianca1997
+
+; this program will read a list of number, until 0 is given
+; then it will print them in reverse order
+
+; prepare stack
+INCB #stack ; set RB at start of the stack
+PUSH #0     ; push sentinel to detect complete stack unwind
+
+; read values and push them on the stack
+input_loop_start:
+    IN   io_val                  ; read a value
+    JZ   io_val #input_loop_end  ; stop at 0
+    PUSH io_val                  ; push value on stack
+    JMP #input_loop_start        ; loop
+input_loop_end:
+
+; pop value and output them
+output_loop_start:
+    POP  io_val                  ; pop a value
+    JZ   io_val #output_loop_end ; stop at 0 (sentinel at stack start)
+    OUT  io_val                  ; output value
+    JMP #output_loop_start       ; loop
+output_loop_end:
+
+HALT
+
+; input/output
+io_val: ZEROS 1
+
+; stack
+stack:
