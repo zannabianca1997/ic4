@@ -2,7 +2,7 @@
 
 ## The Assembly Language
 
-Extension for assembly files is `.ica`, for compiled files `.int`.
+Extension for assembly files is `.ica`, for compiled files `.int`. See the [end-to-end tests](../../tests/assembler/end_to_end)
 
 ### Grammar
 
