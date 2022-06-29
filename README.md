@@ -21,7 +21,7 @@ This is a sintetic roadmap:
   - [X] Labels
   - [X] Directives
     - [X] INTS
-    - [ ] STRING
+    - [X] STRING
     - [X] ZEROS
     - [X] JMP
     - [X] INC and DEC
