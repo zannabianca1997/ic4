@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 from sly import Lexer
 
 from .commands import DirectiveCode, OpCode
-from ..utilities import char_const_re, unescape_char_const
+from ..utilities import char_const_re, const_string_re, unescape_char_const
 
 
 class ICAssLexer(Lexer):
@@ -99,7 +99,7 @@ class ICAssLexer(Lexer):
         return t
 
     # char and string constants
-    @_(r"\"[^\"\\]*(?:\\.[^\"\\]*)*\"")
+    @_(const_string_re)
     def STRING(self, p):
         raise NotImplementedError()
 
