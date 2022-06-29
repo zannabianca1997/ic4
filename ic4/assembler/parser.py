@@ -6,7 +6,7 @@ from os import getenv
 from pathlib import Path
 from sly import Parser
 
-from ic4.utilities import unescape_string_const
+from ic4.string_utilities import unescape_string_const
 
 
 from .expressions import Divide, Multiply, Subtract, Sum

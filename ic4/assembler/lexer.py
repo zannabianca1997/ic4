@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 
 from sly import Lexer
 
-from .commands import DirectiveCode, OpCode
-from ..utilities import (
+from .commands import OpCode
+from ..string_utilities import (
     char_const_re,
     const_string_re,
     unescape_char_const,
