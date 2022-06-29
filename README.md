@@ -14,9 +14,9 @@ Objective is to translate the biggest subset of C I can manage.
 This is a sintetic roadmap:
 
 - [ ] Compiler
-- [ ] Linker
-- [X] Assembler
+- [X] Assembly parser
   - [X] Lexer
+  - [ ] Header
   - [X] Instructions
   - [X] Labels
   - [X] Directives
@@ -29,6 +29,9 @@ This is a sintetic roadmap:
     - [X] LOAD and STORE
     - [X] PUSH and POP
     - [X] CALL and RET
+- [ ] Linker
+- [X] Assembler
+  - [X] Code generation
 - [X] Intcode machine
 
 ## Used C dialect
