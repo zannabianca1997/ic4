@@ -188,6 +188,14 @@ class TestParsing(TestCase):
                 Directive(DirectiveCode.INTS, (0, 1, 2)),
             ),
             (
+                "INTS with string",
+                'INTS "This is a String, \\n with escapes!"',
+                Directive(
+                    DirectiveCode.INTS,
+                    tuple(ord(x) for x in "This is a String, \n with escapes!\0"),
+                ),
+            ),
+            (
                 "INTS with expression",
                 "INTS 0 1-2",
                 Directive(DirectiveCode.INTS, (0, Subtract(1, 2))),

@@ -73,4 +73,5 @@ def unescape_string_const(char_string: str) -> Tuple[int, ...]:
         char_string = char_string[m.end() :]
         unescaped.append(int(m[0], 8))
 
+    unescaped.append(0)
     return tuple(unescaped)

@@ -8,7 +8,12 @@ logger = logging.getLogger(__name__)
 from sly import Lexer
 
 from .commands import DirectiveCode, OpCode
-from ..utilities import char_const_re, const_string_re, unescape_char_const
+from ..utilities import (
+    char_const_re,
+    const_string_re,
+    unescape_char_const,
+    unescape_string_const,
+)
 
 
 class ICAssLexer(Lexer):
@@ -98,10 +103,11 @@ class ICAssLexer(Lexer):
             t.value = int(t.value)
         return t
 
-    # char and string constants
-    @_(const_string_re)
-    def STRING(self, p):
-        raise NotImplementedError()
+    # string constants
+    @_(const_string_re.pattern)
+    def STRING(self, t):
+        t.value = unescape_string_const(t.value)
+        return t
 
     # this will match end of line and file
     @_(r"\n")

@@ -6,6 +6,8 @@ from os import getenv
 from pathlib import Path
 from sly import Parser
 
+from ic4.utilities import unescape_string_const
+
 
 from .expressions import Divide, Multiply, Subtract, Sum
 from .commands import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
@@ -50,6 +52,10 @@ class ICAssParser(Parser):
     @_("INTS { expr [ COMMA ] }")
     def directive(self, p):
         return Directive(DirectiveCode[p[0]], tuple(p.expr))
+
+    @_("INTS STRING")
+    def directive(self, p):
+        return Directive(DirectiveCode[p[0]], p.STRING)
 
     @_("ZEROS expr")
     def directive(self, p):
