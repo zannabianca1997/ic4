@@ -7,9 +7,36 @@ Extension for assembly files is `.ica`, for compiled files `.int`. See the [end-
 ### Grammar
 
 There are three basic units in the language:
+- **Header:** specify what type of file is this
 - **Labels:** written as `name:` they mark the next position as `name`.
 - **Directives:** instruction for the assembler, ended by a newline.
 - **Instructions:** IntCode instructions, ended by a newline.
+
+## Header
+
+Header specify if this is a *object* file, that can be linked with other, or if it's an *executable*, that will produce a IntCode program. It must come before any instruction or directive.
+
+### Object files
+Header is:
+```
+OBJECTS version
+EXPORT a b c ... 
+EXTERN d e f ... 
+ENTRY  main
+```
+The only version that is now supported is 0.1.
+The three subsequential lines are optionals:
+- `EXPORT` list the labels that must be accessible by other object files.
+- `EXTERN` instead list the label that are finded into other files. They must not be defined into the file
+- `ENTRY` signal that that label is the program starting point.
+
+### Executable files
+Header is:
+```
+EXECUTABLE version
+```
+The only version that is now supported is 0.1. If header is missing, this is the default (`EXECUTABLE 1.0`)
+
 
 ## Labels
 
@@ -102,4 +129,4 @@ All numbers are integers, and can be spexified in four ways:
 - **Char constant:** `'a'`, `'\n'`, `'\0'`, `'\xAA'`, ...
 
 ## Identifiers
-Identifiers follow the rules of C identifiers.
+Identifiers in *objects* files follow the rules of C identifiers. In *executables* files the character `$` is also available (used to add file information).
