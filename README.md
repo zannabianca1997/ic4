@@ -30,6 +30,9 @@ This is a sintetic roadmap:
     - [X] PUSH and POP
     - [X] CALL and RET
 - [ ] Linker
+  - [ ] Reference consistency check
+  - [ ] Label renaming
+  - [ ] Entry code generation
 - [X] Assembler
   - [X] Code generation
 - [X] Intcode machine
