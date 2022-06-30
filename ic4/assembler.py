@@ -4,7 +4,7 @@
 from distutils.log import warn
 from typing import Dict, Iterable, List, Tuple
 
-from .commands import (
+from .assembly.commands import (
     Command,
     Directive,
     DirectiveCode,
@@ -13,7 +13,7 @@ from .commands import (
     OpCode,
     ParamMode,
 )
-from .expressions import (
+from .assembly.expressions import (
     Expression,
     Multiply,
     SimplifyException,

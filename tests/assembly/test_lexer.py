@@ -6,8 +6,8 @@ from unittest import TestCase, skip
 from parameterized import parameterized
 from sly.lex import Token, Lexer
 
-from ic4.assembler.commands import DirectiveCode, OpCode
-from ic4.assembler.lexer import ICAssLexer
+from ic4.assembly.commands import DirectiveCode, OpCode
+from ic4.assembly.lexer import ICAssLexer
 
 
 def tuplify(token: Token):

@@ -4,7 +4,7 @@
 from sys import stdin
 from typing import Iterable
 
-from .assembler import assemble
+from .assembly import assemble
 
 
 def usage(argv):

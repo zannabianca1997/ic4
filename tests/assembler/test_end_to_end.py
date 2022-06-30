@@ -8,11 +8,11 @@ from unittest import TestCase
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
 from sly.lex import Token
-from ic4.assembler.codegen import generate
-from ic4.assembler.commands import Directive, Instruction, Label
+from ic4.assembler import generate
+from ic4.assembly.commands import Directive, Instruction, Label
 
-from ic4.assembler.lexer import ICAssLexer
-from ic4.assembler.parser import ICAssParser
+from ic4.assembly.lexer import ICAssLexer
+from ic4.assembly.parser import ICAssParser
 from ic4.machine import Machine
 
 
@@ -46,7 +46,7 @@ class IOExample(BaseModel):
 
 
 def get_sources(dir: Path):
-    yield from Path(dir).parent.glob("*.ica")
+    yield from (Path(dir).parent / "end_to_end_sources").glob("*.ica")
 
 
 def get_log_path(file_path: Path) -> Path:

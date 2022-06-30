@@ -3,7 +3,7 @@ from typing import Tuple
 from unittest import TestCase
 from parameterized import parameterized
 
-from ic4.assembler.commands import (
+from ic4.assembly.commands import (
     Command,
     Directive,
     DirectiveCode,
@@ -12,7 +12,7 @@ from ic4.assembler.commands import (
     OpCode,
     ParamMode,
 )
-from ic4.assembler.codegen import GenerateException, generate
+from ic4.assembler import GenerateException, generate
 
 
 class TestGenerateInstruction(TestCase):

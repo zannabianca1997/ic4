@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from parameterized import parameterized
 
-from ic4.assembler.commands import (
+from ic4.assembly.commands import (
     INSTRUCTION_PARAMS_WRITING_TABLE,
     Directive,
     DirectiveCode,
@@ -13,9 +13,9 @@ from ic4.assembler.commands import (
     OpCode,
     ParamMode,
 )
-from ic4.assembler.expressions import Divide, Expression, Multiply, Subtract, Sum
-from ic4.assembler.lexer import ICAssLexer
-from ic4.assembler.parser import ICAssParser
+from ic4.assembly.expressions import Divide, Expression, Multiply, Subtract, Sum
+from ic4.assembly.lexer import ICAssLexer
+from ic4.assembly.parser import ICAssParser
 
 
 def names(n: int) -> Iterable[str]:
