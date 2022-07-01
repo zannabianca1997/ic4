@@ -361,6 +361,21 @@ class TestParsing(TestCase):
     @parameterized.expand(
         [
             ("Plain", "OBJECTS 1.2.3_test\n", ObjectsHeader(Version(1, 2, 3, "test"))),
+            (
+                "with entry",
+                "OBJECTS 3.4\nENTRY main\n",
+                ObjectsHeader(Version(3, 4), entry="main"),
+            ),
+            (
+                "with export",
+                "OBJECTS 3.4\nEXPORT a b c d\n",
+                ObjectsHeader(Version(3, 4), export=frozenset(("a", "b", "c", "d"))),
+            ),
+            (
+                "with extern",
+                "OBJECTS 3.4\nEXTERN a b c d\n",
+                ObjectsHeader(Version(3, 4), extern=frozenset(("a", "b", "c", "d"))),
+            ),
         ]
     )
     def test_parse_exec_header(self, name: str, source: str, expected: ObjectsHeader):

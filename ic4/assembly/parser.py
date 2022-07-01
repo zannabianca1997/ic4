@@ -1,7 +1,7 @@
 """
 Parse an assembly file
 """
-from itertools import chain
+from itertools import chain, permutations, product
 from os import getenv
 from pathlib import Path
 from sly import Parser
@@ -43,17 +43,37 @@ class ICAssParser(Parser):
         return ExecutableHeader(p.VERSION)
 
     # Objects header
-
-    @_(
-        "OBJECTS VERSION lline_end [ extern_objs lline_end ] [ export_objs lline_end ] [ entry_obj lline_end ]"
-    )
+    @_("OBJECTS VERSION lline_end objs_specs")
     def header(self, p):
-        return ObjectsHeader(
-            p.VERSION,
-            extern=p.extern_objs or frozenset(),
-            export=p.export_objs or frozenset(),
-            entry=p.entry_obj,
+        return ObjectsHeader(p.VERSION, **p.objs_specs)
+
+    # producing rules for all possible combinations
+    for extern, export, entry in product([True, False], repeat=3):
+
+        @_(
+            *(
+                " ".join(perm)
+                for perm in permutations(
+                    comp
+                    for p, comp in (
+                        (extern, "extern_objs lline_end"),
+                        (export, "export_objs lline_end"),
+                        (entry, "entry_obj lline_end"),
+                    )
+                    if p
+                )
+            )
         )
+        def objs_specs(self, p):
+            specs = {}
+            specs["extern"] = (
+                p.extern_objs if hasattr(p, "extern_objs") else frozenset()
+            )
+            specs["export"] = (
+                p.export_objs if hasattr(p, "export_objs") else frozenset()
+            )
+            specs["entry"] = p.entry_obj if hasattr(p, "entry_obj") else None
+            return specs
 
     @_("EXTERN { IDENTIFIER }")
     def extern_objs(self, p):

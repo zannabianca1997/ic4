@@ -90,6 +90,7 @@ class ICAssLexer(Lexer):
     IDENTIFIER["OBJECTS"] = OBJECTS
     IDENTIFIER["EXPORT"] = EXPORT
     IDENTIFIER["EXTERN"] = EXTERN
+    IDENTIFIER["ENTRY"] = ENTRY
 
     # Punctuators
     PLUS = r"\+"
