@@ -14,6 +14,7 @@ from ..string_utilities import (
     unescape_char_const,
     unescape_string_const,
 )
+from ..version import Version, version_re
 
 
 class ICAssLexer(Lexer):
@@ -53,6 +54,12 @@ class ICAssLexer(Lexer):
         RPAREN,
         # char and string constants
         STRING,
+        # Header stuff
+        FILETYPE,
+        VERSION,
+        EXPORT,
+        EXTERN,
+        ENTRY,
     }
 
     ignore = " \t"
@@ -77,6 +84,12 @@ class ICAssLexer(Lexer):
     IDENTIFIER["CALL"] = CALL
     IDENTIFIER["RET"] = RET
 
+    # header keyword
+    IDENTIFIER["EXECUTABLE"] = FILETYPE
+    IDENTIFIER["OBJECTS"] = FILETYPE
+    IDENTIFIER["EXPORT"] = EXPORT
+    IDENTIFIER["EXTERN"] = EXTERN
+
     # Punctuators
     PLUS = r"\+"
     MINUS = r"\-"
@@ -88,6 +101,11 @@ class ICAssLexer(Lexer):
     RELATIVE = r"\@"
     COMMA = r"\,"
     COLON = r"\:"
+
+    @_(version_re)
+    def VERSION(self, t):
+        t.value = Version.from_string(t.value)
+        return t
 
     @_(
         r"0x[0-9a-fA-F]+",

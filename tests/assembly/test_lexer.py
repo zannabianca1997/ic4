@@ -8,6 +8,7 @@ from sly.lex import Token, Lexer
 
 from ic4.assembly.commands import DirectiveCode, OpCode
 from ic4.assembly.lexer import ICAssLexer
+from ic4.version import Version
 
 
 def tuplify(token: Token):
@@ -109,6 +110,26 @@ class TestLexing(TestCase):
                     ("NUMBER", 1, 7, 65),
                     ("LINE_END", "\n", 7, 66),
                     ("LINE_END", "\n", 8, 67),
+                ),
+            ),
+            (
+                "Version complete",
+                "1.2.3_alpha",
+                (("VERSION", Version(1, 2, 3, "alpha"), 1, 0),),
+            ),
+            ("Version no extra", "1.2.3", (("VERSION", Version(1, 2, 3), 1, 0),)),
+            ("Version short", "1.2", (("VERSION", Version(1, 2), 1, 0),)),
+            (
+                "Version short with extra",
+                "1.2_alpha",
+                (("VERSION", Version(1, 2, 0, "alpha"), 1, 0),),
+            ),
+            (
+                "Version wrong",
+                "1_alpha",
+                (
+                    ("NUMBER", 1, 1, 0),
+                    ("IDENTIFIER", "_alpha", 1, 1),
                 ),
             ),
         ]
