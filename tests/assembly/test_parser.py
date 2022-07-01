@@ -367,14 +367,22 @@ class TestParsing(TestCase):
                 ObjectsHeader(Version(3, 4), entry="main"),
             ),
             (
-                "with export",
-                "OBJECTS 3.4\nEXPORT a b c d\n",
-                ObjectsHeader(Version(3, 4), export=frozenset(("a", "b", "c", "d"))),
+                "with export and extern",
+                "OBJECTS 3.4\nEXTERN a b c d\nEXPORT de f\n",
+                ObjectsHeader(
+                    Version(3, 4),
+                    extern=frozenset(("a", "b", "c", "d")),
+                    export=frozenset(("de", "f")),
+                ),
             ),
             (
-                "with extern",
-                "OBJECTS 3.4\nEXTERN a b c d\n",
-                ObjectsHeader(Version(3, 4), extern=frozenset(("a", "b", "c", "d"))),
+                "with export and extern reversed",
+                "OBJECTS 3.4\nEXPORT de f\nEXTERN a b c d\n",
+                ObjectsHeader(
+                    Version(3, 4),
+                    extern=frozenset(("a", "b", "c", "d")),
+                    export=frozenset(("de", "f")),
+                ),
             ),
         ]
     )
