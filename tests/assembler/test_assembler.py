@@ -1,6 +1,6 @@
 from itertools import product
 from typing import Tuple
-from unittest import TestCase
+from unittest import TestCase, skip
 from parameterized import parameterized
 
 from ic4.assembly.commands import (
@@ -12,7 +12,15 @@ from ic4.assembly.commands import (
     OpCode,
     ParamMode,
 )
-from ic4.assembler import GenerateException, generate
+from ic4.assembler import GenerateException
+from ic4.assembler import generate as file_generate
+from ic4.assembly.srcfile import ExecutableHeader, SourceFile
+from ic4.version import Version
+
+
+def generate(source: Tuple[Command, ...]) -> Tuple[int, ...]:
+    """Generate from a test body"""
+    return file_generate(SourceFile(ExecutableHeader(Version(0, 1)), source))
 
 
 class TestGenerateInstruction(TestCase):
@@ -193,24 +201,23 @@ class TestGenerate(TestCase):
                     DirectiveCode.MOV,
                     (
                         (ParamMode.ABSOLUTE, 42),
-                        (ParamMode.ABSOLUTE, "address_pos"),
+                        (ParamMode.ABSOLUTE, 12345),
                         1,
                     ),
                 ),
                 Directive(
                     DirectiveCode.MOV,
                     (
-                        (ParamMode.ABSOLUTE, "address_dest"),
+                        (ParamMode.ABSOLUTE, 54321),
                         (ParamMode.ABSOLUTE, 76),
                         1,
                     ),
                 ),
             ),
-            full_simplify=False,
         )
         # recovering the placeholders
-        address_pos = MOV_code.index("address_pos")
-        address_dest = MOV_code.index("address_dest")
+        address_pos = MOV_code.index(12345)
+        address_dest = MOV_code.index(54321)
         # patching mov code
         MOV_code = list(MOV_code)
         MOV_code[address_pos] = address_dest
@@ -237,7 +244,7 @@ class TestGenerate(TestCase):
                     DirectiveCode.MOV,
                     (
                         (ParamMode.ABSOLUTE, 76),
-                        (ParamMode.ABSOLUTE, "address_pos"),
+                        (ParamMode.ABSOLUTE, 12345),
                         1,
                     ),
                 ),
@@ -245,16 +252,15 @@ class TestGenerate(TestCase):
                     DirectiveCode.MOV,
                     (
                         (ParamMode.ABSOLUTE, 42),
-                        (ParamMode.ABSOLUTE, "address_dest"),
+                        (ParamMode.ABSOLUTE, 54321),
                         1,
                     ),
                 ),
             ),
-            full_simplify=False,
         )
         # recovering the placeholders
-        address_pos = MOV_code.index("address_pos")
-        address_dest = MOV_code.index("address_dest")
+        address_pos = MOV_code.index(12345)
+        address_dest = MOV_code.index(54321)
         # patching mov code
         MOV_code = list(MOV_code)
         MOV_code[address_pos] = address_dest

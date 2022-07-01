@@ -5,6 +5,7 @@ from itertools import chain
 from os import getenv
 from pathlib import Path
 from sly import Parser
+from ic4.assembly.srcfile import ExecutableHeader, SourceFile
 
 from ic4.string_utilities import unescape_string_const
 
@@ -27,9 +28,13 @@ class ICAssParser(Parser):
         ("right", UMINUS),  # Unary minus operator
     )
 
-    @_("{ command lline_end }")
+    @_("header { command lline_end }")
     def program(self, p):
-        return tuple(chain(*p.command))
+        return SourceFile(p.header, tuple(chain(*p.command)))
+
+    @_("EXECUTABLE VERSION lline_end")
+    def header(self, p):
+        return ExecutableHeader(p.VERSION)
 
     # grouping together line ends
     @_("LINE_END { LINE_END }")

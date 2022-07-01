@@ -1,5 +1,6 @@
 ; Hello world, by zannabianca1997
 
+EXECUTABLE 0.1
 JNZ #1 #start ; start the program
 
 string: INTS "Hello world\n"

@@ -1,6 +1,8 @@
 ; brainfuck interpreter
 ; by zannabianca1997
 
+EXECUTABLE 0.1
+
 ; load the program from stdin
 IN readed_ch
 loop: JZ readed_ch #init

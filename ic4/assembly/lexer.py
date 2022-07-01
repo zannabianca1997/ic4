@@ -55,7 +55,8 @@ class ICAssLexer(Lexer):
         # char and string constants
         STRING,
         # Header stuff
-        FILETYPE,
+        EXECUTABLE,
+        OBJECTS,
         VERSION,
         EXPORT,
         EXTERN,
@@ -85,8 +86,8 @@ class ICAssLexer(Lexer):
     IDENTIFIER["RET"] = RET
 
     # header keyword
-    IDENTIFIER["EXECUTABLE"] = FILETYPE
-    IDENTIFIER["OBJECTS"] = FILETYPE
+    IDENTIFIER["EXECUTABLE"] = EXECUTABLE
+    IDENTIFIER["OBJECTS"] = OBJECTS
     IDENTIFIER["EXPORT"] = EXPORT
     IDENTIFIER["EXTERN"] = EXTERN
 

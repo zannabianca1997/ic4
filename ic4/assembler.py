@@ -4,6 +4,9 @@
 from distutils.log import warn
 from typing import Dict, Iterable, List, Tuple
 
+from ic4.version import Version
+
+from .assembly.srcfile import ExecutableHeader, SourceFile
 from .assembly.commands import (
     Command,
     Directive,
@@ -276,13 +279,18 @@ def generate_directive(
         raise NotImplementedError(f"Directive {directive.code} it's unimplemented")
 
 
-def generate(
-    commands: Iterable[Command], full_simplify: bool = True
-) -> Tuple[Expression, ...]:
+def generate(file: SourceFile) -> Tuple[int, ...]:
     """Generate a intcode program from a list of commands"""
+    assert isinstance(
+        file.header, ExecutableHeader
+    ), "Code generation works only on executable files"
+    if file.header.version != Version(0, 1):
+        raise NotImplementedError(
+            f"Code generation not implemented for assembly language version {file.header.version}"
+        )
     labels: Dict[str, int] = {}  # known labels
     code: List[Expression] = []  # code generated
-    for command in commands:
+    for command in file.body:
         if isinstance(command, Instruction):
             code.extend(generate_instruction(command))
         if isinstance(command, Label):
@@ -291,4 +299,4 @@ def generate(
             labels[command.name] = len(code)  # point to the next instruction
         if isinstance(command, Directive):
             code.extend(generate_directive(command, labels, len(code)))
-    return simplify_tuple(code, labels, full_simplify=full_simplify)
+    return simplify_tuple(code, labels, full_simplify=True)

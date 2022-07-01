@@ -4,6 +4,8 @@
 ; this program will read a list of number, until 0 is given
 ; then it will print them in reverse order
 
+EXECUTABLE 0.1
+
 ; prepare stack
 INCB #stack ; set RB at start of the stack
 PUSH #0     ; push sentinel to detect complete stack unwind

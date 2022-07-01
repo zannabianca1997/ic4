@@ -16,6 +16,8 @@ from ic4.assembly.commands import (
 from ic4.assembly.expressions import Divide, Expression, Multiply, Subtract, Sum
 from ic4.assembly.lexer import ICAssLexer
 from ic4.assembly.parser import ICAssParser
+from ic4.assembly.srcfile import ExecutableHeader
+from ic4.version import Version
 
 
 def names(n: int) -> Iterable[str]:
@@ -98,7 +100,9 @@ class TestParsing(TestCase):
     )
     def test_parse_expression(self, name: str, source: str, parsed: Expression):
         self.assertEqual(
-            self.parser.parse(self.lexer.tokenize(f"OUT {source}\n"))[0],
+            self.parser.parse(
+                self.lexer.tokenize(f"EXECUTABLE 0.1\nOUT {source}\n")
+            ).body[0],
             Instruction(OpCode["OUT"], ((ParamMode.ABSOLUTE, parsed),)),
         )
 
@@ -125,7 +129,9 @@ class TestParsing(TestCase):
         modes: Tuple[ParamMode, ...],
         writing: Tuple[bool, ...],
     ):
-        parsed = self.parser.parse(self.lexer.tokenize(source + "\n"))[0]
+        parsed = self.parser.parse(
+            self.lexer.tokenize("EXECUTABLE 0.1\n" + source + "\n")
+        ).body[0]
         # check the throw
         if any(
             writ and mode == ParamMode.IMMEDIATE for writ, mode in zip(writing, modes)
@@ -178,7 +184,10 @@ class TestParsing(TestCase):
         ]
     )
     def test_parse_labels(self, name: str, source: str, parsed: Instruction):
-        self.assertTupleEqual(self.parser.parse(self.lexer.tokenize(source)), parsed)
+        self.assertTupleEqual(
+            self.parser.parse(self.lexer.tokenize("EXECUTABLE 0.1\n" + source)).body,
+            parsed,
+        )
 
     @parameterized.expand(
         [
@@ -337,6 +346,14 @@ class TestParsing(TestCase):
         ]
     )
     def test_parse_directives(self, name: str, source: str, expected: Directive):
-        parsed = self.parser.parse(self.lexer.tokenize(source + "\n"))[0]
+        parsed = self.parser.parse(
+            self.lexer.tokenize("EXECUTABLE 0.1\n" + source + "\n")
+        ).body[0]
         parsed.params_check()  # check parameters are ok
         self.assertEqual(parsed, expected)
+
+    def test_parse_exec_header(self):
+        parsed = self.parser.parse(
+            self.lexer.tokenize("EXECUTABLE 1.2.3_test\n")
+        ).header
+        self.assertEqual(parsed, ExecutableHeader(Version(1, 2, 3, "test")))

@@ -3,6 +3,8 @@
 
 ; mainly used to test CALLing functions and program layout
 
+EXECUTABLE 0.1
+
 ; init code
 INCB #stack  ; setup stack
 CALL #main

@@ -13,7 +13,9 @@ from ic4.assembly.commands import Directive, Instruction, Label
 
 from ic4.assembly.lexer import ICAssLexer
 from ic4.assembly.parser import ICAssParser
+from ic4.assembly.srcfile import ExecutableHeader
 from ic4.machine import Machine
+from ic4.version import Version
 
 
 class IOExample(BaseModel):
@@ -94,13 +96,14 @@ class TestLexParse(TestCase):
         """Main purpose of this test is that the program must be parsed without errors.
         As a side effect, the parsed program is logged"""
         with open(log_path / "parsed.txt", "w") as log_file:
-            for command in ICAssParser().parse(ICAssLexer().tokenize(program)):
-                self.assert_(
-                    any(
-                        isinstance(command, cls)
-                        for cls in (Label, Instruction, Directive)
-                    )
-                )
+            parsed = ICAssParser().parse(ICAssLexer().tokenize(program))
+            # check header
+            self.assertIsInstance(parsed.header, ExecutableHeader)
+            self.assertEqual(parsed.header.version, Version(0, 1))
+            print(parsed.header, file=log_file)
+            # check body
+            for command in parsed.body:
+                self.assertIsInstance(command, (Label, Instruction, Directive))
                 print(command, file=log_file)
 
     @parameterized.expand(get_name_log_path_and_source(__file__))
@@ -116,7 +119,7 @@ class TestLexParse(TestCase):
     @parameterized.expand(get_name_log_path_and_source(__file__))
     def test_params(self, name: str, log_path: Path, program: str) -> None:
         """Check consistency of all the emitted commands"""
-        for command in ICAssParser().parse(ICAssLexer().tokenize(program)):
+        for command in ICAssParser().parse(ICAssLexer().tokenize(program)).body:
             command.params_check()
 
 
