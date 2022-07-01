@@ -25,7 +25,7 @@ EXTERN d e f ...
 ENTRY  main
 ```
 The only version that is now supported is 0.1.
-The three subsequential lines are optionals:
+The three subsequential lines are optionals, but must mantain the order:
 - `EXPORT` list the labels that must be accessible by other object files.
 - `EXTERN` instead list the label that are finded into other files. They must not be defined into the file
 - `ENTRY` signal that that label is the program starting point.

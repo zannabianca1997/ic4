@@ -5,7 +5,7 @@ from itertools import chain
 from os import getenv
 from pathlib import Path
 from sly import Parser
-from ic4.assembly.srcfile import ExecutableHeader, SourceFile
+from ic4.assembly.srcfile import ExecutableHeader, ObjectsHeader, SourceFile
 
 from ic4.string_utilities import unescape_string_const
 
@@ -32,9 +32,36 @@ class ICAssParser(Parser):
     def program(self, p):
         return SourceFile(p.header, tuple(chain(*p.command)))
 
+    # Executable header
+
     @_("EXECUTABLE VERSION lline_end")
     def header(self, p):
         return ExecutableHeader(p.VERSION)
+
+    # Objects header
+
+    @_(
+        "OBJECTS VERSION lline_end [ extern_objs lline_end ] [ export_objs lline_end ] [ entry_obj lline_end ]"
+    )
+    def header(self, p):
+        return ObjectsHeader(
+            p.VERSION,
+            extern=p.extern_objs or frozenset(),
+            export=p.export_objs or frozenset(),
+            entry=p.entry_obj,
+        )
+
+    @_("EXTERN { IDENTIFIER }")
+    def extern_objs(self, p):
+        return frozenset(p.IDENTIFIER)
+
+    @_("EXPORT { IDENTIFIER }")
+    def export_objs(self, p):
+        return frozenset(p.IDENTIFIER)
+
+    @_("ENTRY IDENTIFIER")
+    def entry_obj(self, p):
+        return p.IDENTIFIER
 
     # grouping together line ends
     @_("LINE_END { LINE_END }")

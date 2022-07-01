@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
+from typing import FrozenSet, Optional, Tuple, Union
 
 from .commands import Command
 from ..version import Version
@@ -13,9 +13,9 @@ class ExecutableHeader:
 @dataclass(frozen=True)
 class ObjectsHeader:
     version: Version
-    export: Tuple[str, ...]
-    extern: Tuple[str, ...]
-    entry: Optional[str]
+    export: FrozenSet[str] = frozenset()
+    extern: FrozenSet[str] = frozenset()
+    entry: Optional[str] = None
 
 
 @dataclass(frozen=True)

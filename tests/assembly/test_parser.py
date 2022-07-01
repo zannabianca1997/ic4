@@ -16,7 +16,7 @@ from ic4.assembly.commands import (
 from ic4.assembly.expressions import Divide, Expression, Multiply, Subtract, Sum
 from ic4.assembly.lexer import ICAssLexer
 from ic4.assembly.parser import ICAssParser
-from ic4.assembly.srcfile import ExecutableHeader
+from ic4.assembly.srcfile import ExecutableHeader, ObjectsHeader
 from ic4.version import Version
 
 
@@ -357,3 +357,12 @@ class TestParsing(TestCase):
             self.lexer.tokenize("EXECUTABLE 1.2.3_test\n")
         ).header
         self.assertEqual(parsed, ExecutableHeader(Version(1, 2, 3, "test")))
+
+    @parameterized.expand(
+        [
+            ("Plain", "OBJECTS 1.2.3_test\n", ObjectsHeader(Version(1, 2, 3, "test"))),
+        ]
+    )
+    def test_parse_exec_header(self, name: str, source: str, expected: ObjectsHeader):
+        parsed = self.parser.parse(self.lexer.tokenize(source)).header
+        self.assertEqual(parsed, expected)
