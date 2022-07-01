@@ -17,6 +17,10 @@ from .lexer import ICAssLexer
 Path(getenv("LOG_DIR")).mkdir(parents=True, exist_ok=True)  # creating log dir
 
 
+class ICassSyntaxError(ValueError):
+    pass
+
+
 class ICAssParser(Parser):
     tokens = ICAssLexer.tokens
 
@@ -182,3 +186,16 @@ class ICAssParser(Parser):
     @_("LPAREN expr RPAREN")
     def expr(self, p):
         return p.expr
+
+    def error(self, token):
+        """Error handling routine"""
+        if token:
+            lineno = getattr(token, "lineno", 0)
+            if lineno:
+                raise ICassSyntaxError(
+                    f"sly: Syntax error at line {lineno}, token={token.type}\n"
+                )
+            else:
+                raise ICassSyntaxError(f"sly: Syntax error, token={token.type}")
+        else:
+            raise ICassSyntaxError("sly: Parse error in input. EOF\n")
