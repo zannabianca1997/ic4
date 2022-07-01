@@ -32,7 +32,7 @@ class ICAssParser(Parser):
         ("right", UMINUS),  # Unary minus operator
     )
 
-    @_("header { command lline_end }")
+    @_("[ lline_end ] header { command lline_end }")
     def program(self, p):
         return SourceFile(p.header, tuple(chain(*p.command)))
 
