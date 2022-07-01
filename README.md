@@ -16,7 +16,7 @@ This is a sintetic roadmap:
 - [ ] Compiler
 - [X] Assembly parser
   - [X] Lexer
-  - [ ] Header
+  - [X] Header
   - [X] Instructions
   - [X] Labels
   - [X] Directives
