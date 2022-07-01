@@ -27,9 +27,14 @@ class ICAssParser(Parser):
         ("right", UMINUS),  # Unary minus operator
     )
 
-    @_("{ command LINE_END }")
+    @_("{ command lline_end }")
     def program(self, p):
         return tuple(chain(*p.command))
+
+    # grouping together line ends
+    @_("LINE_END { LINE_END }")
+    def lline_end(self, p):
+        pass
 
     @_("labels instruction", "labels directive")
     def command(self, p):
