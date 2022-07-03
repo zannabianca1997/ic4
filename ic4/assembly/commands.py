@@ -145,7 +145,7 @@ class Instruction(Command):
 
     def check(self) -> None:
         # check number of params
-        assert len(self.params, self.opcode.param_number)
+        assert len(self.params) == self.opcode.param_number
         # checks all params that are used for writing can be written
         assert all(
             (not writes_to) or p.can_be_written
@@ -263,7 +263,7 @@ class STORE(Directive):
     dest_ptr: Param
 
     def check(self) -> None:
-        for p in self.src_ptr, self.dest:
+        for p in self.src, self.dest_ptr:
             p.check()
 
 
@@ -296,7 +296,7 @@ class POP(Directive):
     def check(self) -> None:
         if self.dest is not None:
             self.dest.check()
-        assert self.dest.can_be_written
+            assert self.dest.can_be_written
         # size cannot be negative
         try:
             val = self.size.simplify(fullsimplify=True)
@@ -320,4 +320,5 @@ class CALL(Directive):
 class RET(Directive):
     """Return from a subroutine"""
 
-    pass
+    def check(self) -> None:
+        pass

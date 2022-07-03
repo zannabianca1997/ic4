@@ -24,8 +24,6 @@ from .commands import (
     RET,
     STORE,
     ZEROS,
-    Directive,
-    DirectiveCode,
     Instruction,
     Label,
     OpCode,
