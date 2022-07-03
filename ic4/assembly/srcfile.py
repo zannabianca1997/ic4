@@ -21,4 +21,4 @@ class ObjectsHeader:
 @dataclass(frozen=True)
 class SourceFile:
     header: Union[ExecutableHeader, ObjectsHeader]
-    body: Tuple[Command]
+    body: Tuple[Command, ...]
