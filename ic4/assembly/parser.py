@@ -10,8 +10,28 @@ from ic4.assembly.srcfile import ExecutableHeader, ObjectsHeader, SourceFile
 from ic4.string_utilities import unescape_string_const
 
 
-from .expressions import Divide, Multiply, Subtract, Sum
-from .commands import Directive, DirectiveCode, Instruction, Label, OpCode, ParamMode
+from .expressions import Constant, Divide, Multiply, Reference, Subtract, Sum
+from .commands import (
+    CALL,
+    DEC,
+    INC,
+    INTS,
+    JMP,
+    LOAD,
+    MOV,
+    POP,
+    PUSH,
+    RET,
+    STORE,
+    ZEROS,
+    Directive,
+    DirectiveCode,
+    Instruction,
+    Label,
+    OpCode,
+    Param,
+    ParamMode,
+)
 from .lexer import ICAssLexer
 
 Path(getenv("LOG_DIR")).mkdir(parents=True, exist_ok=True)  # creating log dir
@@ -112,56 +132,61 @@ class ICAssParser(Parser):
 
     @_("INTS { expr [ COMMA ] }")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], tuple(p.expr))
+        return INTS(tuple(p.expr))
 
     @_("INTS STRING")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], p.STRING)
+        return INTS(p.STRING)
 
     @_("ZEROS expr")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], (p.expr,))
+        return ZEROS(p.expr)
 
-    @_("INC param", "DEC param")
+    @_("INC param")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], (p.param,))
+        return INC(p.param)
+
+    @_("DEC param")
+    def directive(self, p):
+        return DEC(p.param)
 
     @_("MOV param [ COMMA ] param [ COMMA ] [ expr ]")
     def directive(self, p):
-        return Directive(
-            DirectiveCode[p[0]],
-            (p.param0, p.param1, p.expr or 1),
-        )
+        return MOV(p.param0, p.param1, p.expr or Constant(1))
 
-    @_("LOAD param [ COMMA ] param", "STORE param [ COMMA ] param")
+    @_("LOAD param [ COMMA ] param")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], (p.param0, p.param1))
+        return LOAD(p.param0, p.param1)
+
+    @_("STORE param [ COMMA ] param")
+    def directive(self, p):
+        return STORE(p.param0, p.param1)
 
     @_("JMP param")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], (p.param,))
+        return JMP(p.param)
 
     @_("PUSH [ param ] [ COMMA ] [ expr ]")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], (p.param, p.expr or 1))
+        return PUSH(p.param, p.expr or Constant(1))
 
     @_("POP [ param ] [ COMMA ] [ expr ]")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], (p.param, p.expr or 1))
+        return POP(p.param, p.expr or Constant(1))
 
     @_("CALL param")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], (p.param,))
+        return CALL(p.param)
 
     @_("RET")
     def directive(self, p):
-        return Directive(DirectiveCode[p[0]], ())
+        return RET()
 
     # --- parameters ---
 
     @_("param_mode expr")
     def param(self, p):
-        return (p.param_mode, p.expr)
+        return Param(p.param_mode, p.expr)
 
     @_("")
     def param_mode(self, p):
@@ -197,11 +222,11 @@ class ICAssParser(Parser):
 
     @_("NUMBER")
     def expr(self, p):
-        return p.NUMBER
+        return Constant(p.NUMBER)
 
     @_("IDENTIFIER")
     def expr(self, p):
-        return p.IDENTIFIER
+        return Reference(p.IDENTIFIER)
 
     @_("LPAREN expr RPAREN")
     def expr(self, p):
