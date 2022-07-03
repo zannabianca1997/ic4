@@ -1,7 +1,9 @@
 """
     Methods to manipulate arithmetic expressions
 """
-from typing import Dict, Optional, SupportsInt, Union
+from operator import index
+from typing import AnyStr, Dict, Optional, SupportsInt, Union
+from re import compile, Pattern
 
 
 class SimplifyException(Exception):
@@ -14,6 +16,9 @@ class Expression:
     """A symbolic arithmetic expression"""
 
     __slots__ = ()
+
+    def __init__(self) -> None:
+        raise NotImplementedError()
 
     def simplify(
         self,
@@ -60,21 +65,78 @@ class Expression:
         """
         raise NotImplementedError(f"__hash__ not implemented for {self.__class__}")
 
+    # operators
+    def __add__(self, __o: object) -> "Sum":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Sum(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __radd__(self, __o: object) -> "Sum":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Sum(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __sub__(self, __o: object) -> "Subtract":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Subtract(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __rsub__(self, __o: object) -> "Subtract":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Subtract(__o if isinstance(__o, Expression) else Atom.fromval(__o), self)
+
+    def __mul__(self, __o: object) -> "Multiply":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Multiply(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __rmul__(self, __o: object) -> "Multiply":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Multiply(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __floordiv__(self, __o: object) -> "Divide":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Divide(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __rfloordiv__(self, __o: object) -> "Divide":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Divide(__o if isinstance(__o, Expression) else Atom.fromval(__o), self)
+
+    def __neg__(self) -> "Multiply":
+        return Multiply(self, Constant(-1))
+
+    def __pos__(self) -> "Expression":
+        return self
+
+    def __int__(self) -> int:
+        return index(self)
+
+    def __index__(self) -> int:
+        return int(self.simplify(fullsimplify=True))
+
 
 class Atom(Expression):
     """An atomic value"""
 
     __slots__ = ("value",)
 
-    def __init__(self, value: Union[SupportsInt, str]) -> None:
-        super().__init__()
-        self.value = value
-
     def __str__(self) -> str:
         return str(self.value)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.value!r})"
+
+    @staticmethod
+    def fromval(value: Union[SupportsInt, AnyStr]) -> Union["Constant", "Reference"]:
+        if isinstance(value, SupportsInt):
+            return Constant(value)
+        elif isinstance(value, str):
+            return Reference(value)
+        raise TypeError()
 
 
 class Constant(Atom):
@@ -84,7 +146,7 @@ class Constant(Atom):
     value: int
 
     def __init__(self, value: Union[SupportsInt, str]) -> None:
-        super().__init__(int(value))
+        self.value = int(value)
 
     def simplify(
         self,
@@ -105,6 +167,9 @@ class Constant(Atom):
     def __hash__(self) -> int:
         return hash(self.value)
 
+    def __index__(self) -> int:
+        return self.value
+
 
 class Reference(Atom):
     """A reference (to a variable, or a label, etc)"""
@@ -112,8 +177,13 @@ class Reference(Atom):
     __slots__ = ()
     value: str
 
-    def __init__(self, value: str) -> None:
-        super().__init__(str(value))
+    NAMES_RE: Pattern = compile(r"[_a-zA-Z][_a-zA-Z0-9$]*")
+
+    def __init__(self, value: AnyStr) -> None:
+        value = str(value)
+        if not self.NAMES_RE.fullmatch(value):
+            raise ValueError(f"{value!r} is not an appropriate name for a reference")
+        self.value = value
 
     def simplify(
         self,
@@ -147,16 +217,15 @@ class BinOp(Expression):
     left: Expression
     right: Expression
 
-    def __init__(self, left, right) -> None:
-        super().__init__()
-        self.left = left
-        self.right = right
-
 
 class Sum(BinOp):
     """Sum of two expressions"""
 
     __slots__ = ()
+
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
 
     def simplify(
         self,
@@ -196,6 +265,10 @@ class Subtract(BinOp):
 
     __slots__ = ()
 
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
+
     def simplify(
         self,
         subs: Optional[Dict["Reference", "Expression"]] = None,
@@ -234,6 +307,10 @@ class Multiply(BinOp):
     """Product of two expressions"""
 
     __slots__ = ()
+
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
 
     def simplify(
         self,
@@ -278,6 +355,10 @@ class Divide(BinOp):
     """Integer division of two expressions"""
 
     __slots__ = ()
+
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
 
     def simplify(
         self,

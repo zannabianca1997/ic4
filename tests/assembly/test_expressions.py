@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from parameterized import parameterized_class
+from parameterized import parameterized_class, parameterized
 
 from ic4.assembly.expressions import (
     Atom,
@@ -101,6 +101,9 @@ class TestReference(TestCase):
                 {Reference(self.value): Reference("question")}, fullsimplify=False
             ),
         )
+
+    def test_name_check(self):
+        self.assertRaises(ValueError, Reference, "0.*")
 
 
 @parameterized_class(
@@ -233,3 +236,51 @@ class TestSpecialCase(TestCase):
         )
         self.assertRaises(SimplifyException, Divide(Constant(0), Constant(0)).simplify)
         self.assertRaises(SimplifyException, Divide(Constant(1), Constant(0)).simplify)
+
+
+class TestOperators(TestCase):
+    OPS = [
+        ("sum", Sum, lambda a, b: a + b),
+        ("mul", Multiply, lambda a, b: a * b),
+        ("div", Divide, lambda a, b: a // b),
+        ("sub", Subtract, lambda a, b: a - b),
+    ]
+
+    def setUp(self) -> None:
+        self.a = Reference("a")
+        self.b = Reference("b")
+        self.three = Constant(3)
+        self.four = Constant(4)
+
+    @parameterized.expand(OPS)
+    def test_references(self, name, cls, fun):
+        self.assertEqual(cls(self.a, self.b), fun(self.a, self.b))
+
+    @parameterized.expand(OPS)
+    def test_constant(self, name, cls, fun):
+        self.assertEqual(cls(self.three, self.four), fun(self.three, self.four))
+
+    @parameterized.expand(OPS)
+    def test_constant_and_refs(self, name, cls, fun):
+        self.assertEqual(cls(self.a, self.four), fun(self.a, self.four))
+        self.assertEqual(cls(self.four, self.a), fun(self.four, self.a))
+
+    @parameterized.expand(OPS)
+    def test_reference_and_lit(self, name, cls, fun):
+        self.assertEqual(cls(self.a, self.three), fun(self.a, 3))
+        self.assertEqual(cls(self.three, self.a), fun(3, self.a))
+
+    @parameterized.expand(OPS)
+    def test_constant_and_lit(self, name, cls, fun):
+        self.assertEqual(cls(self.three, self.four), fun(self.three, 4))
+        self.assertEqual(cls(self.four, self.three), fun(4, self.three))
+
+    @parameterized.expand(OPS)
+    def test_reference_and_str(self, name, cls, fun):
+        self.assertEqual(cls(self.a, self.b), fun(self.a, "b"))
+        self.assertEqual(cls(self.b, self.a), fun("b", self.a))
+
+    @parameterized.expand(OPS)
+    def test_constant_and_str(self, name, cls, fun):
+        self.assertEqual(cls(self.three, self.b), fun(self.three, "b"))
+        self.assertEqual(cls(self.b, self.three), fun("b", self.three))
