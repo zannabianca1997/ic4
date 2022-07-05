@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Optional, Tuple
 
-from .expressions import Expression, Reference, SimplifyException
+from .expressions import Constant, Expression, Reference, SimplifyException
 
 
 @unique
@@ -133,7 +133,7 @@ class Label(Command):
     value: str
 
     def check(self) -> None:
-        return Reference.NAMES_RE.fullmatch(self.value)
+        return Reference.INTERNAL_NAMES_RE.fullmatch(self.value)
 
 
 @dataclass(frozen=True)
@@ -227,7 +227,7 @@ class MOV(Directive):
 
     src: Param
     dest: Param
-    size: Expression
+    size: Expression = Constant(1)
 
     def check(self) -> None:
         for p in self.src, self.dest:
@@ -271,8 +271,8 @@ class STORE(Directive):
 class PUSH(Directive):
     """Push a value onto the stack"""
 
-    value: Optional[Param]
-    size: Expression
+    value: Optional[Param] = None
+    size: Expression = Constant(1)
 
     def check(self) -> None:
         if self.value is not None:
@@ -290,8 +290,8 @@ class PUSH(Directive):
 class POP(Directive):
     """Pop a value from the stack"""
 
-    dest: Optional[Param]
-    size: Expression
+    dest: Optional[Param] = None
+    size: Expression = Constant(1)
 
     def check(self) -> None:
         if self.dest is not None:

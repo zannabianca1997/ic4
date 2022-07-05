@@ -2,6 +2,7 @@
     Methods to manipulate arithmetic expressions
 """
 from operator import index
+from sys import stderr
 from typing import AnyStr, Dict, Optional, SupportsInt, Union
 from re import compile, Pattern
 
@@ -177,11 +178,14 @@ class Reference(Atom):
     __slots__ = ()
     value: str
 
-    NAMES_RE: Pattern = compile(r"[_a-zA-Z][_a-zA-Z0-9$]*")
+    INTERNAL_NAMES_RE: Pattern = compile(
+        r"[_a-zA-Z&][_a-zA-Z0-9$]*"
+    )  # names that a reference can have
+    NAMES_RE: str = r"[_a-zA-Z][_a-zA-Z0-9$]*"  # names usable by the assembler ( &-starting names are reserved )
 
     def __init__(self, value: AnyStr) -> None:
         value = str(value)
-        if not self.NAMES_RE.fullmatch(value):
+        if not self.INTERNAL_NAMES_RE.fullmatch(value):
             raise ValueError(f"{value!r} is not an appropriate name for a reference")
         self.value = value
 
@@ -277,7 +281,7 @@ class Subtract(BinOp):
         left = self.left.simplify(subs, fullsimplify)
         # morph into multiplication
         if left == 0:
-            return Multiply(right, Constant(-1)).simplify()
+            return Multiply(self.right, Constant(-1)).simplify()
 
         right = self.right.simplify(subs, fullsimplify)
         # subtract 0

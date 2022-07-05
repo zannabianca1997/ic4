@@ -216,11 +216,11 @@ class ICAssParser(Parser):
 
     @_("MINUS expr %prec UMINUS")
     def expr(self, p):
-        return Multiply(p.expr, -1)
+        return Multiply(p.expr, Constant(-1))
 
     @_("NUMBER")
     def expr(self, p):
-        return Constant(p.NUMBER)
+        return p.NUMBER
 
     @_("IDENTIFIER")
     def expr(self, p):
