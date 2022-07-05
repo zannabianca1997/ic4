@@ -21,4 +21,12 @@ class ObjectsHeader:
 @dataclass(frozen=True)
 class SourceFile:
     header: Union[ExecutableHeader, ObjectsHeader]
-    body: Tuple[Command]
+    body: Tuple[Command, ...]
+
+    @property
+    def is_executable(self):
+        return isinstance(self.header, ExecutableHeader)
+
+    @property
+    def is_objects(self):
+        return isinstance(self.header, ObjectsHeader)

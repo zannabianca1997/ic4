@@ -5,15 +5,34 @@ from unittest import TestCase
 from parameterized import parameterized
 
 from ic4.assembly.commands import (
-    INSTRUCTION_PARAMS_WRITING_TABLE,
+    CALL,
+    DEC,
+    INC,
+    INTS,
+    JMP,
+    LOAD,
+    MOV,
+    POP,
+    PUSH,
+    RET,
+    STORE,
+    ZEROS,
     Directive,
-    DirectiveCode,
     Instruction,
     Label,
     OpCode,
+    Param,
     ParamMode,
 )
-from ic4.assembly.expressions import Divide, Expression, Multiply, Subtract, Sum
+from ic4.assembly.expressions import (
+    Constant,
+    Divide,
+    Expression,
+    Multiply,
+    Reference,
+    Subtract,
+    Sum,
+)
 from ic4.assembly.lexer import ICAssLexer
 from ic4.assembly.parser import ICAssParser
 from ic4.assembly.srcfile import ExecutableHeader, ObjectsHeader
@@ -34,67 +53,94 @@ class TestParsing(TestCase):
             (
                 "simple addition",
                 "3+2",
-                Sum(3, 2),
+                Sum(Constant(3), Constant(2)),
             ),
             (
                 "long addition",
                 "3+2+1+0+1+2+3",
-                Sum(Sum(Sum(Sum(Sum(Sum(3, 2), 1), 0), 1), 2), 3),
+                Sum(
+                    Sum(
+                        Sum(
+                            Sum(
+                                Sum(Sum(Constant(3), Constant(2)), Constant(1)),
+                                Constant(0),
+                            ),
+                            Constant(1),
+                        ),
+                        Constant(2),
+                    ),
+                    Constant(3),
+                ),
             ),
             (
                 "addiction and subtraction",
                 "3-2+1+0-1+2+3",
-                Sum(Sum(Subtract(Sum(Sum(Subtract(3, 2), 1), 0), 1), 2), 3),
+                Sum(
+                    Sum(
+                        Subtract(
+                            Sum(
+                                Sum(Subtract(Constant(3), Constant(2)), Constant(1)),
+                                Constant(0),
+                            ),
+                            Constant(1),
+                        ),
+                        Constant(2),
+                    ),
+                    Constant(3),
+                ),
             ),
             (
                 "unitary minus",
                 "-3",
-                Multiply(3, -1),
+                Multiply(Constant(3), Constant(-1)),
             ),
             (
                 "double unitary minus",
                 "--3",
-                Multiply(Multiply(3, -1), -1),
+                Multiply(Multiply(Constant(3), Constant(-1)), Constant(-1)),
             ),
             (
                 "sum to unitary minus",
                 "1 + -3",
-                Sum(1, Multiply(3, -1)),
+                Sum(Constant(1), Multiply(Constant(3), Constant(-1))),
             ),
             (
                 "mult to unitary minus",
                 "1 * -3",
-                Multiply(1, Multiply(3, -1)),
+                Multiply(Constant(1), Multiply(Constant(3), Constant(-1))),
             ),
             (
                 "divide to unitary minus",
                 "1 / -3",
-                Divide(1, Multiply(3, -1)),
+                Divide(Constant(1), Multiply(Constant(3), Constant(-1))),
             ),
             (
                 "divide from unitary minus",
                 "-1 / 3",
-                Divide(Multiply(1, -1), 3),
+                Divide(Multiply(Constant(1), Constant(-1)), Constant(3)),
             ),
             (
                 "4 operations",
                 "3+ 2 *6 /24",
-                Sum(3, Divide(Multiply(2, 6), 24)),
+                Sum(
+                    Constant(3),
+                    Divide(Multiply(Constant(2), Constant(6)), Constant(24)),
+                ),
             ),
             (
                 "Parenthesis",
                 "(3+ 6) /24",
-                Divide(Sum(3, 6), 24),
+                Divide(Sum(Constant(3), Constant(6)), Constant(24)),
             ),
             (
                 "Identifier",
                 "a",
-                "a",
+                Reference("a"),
             ),
             (
                 "Identifier in math",
                 "a+3",
-                Sum("a", 3),
+                Sum(Reference("a"), Constant(3)),
             ),
         ]
     )
@@ -103,22 +149,25 @@ class TestParsing(TestCase):
             self.parser.parse(
                 self.lexer.tokenize(f"EXECUTABLE 0.1\nOUT {source}\n")
             ).body[0],
-            Instruction(OpCode["OUT"], ((ParamMode.ABSOLUTE, parsed),)),
+            Instruction(OpCode.OUT, (Param(ParamMode.ABSOLUTE, parsed),)),
         )
 
     @parameterized.expand(
         [
             (
                 f"{opcode.name} {''.join({ParamMode.ABSOLUTE:'A',ParamMode.IMMEDIATE:'I', ParamMode.RELATIVE:'R'}[mode] for mode in parammodes)}",
-                f"{opcode.name} {' '.join(f'{mode.prefix()}{param}' for mode, param in  zip(parammodes, names(opcode.param_number())))}",
+                f"{opcode.name} {' '.join(f'{mode.prefix}{param}' for mode, param in  zip(parammodes, names(opcode.param_number)))}",
                 Instruction(
-                    opcode, tuple(zip(parammodes, names(opcode.param_number())))
+                    opcode,
+                    tuple(
+                        Param(p, Reference(n))
+                        for p, n in zip(parammodes, names(opcode.param_number))
+                    ),
                 ),
                 parammodes,
-                INSTRUCTION_PARAMS_WRITING_TABLE[opcode],
             )
             for opcode in OpCode
-            for parammodes in product(ParamMode, repeat=opcode.param_number())
+            for parammodes in product(ParamMode, repeat=opcode.param_number)
         ]
     )
     def test_parse_instructions(
@@ -127,18 +176,18 @@ class TestParsing(TestCase):
         source: str,
         expected: Instruction,
         modes: Tuple[ParamMode, ...],
-        writing: Tuple[bool, ...],
     ):
         parsed = self.parser.parse(
             self.lexer.tokenize("EXECUTABLE 0.1\n" + source + "\n")
         ).body[0]
         # check the throw
         if any(
-            writ and mode == ParamMode.IMMEDIATE for writ, mode in zip(writing, modes)
+            writ and mode == ParamMode.IMMEDIATE
+            for writ, mode in zip(expected.opcode.writes_to, modes)
         ):
-            self.assertRaises(AssertionError, parsed.params_check)
+            self.assertRaises(AssertionError, parsed.check)
         else:
-            parsed.params_check()  # should run
+            parsed.check()  # should run
         self.assertEqual(parsed, expected)
 
     @parameterized.expand(
@@ -161,7 +210,7 @@ class TestParsing(TestCase):
             (
                 "single plus directive",
                 "label : INTS 0\n",
-                (Label("label"), Directive(DirectiveCode.INTS, (0,))),
+                (Label("label"), INTS((Constant(0),))),
             ),
             (
                 "multiple plus directive",
@@ -170,7 +219,7 @@ class TestParsing(TestCase):
                     Label("label1"),
                     Label("label2"),
                     Label("label3"),
-                    Directive(DirectiveCode.INTS, (0,)),
+                    INTS((Constant(0),)),
                 ),
             ),
             (
@@ -194,162 +243,120 @@ class TestParsing(TestCase):
             (
                 "INTS",
                 "INTS 0 1 2",
-                Directive(DirectiveCode.INTS, (0, 1, 2)),
+                INTS(tuple(Constant(x) for x in (0, 1, 2))),
             ),
             (
                 "INTS with string",
                 'INTS "This is a String, \\n with escapes!"',
-                Directive(
-                    DirectiveCode.INTS,
-                    tuple(ord(x) for x in "This is a String, \n with escapes!\0"),
+                INTS(
+                    tuple(
+                        Constant(ord(x)) for x in "This is a String, \n with escapes!\0"
+                    )
                 ),
             ),
             (
                 "INTS with expression",
                 "INTS 0 1-2",
-                Directive(DirectiveCode.INTS, (0, Subtract(1, 2))),
+                INTS((Constant(0), Constant(1) - 2)),
             ),
             (
                 "INTS comma to separe parameters",
                 "INTS 0 1 ,-2",
-                Directive(DirectiveCode.INTS, (0, 1, Multiply(2, -1))),
+                INTS((Constant(0), Constant(1), Constant(-1) * 2)),
             ),
             (
                 "ZEROS",
                 "ZEROS 32",
-                Directive(DirectiveCode.ZEROS, (32,)),
+                ZEROS(Constant(32)),
             ),
-            (
-                "INC",
-                "INC 4",
-                Directive(DirectiveCode.INC, ((ParamMode.ABSOLUTE, 4),)),
-            ),
-            (
-                "INC relative",
-                "INC @4",
-                Directive(DirectiveCode.INC, ((ParamMode.RELATIVE, 4),)),
-            ),
-            (
-                "DEC",
-                "DEC 4",
-                Directive(DirectiveCode.DEC, ((ParamMode.ABSOLUTE, 4),)),
-            ),
-            (
-                "DEC relative",
-                "DEC @4",
-                Directive(DirectiveCode.DEC, ((ParamMode.RELATIVE, 4),)),
-            ),
+            ("INC", "INC 4", INC(Param(ParamMode.ABSOLUTE, Constant(4)))),
+            ("INC relative", "INC @4", INC(Param(ParamMode.RELATIVE, Constant(4)))),
+            ("DEC", "DEC 4", DEC(Param(ParamMode.ABSOLUTE, Constant(4)))),
+            ("DEC relative", "DEC @4", DEC(Param(ParamMode.RELATIVE, Constant(4)))),
             (
                 "MOV",
                 "MOV 4 @3",
-                Directive(
-                    DirectiveCode.MOV,
-                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3), 1),
+                MOV(
+                    Param(ParamMode.ABSOLUTE, Constant(4)),
+                    Param(ParamMode.RELATIVE, Constant(3)),
+                    Constant(1),
                 ),
             ),
             (
                 "MOV multiple",
                 "MOV 4 @3 15",
-                Directive(
-                    DirectiveCode.MOV,
-                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3), 15),
+                MOV(
+                    Param(ParamMode.ABSOLUTE, Constant(4)),
+                    Param(ParamMode.RELATIVE, Constant(3)),
+                    Constant(15),
                 ),
             ),
             (
                 "LOAD",
                 "LOAD 4 @3",
-                Directive(
-                    DirectiveCode.LOAD,
-                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3)),
+                LOAD(
+                    Param(ParamMode.ABSOLUTE, Constant(4)),
+                    Param(ParamMode.RELATIVE, Constant(3)),
                 ),
             ),
             (
                 "STORE",
                 "STORE 4 @3",
-                Directive(
-                    DirectiveCode.STORE,
-                    ((ParamMode.ABSOLUTE, 4), (ParamMode.RELATIVE, 3)),
+                STORE(
+                    Param(ParamMode.ABSOLUTE, Constant(4)),
+                    Param(ParamMode.RELATIVE, Constant(3)),
                 ),
             ),
             (
                 "JMP",
                 "JMP @3",
-                Directive(
-                    DirectiveCode.JMP,
-                    ((ParamMode.RELATIVE, 3),),
+                JMP(
+                    Param(ParamMode.RELATIVE, Constant(3)),
                 ),
             ),
             (
                 "PUSH",
                 "PUSH @3",
-                Directive(
-                    DirectiveCode.PUSH,
-                    ((ParamMode.RELATIVE, 3), 1),
-                ),
+                PUSH(Param(ParamMode.RELATIVE, Constant(3)), Constant(1)),
             ),
             (
                 "PUSH multiple",
                 "PUSH @3 15",
-                Directive(
-                    DirectiveCode.PUSH,
-                    ((ParamMode.RELATIVE, 3), 15),
-                ),
+                PUSH(Param(ParamMode.RELATIVE, Constant(3)), Constant(15)),
             ),
             (
                 "PUSH only size",
                 "PUSH , 15",
-                Directive(
-                    DirectiveCode.PUSH,
-                    (None, 15),
-                ),
+                PUSH(None, Constant(15)),
             ),
             (
                 "POP",
                 "POP @3",
-                Directive(
-                    DirectiveCode.POP,
-                    ((ParamMode.RELATIVE, 3), 1),
-                ),
+                POP(Param(ParamMode.RELATIVE, Constant(3)), Constant(1)),
             ),
             (
                 "POP multiple",
                 "POP @3 15",
-                Directive(
-                    DirectiveCode.POP,
-                    ((ParamMode.RELATIVE, 3), 15),
-                ),
+                POP(Param(ParamMode.RELATIVE, Constant(3)), Constant(15)),
             ),
             (
                 "POP only size",
                 "POP , 15",
-                Directive(
-                    DirectiveCode.POP,
-                    (None, 15),
-                ),
+                POP(None, Constant(15)),
             ),
             (
                 "CALL",
                 "CALL #15",
-                Directive(
-                    DirectiveCode.CALL,
-                    ((ParamMode.IMMEDIATE, 15),),
-                ),
+                CALL(Param(ParamMode.IMMEDIATE, Constant(15))),
             ),
-            (
-                "RET",
-                "RET",
-                Directive(
-                    DirectiveCode.RET,
-                    (),
-                ),
-            ),
+            ("RET", "RET", RET()),
         ]
     )
     def test_parse_directives(self, name: str, source: str, expected: Directive):
         parsed = self.parser.parse(
             self.lexer.tokenize("EXECUTABLE 0.1\n" + source + "\n")
         ).body[0]
-        parsed.params_check()  # check parameters are ok
+        parsed.check()  # check parameters are ok
         self.assertEqual(parsed, expected)
 
     def test_parse_exec_header(self):

@@ -8,9 +8,9 @@ from unittest import TestCase
 from parameterized import parameterized
 from pydantic import BaseModel, validator, parse_file_as
 from sly.lex import Token
-from ic4.assembler import generate
-from ic4.assembly.commands import Directive, Instruction, Label
 
+from ic4.assembler.assembler import Assembler
+from ic4.assembly.commands import Directive, Instruction, Label
 from ic4.assembly.lexer import ICAssLexer
 from ic4.assembly.parser import ICAssParser
 from ic4.assembly.srcfile import ExecutableHeader
@@ -110,7 +110,7 @@ class TestLexParse(TestCase):
     def test_compile(self, name: str, log_path: Path, program: str) -> None:
         """Main purpose of this test is that the program must be compiled without errors.
         As a side effect, the compiled program is logged"""
-        compiled = generate(ICAssParser().parse(ICAssLexer().tokenize(program)))
+        compiled = Assembler(ICAssParser().parse(ICAssLexer().tokenize(program))).values
         with open(log_path / "compiled.txt", "w") as log_file:
             print(*compiled, sep=", ", end="", file=log_file)
         for x in compiled:
@@ -120,17 +120,21 @@ class TestLexParse(TestCase):
     def test_params(self, name: str, log_path: Path, program: str) -> None:
         """Check consistency of all the emitted commands"""
         for command in ICAssParser().parse(ICAssLexer().tokenize(program)).body:
-            command.params_check()
+            command.check()
 
 
 class TestRun(TestCase):
     @parameterized.expand(get_name_source_and_example(__file__))
     def test_run(self, name: str, program: str, io_example: IOExample):
         """Compile the program and test it against the given example input/output"""
-        machine = Machine(generate(ICAssParser().parse(ICAssLexer().tokenize(program))))
+        machine = Machine(
+            Assembler(ICAssParser().parse(ICAssLexer().tokenize(program))).values
+        )
         machine.give_input(io_example.input)
         machine.run()
-        self.assert_(machine.halted, "The machine did not halt with the given input!")
+        self.assertTrue(
+            machine.halted, "The machine did not halt with the given input!"
+        )
         self.assertTupleEqual(
             io_example.output,
             tuple(

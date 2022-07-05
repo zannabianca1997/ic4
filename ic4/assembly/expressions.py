@@ -1,121 +1,403 @@
 """
     Methods to manipulate arithmetic expressions
 """
-from dataclasses import dataclass
-from typing import Dict, Iterable, Optional, Tuple, Union
-
-# A single, atomic factor: a number, a identifier,
-# or a parentisized expression.
-Factor = Union[int, str, "Expression"]
-
-
-@dataclass(frozen=True)
-class Multiply:
-    left: Factor
-    right: Factor
-
-
-@dataclass(frozen=True)
-class Divide:
-    left: Factor
-    right: Factor
-
-
-Term = Union[Multiply, Divide, Factor]
-
-
-@dataclass(frozen=True)
-class Sum:
-    left: Factor
-    right: Factor
-
-
-@dataclass(frozen=True)
-class Subtract:
-    left: Factor
-    right: Factor
-
-
-Expression = Union[Sum, Subtract, Term]
+from operator import index
+from sys import stderr
+from typing import AnyStr, Dict, Optional, SupportsInt, Union
+from re import compile, Pattern
 
 
 class SimplifyException(Exception):
+    """Raised if a simplifying did not complete"""
+
     pass
 
 
-def simplify_tuple(
-    exprs: Iterable[Expression],
-    subs: Optional[Dict[str, Expression]] = None,
-    full_simplify: bool = False,
-) -> Tuple[Expression, ...]:
-    return tuple(simplify(val, subs, full_simplify=full_simplify) for val in exprs)
+class Expression:
+    """A symbolic arithmetic expression"""
+
+    __slots__ = ()
+
+    def __init__(self) -> None:
+        raise NotImplementedError()
+
+    def simplify(
+        self,
+        subs: Optional[Dict["Reference", "Expression"]] = None,
+        fullsimplify: bool = True,
+    ) -> "Expression":
+        """Simplify this expression
+
+        :param subs: The substitutions to use while simplifying, defaults to None
+        :type subs: Optional[Dict[Reference, Expression]], optional
+        :param fullsimplify: If True, the method will return a Constant, defaults to True
+        :type fullsimplify: bool, optional
+        :raises SimplifyException: If fullsimplify == True and a constant is unreachable
+        :return: The simplified expression
+        :rtype: Expression
+        """
+        if fullsimplify:
+            raise NotImplementedError(f"simplify not implemented for {self.__class__}")
+        return self
+
+    def __str__(self) -> str:
+        """Return a human readable form of the expression
+
+        :return: the expression in string form
+        :rtype: str
+        """
+        raise NotImplementedError(f"__str__ not implemented for {self.__class__}")
+
+    def __eq__(self, __o: object) -> bool:
+        """Compare expression for equality
+
+        :param __o: the other expression
+        :type __o: object
+        :return: True if equal, False otherwise
+        :rtype: bool
+        """
+        raise NotImplementedError(f"__eq__ not implemented for {self.__class__}")
+
+    def __hash__(self) -> int:
+        """hash of the expression.
+
+        :return: the hash
+        :rtype: int
+        """
+        raise NotImplementedError(f"__hash__ not implemented for {self.__class__}")
+
+    # operators
+    def __add__(self, __o: object) -> "Sum":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Sum(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __radd__(self, __o: object) -> "Sum":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Sum(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __sub__(self, __o: object) -> "Subtract":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Subtract(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __rsub__(self, __o: object) -> "Subtract":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Subtract(__o if isinstance(__o, Expression) else Atom.fromval(__o), self)
+
+    def __mul__(self, __o: object) -> "Multiply":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Multiply(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __rmul__(self, __o: object) -> "Multiply":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Multiply(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __floordiv__(self, __o: object) -> "Divide":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Divide(self, __o if isinstance(__o, Expression) else Atom.fromval(__o))
+
+    def __rfloordiv__(self, __o: object) -> "Divide":
+        if not isinstance(__o, (Expression, SupportsInt, str)):
+            return NotImplemented
+        return Divide(__o if isinstance(__o, Expression) else Atom.fromval(__o), self)
+
+    def __neg__(self) -> "Multiply":
+        return Multiply(self, Constant(-1))
+
+    def __pos__(self) -> "Expression":
+        return self
+
+    def __int__(self) -> int:
+        return index(self)
+
+    def __index__(self) -> int:
+        return int(self.simplify(fullsimplify=True))
 
 
-def simplify(
-    expr: Expression,
-    subs: Optional[Dict[str, Expression]] = None,
-    full_simplify: bool = False,
-) -> Expression:
-    """
-    Return a simplified copy of an expression.
-    If no references are inside it, it will get down to a single int.
-    Can be given a dictionary of substitutions to reduce the references.
-    If full_simplify == True the process will halt and throw a SimplifyException if it can't get
-    the expression down to a single int.
-    """
-    if subs is None:
-        subs = {}
-    if isinstance(expr, int):
-        return expr  # cannot be simplier
-    if isinstance(expr, str):
-        if expr in subs:
-            # simplify that expression and then return that
-            return simplify(subs[expr], subs, full_simplify=full_simplify)
-        if full_simplify:
-            raise SimplifyException(
-                f"Cannot find '{expr}' within the substitution given ({subs})"
-            )
-        return expr
+class Atom(Expression):
+    """An atomic value"""
 
-    # it's one of the four binary operations
-    left = simplify(expr.left, subs, full_simplify=full_simplify)
-    right = simplify(expr.right, subs, full_simplify=full_simplify)
+    __slots__ = ("value",)
 
-    # arithmetic identities
-    if isinstance(expr, Sum):
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.value!r})"
+
+    @staticmethod
+    def fromval(value: Union[SupportsInt, AnyStr]) -> Union["Constant", "Reference"]:
+        if isinstance(value, SupportsInt):
+            return Constant(value)
+        elif isinstance(value, str):
+            return Reference(value)
+        raise TypeError()
+
+
+class Constant(Atom):
+    """A number"""
+
+    __slots__ = ()
+    value: int
+
+    def __init__(self, value: Union[SupportsInt, str]) -> None:
+        self.value = int(value)
+
+    def simplify(
+        self,
+        subs: Optional[Dict["Reference", "Expression"]] = None,
+        fullsimplify: bool = True,
+    ) -> "Constant":
+        return self  # no need to go further
+
+    def __eq__(self, __o: object) -> bool:
+        # try simplify the other
+        if isinstance(__o, Constant):
+            return self.value == __o.value
+        # compare with ints
+        if isinstance(__o, SupportsInt):
+            return self.value == int(__o)
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+    def __index__(self) -> int:
+        return self.value
+
+
+class Reference(Atom):
+    """A reference (to a variable, or a label, etc)"""
+
+    __slots__ = ()
+    value: str
+
+    INTERNAL_NAMES_RE: Pattern = compile(
+        r"[_a-zA-Z&][_a-zA-Z0-9$]*"
+    )  # names that a reference can have
+    NAMES_RE: str = r"[_a-zA-Z][_a-zA-Z0-9$]*"  # names usable by the assembler ( &-starting names are reserved )
+
+    def __init__(self, value: AnyStr) -> None:
+        value = str(value)
+        if not self.INTERNAL_NAMES_RE.fullmatch(value):
+            raise ValueError(f"{value!r} is not an appropriate name for a reference")
+        self.value = value
+
+    def simplify(
+        self,
+        subs: Optional[Dict["Reference", "Expression"]] = None,
+        fullsimplify: bool = True,
+    ) -> Expression:
+        if subs is None or self not in subs:
+            if fullsimplify:
+                raise SimplifyException(
+                    f"{self.value!r} not in the given substitutions!"
+                )
+            else:
+                return self
+        return subs[self].simplify(subs, fullsimplify)
+
+    def __eq__(self, __o: object) -> bool:
+        # try simplify the other
+        if isinstance(__o, Reference):
+            return self.value == __o.value
+        # compare with ints
+        if isinstance(__o, str):
+            return self.value == __o
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.value)
+
+
+class BinOp(Expression):
+    __slots__ = ("left", "right")
+    left: Expression
+    right: Expression
+
+
+class Sum(BinOp):
+    """Sum of two expressions"""
+
+    __slots__ = ()
+
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
+
+    def simplify(
+        self,
+        subs: Optional[Dict["Reference", "Expression"]] = None,
+        fullsimplify: bool = True,
+    ) -> "Expression":
+        left = self.left.simplify(subs, fullsimplify)
+        right = self.right.simplify(subs, fullsimplify)
+
+        # sum by zero
         if left == 0:
             return right
         if right == 0:
             return left
-    if isinstance(expr, Subtract):
+
+        # sum of constants
+        if isinstance(left, Constant) and isinstance(right, Constant):
+            return Constant(left.value + right.value)
+
+        return Sum(left, right)
+
+    def __str__(self) -> str:
+        return f"({self.left}) + ({self.right})"
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, Sum):
+            return False
+        # using sets so a+b == b+a
+        return frozenset((self.left, self.right)) == frozenset((__o.left, __o.right))
+
+    def __hash__(self) -> int:
+        return hash(("+", frozenset((self.left, self.right))))
+
+
+class Subtract(BinOp):
+    """Difference of two expressions"""
+
+    __slots__ = ()
+
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
+
+    def simplify(
+        self,
+        subs: Optional[Dict["Reference", "Expression"]] = None,
+        fullsimplify: bool = True,
+    ) -> "Expression":
+        left = self.left.simplify(subs, fullsimplify)
+        # morph into multiplication
+        if left == 0:
+            return Multiply(self.right, Constant(-1)).simplify()
+
+        right = self.right.simplify(subs, fullsimplify)
+        # subtract 0
         if right == 0:
             return left
-    if isinstance(expr, Multiply):
-        if left == 0 or right == 0:
-            return 0
+
+        # difference of constants
+        if isinstance(left, Constant) and isinstance(right, Constant):
+            return Constant(left.value - right.value)
+
+        return Subtract(left, right)
+
+    def __str__(self) -> str:
+        return f"({self.left}) - ({self.right})"
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, Subtract):
+            return False
+        # using tuples so a-b != b-a
+        return tuple((self.left, self.right)) == tuple((__o.left, __o.right))
+
+    def __hash__(self) -> int:
+        return hash(("-", tuple((self.left, self.right))))
+
+
+class Multiply(BinOp):
+    """Product of two expressions"""
+
+    __slots__ = ()
+
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
+
+    def simplify(
+        self,
+        subs: Optional[Dict["Reference", "Expression"]] = None,
+        fullsimplify: bool = True,
+    ) -> "Expression":
+        left = self.left.simplify(subs, fullsimplify)
+        # multiply by zero
+        if left == 0:
+            return Constant(0)
+        right = self.right.simplify(subs, fullsimplify)
+        # multiply by zero
+        if right == 0:
+            return Constant(0)
+
+        # multiply by one
         if left == 1:
             return right
         if right == 1:
             return left
-    if isinstance(expr, Divide):
-        if left == 0:
-            return 0
+
+        # product of constants
+        if isinstance(left, Constant) and isinstance(right, Constant):
+            return Constant(left.value * right.value)
+
+        return Multiply(left, right)
+
+    def __str__(self) -> str:
+        return f"({self.left}) * ({self.right})"
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, Multiply):
+            return False
+        # using sets so a*b == b*a
+        return frozenset((self.left, self.right)) == frozenset((__o.left, __o.right))
+
+    def __hash__(self) -> int:
+        return hash(("*", frozenset((self.left, self.right))))
+
+
+class Divide(BinOp):
+    """Integer division of two expressions"""
+
+    __slots__ = ()
+
+    def __init__(self, left, right) -> None:
+        self.left = left
+        self.right = right
+
+    def simplify(
+        self,
+        subs: Optional[Dict["Reference", "Expression"]] = None,
+        fullsimplify: bool = True,
+    ) -> "Expression":
+        right = self.right.simplify(subs, fullsimplify)
         if right == 1:
-            return left
+            return self.left.simplify(subs, fullsimplify)
+        if right == -1:  # morph into a multiplication
+            return Multiply(self.left, Constant(-1)).simplify(subs, fullsimplify)
 
-    if not (isinstance(left, int) and isinstance(right, int)):
-        assert (
-            not full_simplify
-        ), "When fullsimplifyin an exception should be thrown before there"
-        return expr.__class__(left, right)  # simplified version
+        left = self.left.simplify(subs, fullsimplify)
 
-    if isinstance(expr, Sum):
-        return left + right
-    if isinstance(expr, Subtract):
-        return left - right
-    if isinstance(expr, Multiply):
-        return left * right
-    if isinstance(expr, Divide):
-        return left // right  # integer division only
+        if left == 0:
+            if right == 0:
+                raise SimplifyException("Indeterminate form 0//0 encountered")
+            return Constant(0)
+        if isinstance(left, Constant) and right == 0:
+            raise SimplifyException("Division by 0 encountered")
 
-    assert False, f"Type {type(expr)} should not be in an expression."
+        # division of constants
+        if isinstance(left, Constant) and isinstance(right, Constant):
+            return Constant(left.value // right.value)
+
+        return Divide(left, right)
+
+    def __str__(self) -> str:
+        return f"({self.left}) / ({self.right})"
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, Divide):
+            return False
+        # using tuples so a/b != b/a
+        return tuple((self.left, self.right)) == tuple((__o.left, __o.right))
+
+    def __hash__(self) -> int:
+        return hash(("/", tuple((self.left, self.right))))

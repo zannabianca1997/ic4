@@ -1,18 +1,21 @@
 from itertools import chain
 from random import shuffle
 from typing import Any, Iterable, Tuple
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from parameterized import parameterized
 from sly.lex import Token, Lexer
 
-from ic4.assembly.commands import DirectiveCode, OpCode
+from ic4.assembly.commands import OpCode, Directive
 from ic4.assembly.lexer import ICAssLexer
 from ic4.version import Version
 
 
 def tuplify(token: Token):
     return token.type, token.value, token.lineno, token.index
+
+
+DIRECTIVES = {s.__name__ for s in Directive.__subclasses__()}
 
 
 class TestLexing(TestCase):
@@ -143,7 +146,7 @@ class TestLexing(TestCase):
 
     def test_keywords(self):
         words = "Some names to distinguish from the keywords _and some_identifier_012".split()
-        keywords = set(x.name for x in chain(OpCode, DirectiveCode))
+        keywords = set(chain((x.name for x in OpCode), DIRECTIVES))
         if keywords.intersection(words):
             self.skipTest(f"{keywords.intersection(words)} are keywords now!")
         words += list(keywords)
@@ -158,11 +161,7 @@ class TestLexing(TestCase):
                     word,
                     "OPCODE"
                     if (word in {x.name for x in OpCode})
-                    else (
-                        word
-                        if (word in {x.name for x in DirectiveCode})
-                        else "IDENTIFIER"
-                    ),
+                    else (word if (word in DIRECTIVES) else "IDENTIFIER"),
                 )
                 for word in words
             ),

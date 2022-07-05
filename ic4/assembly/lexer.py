@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 from sly import Lexer
 
 from .commands import OpCode
+from .expressions import Constant, Reference
 from ..string_utilities import (
     char_const_re,
     const_string_re,
@@ -66,7 +67,7 @@ class ICAssLexer(Lexer):
     ignore = " \t"
     ignore_comment = r"\;.*"
 
-    IDENTIFIER = r"[a-zA-Z_][a-zA-Z0-9_]*"
+    IDENTIFIER = Reference.NAMES_RE
 
     for keyword in OpCode:
         IDENTIFIER[keyword.name] = OPCODE
@@ -121,12 +122,13 @@ class ICAssLexer(Lexer):
             t.value = unescape_char_const(t.value)
         else:
             t.value = int(t.value)
+        t.value = Constant(t.value)
         return t
 
     # string constants
     @_(const_string_re.pattern)
     def STRING(self, t):
-        t.value = unescape_string_const(t.value)
+        t.value = tuple(Constant(x) for x in unescape_string_const(t.value))
         return t
 
     # this will match end of line and file

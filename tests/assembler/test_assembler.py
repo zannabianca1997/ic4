@@ -2,25 +2,35 @@ from itertools import product
 from typing import Tuple
 from unittest import TestCase, skip
 from parameterized import parameterized
+from ic4.assembler.assembler import Assembler, GenerateException
 
 from ic4.assembly.commands import (
+    DEC,
+    INC,
+    INTS,
+    JMP,
+    LOAD,
+    MOV,
+    STORE,
+    ZEROS,
     Command,
     Directive,
-    DirectiveCode,
     Instruction,
     Label,
     OpCode,
+    Param,
     ParamMode,
 )
-from ic4.assembler import GenerateException
-from ic4.assembler import generate as file_generate
+from ic4.assembler.assembler import Assembler
+from ic4.assembly.expressions import Constant, Reference
 from ic4.assembly.srcfile import ExecutableHeader, SourceFile
 from ic4.version import Version
 
 
 def generate(source: Tuple[Command, ...]) -> Tuple[int, ...]:
     """Generate from a test body"""
-    return file_generate(SourceFile(ExecutableHeader(Version(0, 1)), source))
+    file = SourceFile(ExecutableHeader(Version(0, 1)), source)
+    return Assembler(file).values
 
 
 class TestGenerateInstruction(TestCase):
@@ -29,7 +39,11 @@ class TestGenerateInstruction(TestCase):
             (
                 f"{opcode.name} {''.join({ParamMode.ABSOLUTE:'A',ParamMode.IMMEDIATE:'I', ParamMode.RELATIVE:'R'}[mode] for mode in parammodes)}",
                 Instruction(
-                    opcode, tuple(zip(parammodes, range(opcode.param_number())))
+                    opcode,
+                    tuple(
+                        Param(m, Constant(v))
+                        for m, v in zip(parammodes, range(opcode.param_number))
+                    ),
                 ),
                 (
                     (
@@ -38,38 +52,38 @@ class TestGenerateInstruction(TestCase):
                                 (
                                     (
                                         int(parammodes[2])
-                                        if opcode.param_number() > 2
+                                        if opcode.param_number > 2
                                         else 0
                                     )
                                     * 10
                                     + int(parammodes[1])
                                 )
-                                if opcode.param_number() > 1
+                                if opcode.param_number > 1
                                 else 0
                             )
                             * 10
                             + int(parammodes[0])
                         )
-                        if opcode.param_number() > 0
+                        if opcode.param_number > 0
                         else 0
                     )
                     * 100
                     + int(opcode),
-                    *range(opcode.param_number()),
+                    *range(opcode.param_number),
                 ),
             )
             for opcode in OpCode
-            for parammodes in product(ParamMode, repeat=opcode.param_number())
+            for parammodes in product(ParamMode, repeat=opcode.param_number)
         ]
     )
     def test_instruction(self, name: str, code: Command, output: Tuple[int, ...]):
         self.assertTupleEqual(generate((code,)), output)
 
 
-class TestGenerate(TestCase):
+class TestGenerateDirective(TestCase):
     def test_INTS(self):
         self.assertTupleEqual(
-            generate((Directive(DirectiveCode.INTS, (1, 1, 2, 3, 5, 8, 13)),)),
+            generate((INTS(tuple(Constant(x) for x in (1, 1, 2, 3, 5, 8, 13))),)),
             (1, 1, 2, 3, 5, 8, 13),
         )
 
@@ -77,7 +91,7 @@ class TestGenerate(TestCase):
         for i in (0, 10, 1000):
             with self.subTest(i):
                 self.assertTupleEqual(
-                    generate((Directive(DirectiveCode.ZEROS, (i,)),)),
+                    generate((ZEROS(Constant(i)),)),
                     tuple([0] * i),
                 )
 
@@ -87,7 +101,7 @@ class TestGenerate(TestCase):
             generate,
             (
                 Label("a"),
-                Directive(DirectiveCode.ZEROS, ("b",)),
+                ZEROS(Reference("b")),
             ),
         )
 
@@ -97,21 +111,27 @@ class TestGenerate(TestCase):
             generate,
             (
                 Label("a"),
-                Directive(DirectiveCode.ZEROS, (-1,)),
+                ZEROS(Constant(-1)),
             ),
         )
 
     def test_DEC(self):
         self.assertTupleEqual(
-            generate((Directive(DirectiveCode.DEC, ((ParamMode.ABSOLUTE, 42),)),)),
+            generate(
+                (
+                    DEC(
+                        Param(ParamMode.ABSOLUTE, Constant(42)),
+                    ),
+                )
+            ),
             generate(
                 (
                     Instruction(
                         OpCode.ADD,
                         (
-                            (ParamMode.ABSOLUTE, 42),
-                            (ParamMode.IMMEDIATE, -1),
-                            (ParamMode.ABSOLUTE, 42),
+                            Param(ParamMode.ABSOLUTE, Constant(42)),
+                            Param(ParamMode.IMMEDIATE, Constant(-1)),
+                            Param(ParamMode.ABSOLUTE, Constant(42)),
                         ),
                     ),
                 )
@@ -120,15 +140,21 @@ class TestGenerate(TestCase):
 
     def test_INC(self):
         self.assertTupleEqual(
-            generate((Directive(DirectiveCode.INC, ((ParamMode.ABSOLUTE, 42),)),)),
+            generate(
+                (
+                    INC(
+                        Param(ParamMode.ABSOLUTE, Constant(42)),
+                    ),
+                )
+            ),
             generate(
                 (
                     Instruction(
                         OpCode.ADD,
                         (
-                            (ParamMode.ABSOLUTE, 42),
-                            (ParamMode.IMMEDIATE, 1),
-                            (ParamMode.ABSOLUTE, 42),
+                            Param(ParamMode.ABSOLUTE, Constant(42)),
+                            Param(ParamMode.IMMEDIATE, Constant(1)),
+                            Param(ParamMode.ABSOLUTE, Constant(42)),
                         ),
                     ),
                 )
@@ -139,9 +165,9 @@ class TestGenerate(TestCase):
         self.assertTupleEqual(
             generate(
                 (
-                    Directive(
-                        DirectiveCode.MOV,
-                        ((ParamMode.ABSOLUTE, 42), (ParamMode.ABSOLUTE, 76), 1),
+                    MOV(
+                        Param(ParamMode.ABSOLUTE, Constant(42)),
+                        Param(ParamMode.ABSOLUTE, Constant(76)),
                     ),
                 )
             ),
@@ -150,9 +176,9 @@ class TestGenerate(TestCase):
                     Instruction(
                         OpCode.ADD,
                         (
-                            (ParamMode.ABSOLUTE, 42),
-                            (ParamMode.IMMEDIATE, 0),
-                            (ParamMode.ABSOLUTE, 76),
+                            Param(ParamMode.ABSOLUTE, Constant(42)),
+                            Param(ParamMode.IMMEDIATE, Constant(0)),
+                            Param(ParamMode.ABSOLUTE, Constant(76)),
                         ),
                     ),
                 )
@@ -165,23 +191,24 @@ class TestGenerate(TestCase):
                 self.assertTupleEqual(
                     generate(
                         (
-                            Directive(
-                                DirectiveCode.MOV,
-                                ((ParamMode.ABSOLUTE, 42), (ParamMode.ABSOLUTE, 76), i),
+                            MOV(
+                                Param(ParamMode.ABSOLUTE, Constant(42)),
+                                Param(ParamMode.ABSOLUTE, Constant(76)),
+                                Constant(i),
                             ),
                         )
                     ),
                     generate(
-                        (
+                        tuple(
                             Instruction(
                                 OpCode.ADD,
                                 (
-                                    (ParamMode.ABSOLUTE, 42 + j),
-                                    (ParamMode.IMMEDIATE, 0),
-                                    (ParamMode.ABSOLUTE, 76 + j),
+                                    Param(ParamMode.ABSOLUTE, Constant(42) + offset),
+                                    Param(ParamMode.IMMEDIATE, Constant(0)),
+                                    Param(ParamMode.ABSOLUTE, Constant(76) + offset),
                                 ),
                             )
-                            for j in range(i)
+                            for offset in range(i)
                         )
                     ),
                 )
@@ -189,29 +216,21 @@ class TestGenerate(TestCase):
     def test_LOAD(self):
         LOAD_code = generate(
             (
-                Directive(
-                    DirectiveCode.LOAD,
-                    ((ParamMode.ABSOLUTE, 42), (ParamMode.ABSOLUTE, 76)),
+                LOAD(
+                    Param(ParamMode.ABSOLUTE, Constant(42)),
+                    Param(ParamMode.ABSOLUTE, Constant(76)),
                 ),
             )
         )
         MOV_code = generate(
             (
-                Directive(
-                    DirectiveCode.MOV,
-                    (
-                        (ParamMode.ABSOLUTE, 42),
-                        (ParamMode.ABSOLUTE, 12345),
-                        1,
-                    ),
+                MOV(
+                    Param(ParamMode.ABSOLUTE, Constant(42)),
+                    Param(ParamMode.ABSOLUTE, Constant(12345)),
                 ),
-                Directive(
-                    DirectiveCode.MOV,
-                    (
-                        (ParamMode.ABSOLUTE, 54321),
-                        (ParamMode.ABSOLUTE, 76),
-                        1,
-                    ),
+                MOV(
+                    Param(ParamMode.ABSOLUTE, Constant(54321)),
+                    Param(ParamMode.ABSOLUTE, Constant(76)),
                 ),
             ),
         )
@@ -232,29 +251,21 @@ class TestGenerate(TestCase):
     def test_STORE(self):
         LOAD_code = generate(
             (
-                Directive(
-                    DirectiveCode.STORE,
-                    ((ParamMode.ABSOLUTE, 42), (ParamMode.ABSOLUTE, 76)),
+                STORE(
+                    Param(ParamMode.ABSOLUTE, Constant(42)),
+                    Param(ParamMode.ABSOLUTE, Constant(76)),
                 ),
             )
         )
         MOV_code = generate(
             (
-                Directive(
-                    DirectiveCode.MOV,
-                    (
-                        (ParamMode.ABSOLUTE, 76),
-                        (ParamMode.ABSOLUTE, 12345),
-                        1,
-                    ),
+                MOV(
+                    Param(ParamMode.ABSOLUTE, Constant(76)),
+                    Param(ParamMode.ABSOLUTE, Constant(12345)),
                 ),
-                Directive(
-                    DirectiveCode.MOV,
-                    (
-                        (ParamMode.ABSOLUTE, 42),
-                        (ParamMode.ABSOLUTE, 54321),
-                        1,
-                    ),
+                MOV(
+                    Param(ParamMode.ABSOLUTE, Constant(42)),
+                    Param(ParamMode.ABSOLUTE, Constant(54321)),
                 ),
             ),
         )
@@ -274,16 +285,29 @@ class TestGenerate(TestCase):
 
     def test_JMP(self):
         self.assertTupleEqual(
-            generate((Directive(DirectiveCode.JMP, ((ParamMode.ABSOLUTE, 42),)),)),
+            generate((JMP(Param(ParamMode.ABSOLUTE, Constant(42))),)),
             generate(
                 (
                     Instruction(
                         OpCode.JNZ,
                         (
-                            (ParamMode.IMMEDIATE, 1),
-                            (ParamMode.ABSOLUTE, 42),
+                            Param(ParamMode.IMMEDIATE, Constant(1)),
+                            Param(ParamMode.ABSOLUTE, Constant(42)),
                         ),
                     ),
                 )
             ),
         )
+
+
+class TestAssemblerMethods(TestCase):
+    """Check that the assembler has methods for all the directives"""
+
+    @parameterized.expand(
+        ((f"gen_{subclass.__name__}",) for subclass in Directive.__subclasses__())
+    )
+    def test_method(self, name: str):
+        try:
+            getattr(Assembler, name)
+        except AttributeError:
+            self.fail("Method is missing")
