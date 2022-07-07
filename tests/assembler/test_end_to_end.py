@@ -104,7 +104,7 @@ class TestLexParse(TestCase):
             # check body
             for command in parsed.body:
                 self.assertIsInstance(command, (Label, Instruction, Directive))
-                print(command, file=log_file)
+                print(repr(command), file=log_file)
 
     @parameterized.expand(get_name_log_path_and_source(__file__))
     def test_compile(self, name: str, log_path: Path, program: str) -> None:
@@ -143,3 +143,27 @@ class TestRun(TestCase):
                 )
             ),
         )
+
+
+class TestEmit(TestCase):
+    maxDiff = None
+
+    @parameterized.expand(get_name_log_path_and_source(__file__))
+    def test_emit(self, name: str, log_path: Path, program: str) -> None:
+        """Parse the program and then reemit it in the log directory"""
+        with open(log_path / "reemitted.txt", "w") as log_file:
+            parsed = ICAssParser().parse(ICAssLexer().tokenize(program))
+            print(str(parsed), file=log_file, end="")
+
+    @parameterized.expand(get_name_log_path_and_source(__file__))
+    def test_loop(self, name: str, _: Path, program: str) -> None:
+        """Parse the program, reemit it and reparse it. Check that it's equal."""
+        parsed = ICAssParser().parse(ICAssLexer().tokenize(program))
+        emitted = str(parsed)
+        reparsed = ICAssParser().parse(ICAssLexer().tokenize(emitted))
+
+        self.assertEqual(parsed.header, reparsed.header)
+        if parsed.body != reparsed.body:
+            self.assertTupleEqual(
+                Assembler(parsed).values, Assembler(reparsed).values
+            )  # check they compile to the same thing

@@ -43,4 +43,7 @@ class SourceFile:
         return isinstance(self.header, ObjectsHeader)
 
     def __str__(self) -> str:
-        return str(self.header) + "".join(str(c) for c in self.body)
+        srccode = str(self.header) + "".join(str(c) for c in self.body)
+        if not srccode.endswith("\n"):
+            srccode += "\n"
+        return srccode

@@ -250,7 +250,7 @@ class TestParsing(TestCase):
                 'INTS "This is a String, \\n with escapes!"',
                 INTS(
                     tuple(
-                        Constant(ord(x)) for x in "This is a String, \n with escapes!\0"
+                        Constant(ord(x)) for x in "This is a String, \n with escapes!"
                     )
                 ),
             ),

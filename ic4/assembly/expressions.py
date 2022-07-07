@@ -56,7 +56,7 @@ class Expression:
         :return: True if equal, False otherwise
         :rtype: bool
         """
-        raise NotImplementedError(f"__eq__ not implemented for {self.__class__}")
+        raise NotImplemented
 
     def __hash__(self) -> int:
         """hash of the expression.
@@ -163,7 +163,7 @@ class Constant(Atom):
         # compare with ints
         if isinstance(__o, SupportsInt):
             return self.value == int(__o)
-        return False
+        return NotImplemented
 
     def __hash__(self) -> int:
         return hash(self.value)
@@ -210,7 +210,7 @@ class Reference(Atom):
         # compare with ints
         if isinstance(__o, str):
             return self.value == __o
-        return False
+        return NotImplemented
 
     def __hash__(self) -> int:
         return hash(self.value)
@@ -220,6 +220,9 @@ class BinOp(Expression):
     __slots__ = ("left", "right")
     left: Expression
     right: Expression
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.right!r}, {self.left!r})"
 
 
 class Sum(BinOp):
@@ -256,7 +259,7 @@ class Sum(BinOp):
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, Sum):
-            return False
+            return NotImplemented
         # using sets so a+b == b+a
         return frozenset((self.left, self.right)) == frozenset((__o.left, __o.right))
 
@@ -299,7 +302,7 @@ class Subtract(BinOp):
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, Subtract):
-            return False
+            return NotImplemented
         # using tuples so a-b != b-a
         return tuple((self.left, self.right)) == tuple((__o.left, __o.right))
 
@@ -347,7 +350,7 @@ class Multiply(BinOp):
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, Multiply):
-            return False
+            return NotImplemented
         # using sets so a*b == b*a
         return frozenset((self.left, self.right)) == frozenset((__o.left, __o.right))
 
@@ -395,7 +398,7 @@ class Divide(BinOp):
 
     def __eq__(self, __o: object) -> bool:
         if not isinstance(__o, Divide):
-            return False
+            return NotImplemented
         # using tuples so a/b != b/a
         return tuple((self.left, self.right)) == tuple((__o.left, __o.right))
 

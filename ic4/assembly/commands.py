@@ -339,7 +339,12 @@ class PUSH(Directive):
             assert val.value >= 0, "Cannot push a negative number of memory locations"
 
     def _param_str(self) -> str:
-        return str(self.value) + (f", {self.size}" if self.size != 1 else "")
+        vals = []
+        if self.value is not None:
+            vals.append(str(self.value))
+        if self.size != 1:
+            vals.append(str(self.size))
+        return ", ".join(vals)
 
 
 @dataclass(frozen=True)
@@ -362,7 +367,12 @@ class POP(Directive):
             assert val.value >= 0, "Cannot pop a negative number of memory locations"
 
     def _param_str(self) -> str:
-        return str(self.dest) + (f", {self.size}" if self.size != 1 else "")
+        vals = []
+        if self.dest is not None:
+            vals.append(str(self.dest))
+        if self.size != 1:
+            vals.append(str(self.size))
+        return ", ".join(vals)
 
 
 @dataclass(frozen=True)

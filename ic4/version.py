@@ -57,8 +57,8 @@ class Version:
             return (self.major, self.minor, self.patch, self.extra)
 
     def to_string(self) -> str:
-        if self.extra:
-            if self.patch:
+        if not self.extra:
+            if not self.patch:
                 return f"{self.major}.{self.minor}"
             else:
                 return f"{self.major}.{self.minor}.{self.patch}"
