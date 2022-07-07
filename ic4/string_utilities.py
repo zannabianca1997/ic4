@@ -84,7 +84,8 @@ def escape_string_const(char_codes: Iterable[int]) -> str:
         + "".join(
             (
                 chr(x)
-                if x in digits + ascii_letters + punctuation + " "
+                if x
+                in frozenset(ord(c) for c in digits + ascii_letters + punctuation + " ")
                 else "\\" + oct(x)[2:].rjust(3, "0")
             )
             for x in char_codes
