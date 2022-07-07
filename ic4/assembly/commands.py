@@ -3,7 +3,12 @@
 """
 from dataclasses import dataclass
 from enum import IntEnum, unique
+from string import printable
 from typing import Optional, Tuple
+
+from numpy import size
+
+from ic4.string_utilities import escape_string_const
 
 from .expressions import Constant, Expression, Reference, SimplifyException
 
@@ -63,6 +68,9 @@ class OpCode(IntEnum):
             OpCode.HALT: (),
         }[self]
 
+    def __str__(self) -> str:
+        return self.name
+
 
 @unique
 class ParamMode(IntEnum):
@@ -84,6 +92,9 @@ class ParamMode(IntEnum):
             ParamMode.IMMEDIATE: "#",
             ParamMode.RELATIVE: "@",
         }[self]
+
+    def __str__(self) -> str:
+        return self.prefix
 
     @property
     def can_be_written(self) -> bool:
@@ -113,6 +124,9 @@ class Param:
             else:
                 assert val.value >= 0, "Absolute parameters cannot have negative values"
 
+    def __str__(self) -> str:
+        return f"{self.mode}{self.value}"
+
 
 @dataclass(frozen=True)
 class Command:
@@ -135,6 +149,9 @@ class Label(Command):
     def check(self) -> None:
         return Reference.INTERNAL_NAMES_RE.fullmatch(self.value)
 
+    def __str__(self) -> str:
+        return f"{self.value}: "
+
 
 @dataclass(frozen=True)
 class Instruction(Command):
@@ -155,12 +172,19 @@ class Instruction(Command):
         for p in self.params:
             p.check()
 
+    def __str__(self) -> str:
+        return str(self.opcode) + " " + ", ".join(str(p) for p in self.params) + "\n"
+
 
 @dataclass(frozen=True)
 class Directive(Command):
     """Represent an assambler directive"""
 
-    pass
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} {self._param_str()}\n"
+
+    def _param_str(self) -> str:
+        raise NotImplementedError()
 
 
 @dataclass(frozen=True)
@@ -171,6 +195,14 @@ class INTS(Directive):
 
     def check(self) -> None:
         pass
+
+    def _param_str(self) -> str:
+        if all(
+            (isinstance(x, Constant) and (chr(x.value) in (printable + "\0")))
+            for x in self.values
+        ):
+            return escape_string_const(x.value for x in self.values)
+        return ", ".join(str(v) for v in self.values)
 
 
 @dataclass(frozen=True)
@@ -188,6 +220,9 @@ class ZEROS(Directive):
         else:
             assert val.value >= 0, "Cannot insert a negative number of zeros"
 
+    def _param_str(self) -> str:
+        return str(self.len)
+
 
 @dataclass(frozen=True)
 class JMP(Directive):
@@ -197,6 +232,9 @@ class JMP(Directive):
 
     def check(self) -> None:
         self.dest.check()
+
+    def _param_str(self) -> str:
+        return str(self.dest)
 
 
 @dataclass(frozen=True)
@@ -209,6 +247,9 @@ class INC(Directive):
         self.dest.check()
         assert self.dest.can_be_written
 
+    def _param_str(self) -> str:
+        return str(self.dest)
+
 
 @dataclass(frozen=True)
 class DEC(Directive):
@@ -219,6 +260,9 @@ class DEC(Directive):
     def check(self) -> None:
         self.dest.check()
         assert self.dest.can_be_written
+
+    def _param_str(self) -> str:
+        return str(self.dest)
 
 
 @dataclass(frozen=True)
@@ -241,6 +285,9 @@ class MOV(Directive):
         else:
             assert val.value >= 0, "Cannot move a negative number of memory locations"
 
+    def _param_str(self) -> str:
+        return f"{self.src}, {self.dest}" + (f", {self.size}" if self.size != 1 else "")
+
 
 @dataclass(frozen=True)
 class LOAD(Directive):
@@ -254,6 +301,9 @@ class LOAD(Directive):
             p.check()
         assert self.dest.can_be_written
 
+    def _param_str(self) -> str:
+        return f"{self.src_ptr}, {self.dest}"
+
 
 @dataclass(frozen=True)
 class STORE(Directive):
@@ -265,6 +315,9 @@ class STORE(Directive):
     def check(self) -> None:
         for p in self.src, self.dest_ptr:
             p.check()
+
+    def _param_str(self) -> str:
+        return f"{self.src}, {self.dest_ptr}"
 
 
 @dataclass(frozen=True)
@@ -284,6 +337,9 @@ class PUSH(Directive):
             pass  # do not panic, it's simply a complex directive
         else:
             assert val.value >= 0, "Cannot push a negative number of memory locations"
+
+    def _param_str(self) -> str:
+        return str(self.value) + (f", {self.size}" if self.size != 1 else "")
 
 
 @dataclass(frozen=True)
@@ -305,6 +361,9 @@ class POP(Directive):
         else:
             assert val.value >= 0, "Cannot pop a negative number of memory locations"
 
+    def _param_str(self) -> str:
+        return str(self.dest) + (f", {self.size}" if self.size != 1 else "")
+
 
 @dataclass(frozen=True)
 class CALL(Directive):
@@ -315,6 +374,9 @@ class CALL(Directive):
     def check(self) -> None:
         self.dest.check()
 
+    def _param_str(self) -> str:
+        return str(self.dest)
+
 
 @dataclass(frozen=True)
 class RET(Directive):
@@ -322,3 +384,6 @@ class RET(Directive):
 
     def check(self) -> None:
         pass
+
+    def _param_str(self) -> str:
+        return ""

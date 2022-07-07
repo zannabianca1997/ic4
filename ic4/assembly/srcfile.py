@@ -9,6 +9,9 @@ from ..version import Version
 class ExecutableHeader:
     version: Version
 
+    def __str__(self) -> str:
+        return f"EXECUTABLE {self.version}\n"
+
 
 @dataclass(frozen=True)
 class ObjectsHeader:
@@ -16,6 +19,14 @@ class ObjectsHeader:
     export: FrozenSet[str] = frozenset()
     extern: FrozenSet[str] = frozenset()
     entry: Optional[str] = None
+
+    def __str__(self) -> str:
+        return (
+            f"EXECUTABLE {self.version}\n"
+            + (f"EXPORT {' '.join(self.export)}\n" if self.export else "")
+            + (f"EXTERN {' '.join(self.extern)}\n" if self.extern else "")
+            + (f"ENTRY {self.entry}\n" if self.entry is not None else "")
+        )
 
 
 @dataclass(frozen=True)
@@ -30,3 +41,6 @@ class SourceFile:
     @property
     def is_objects(self):
         return isinstance(self.header, ObjectsHeader)
+
+    def __str__(self) -> str:
+        return str(self.header) + "".join(str(c) for c in self.body)
