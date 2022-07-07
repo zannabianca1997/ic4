@@ -1,5 +1,6 @@
 from re import compile
-from typing import Tuple
+from string import ascii_letters, digits, printable, punctuation
+from typing import Iterable, Tuple
 
 ESCAPE_DICT = {
     "a": "\a",
@@ -75,3 +76,18 @@ def unescape_string_const(char_string: str) -> Tuple[int, ...]:
 
     unescaped.append(0)
     return tuple(unescaped)
+
+
+def escape_string_const(char_codes: Iterable[int]) -> str:
+    return (
+        '"'
+        + "".join(
+            (
+                chr(x)
+                if x in digits + ascii_letters + punctuation + " "
+                else "\\" + oct(x)[2:].rjust(3, "0")
+            )
+            for x in char_codes
+        )
+        + '"'
+    )
